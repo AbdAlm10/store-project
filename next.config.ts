@@ -21,9 +21,10 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     staleTimes: {
-      // Keep client router payloads warm longer → snappier back/forward & Link hops
-      dynamic: 60,
-      static: 300,
+      // Dashboard tabs: keep RSC payloads in the client router cache for a long time.
+      // Volatile metrics soft-refresh separately (~10m) without reloading the page shell.
+      dynamic: 86_400, // 24h
+      static: 86_400,
     },
     optimizePackageImports: ["lucide-react"],
   },

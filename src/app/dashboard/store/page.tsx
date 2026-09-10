@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getServices } from "@/infrastructure/container";
 import { PageHeader, StatusBadge } from "@/components/dashboard/page-header";
+import { DashboardCard } from "@/components/dashboard/ui";
 import { StoreSettingsForm } from "@/features/stores/store-settings-form";
 import { CopyStoreUrl } from "@/features/dashboard/copy-store-url";
 import { storeUrl } from "@/lib/social/sharing";
@@ -39,17 +40,19 @@ export default async function StorePage() {
         }
       />
 
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-        <StatusBadge status={store.status} />
-        <code className="break-all text-sm text-slate-700">
-          {storeUrl(store.slug)}
-        </code>
-        <CopyStoreUrl url={storeUrl(store.slug)} />
-      </div>
+      <DashboardCard padding="sm">
+        <div className="flex flex-wrap items-center gap-3">
+          <StatusBadge status={store.status} />
+          <code className="break-all text-sm text-slate-600">
+            {storeUrl(store.slug)}
+          </code>
+          <CopyStoreUrl url={storeUrl(store.slug)} />
+        </div>
+      </DashboardCard>
 
-      <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+      <DashboardCard>
         <StoreSettingsForm store={store} />
-      </div>
+      </DashboardCard>
     </div>
   );
 }

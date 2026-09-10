@@ -7,19 +7,19 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-teal-700 text-white hover:bg-teal-800 shadow-sm shadow-teal-900/10",
+          "bg-slate-900 text-white hover:bg-slate-800 shadow-sm shadow-slate-900/10",
         secondary:
-          "bg-slate-900 text-white hover:bg-slate-800",
+          "bg-teal-300 text-slate-900 hover:bg-teal-200 shadow-sm shadow-teal-900/5",
         outline:
-          "border border-slate-300 bg-white text-slate-900 hover:bg-slate-50",
-        ghost: "text-slate-700 hover:bg-slate-100",
+          "border border-slate-200 bg-white text-slate-800 hover:bg-slate-50",
+        ghost: "text-slate-600 hover:bg-white/80",
         danger: "bg-red-600 text-white hover:bg-red-700",
         whatsapp: "bg-[#128C7E] text-white hover:bg-[#0e6e63]",
       },
       size: {
-        sm: "h-9 px-3",
-        md: "h-11 px-4",
-        lg: "h-12 px-6 text-base",
+        sm: "h-9 rounded-xl px-3",
+        md: "h-11 rounded-xl px-4",
+        lg: "h-12 rounded-xl px-6 text-base",
       },
     },
     defaultVariants: {

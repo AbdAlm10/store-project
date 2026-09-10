@@ -16,12 +16,12 @@ const STATUS_KEY: Record<string, MessageKey> = {
 export function StatusBadge({ status }: { status: string }) {
   const { t } = useI18n();
   const styles: Record<string, string> = {
-    published: "bg-teal-50 text-teal-800 ring-teal-200",
-    draft: "bg-slate-100 text-slate-700 ring-slate-200",
-    hidden: "bg-amber-50 text-amber-800 ring-amber-200",
-    archived: "bg-slate-100 text-slate-500 ring-slate-200",
-    suspended: "bg-red-50 text-red-700 ring-red-200",
-    restricted: "bg-orange-50 text-orange-800 ring-orange-200",
+    published: "bg-teal-50 text-teal-800",
+    draft: "bg-slate-100 text-slate-600",
+    hidden: "bg-amber-50 text-amber-800",
+    archived: "bg-slate-100 text-slate-500",
+    suspended: "bg-red-50 text-red-700",
+    restricted: "bg-orange-50 text-orange-800",
   };
 
   const key = STATUS_KEY[status];
@@ -30,8 +30,8 @@ export function StatusBadge({ status }: { status: string }) {
   return (
     <span
       className={cn(
-        "inline-flex rounded-md px-2 py-0.5 text-xs font-medium ring-1",
-        styles[status] ?? "bg-slate-100 text-slate-700 ring-slate-200",
+        "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
+        styles[status] ?? "bg-slate-100 text-slate-600",
       )}
     >
       {label}

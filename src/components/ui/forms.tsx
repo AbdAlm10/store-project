@@ -15,7 +15,7 @@ export function Input({
   return (
     <input
       className={cn(
-        "h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600",
+        "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300",
         className,
       )}
       {...props}
@@ -31,7 +31,7 @@ export function Textarea({
   return (
     <textarea
       className={cn(
-        "min-h-28 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600",
+        "min-h-28 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300",
         className,
       )}
       {...props}
@@ -45,7 +45,7 @@ export function Label({
 }: React.LabelHTMLAttributes<HTMLLabelElement>) {
   return (
     <label
-      className={cn("mb-1.5 block text-sm font-medium text-slate-700", className)}
+      className={cn("mb-1.5 block text-sm font-medium text-slate-600", className)}
       {...props}
     />
   );
@@ -59,7 +59,7 @@ export function Select({
   return (
     <select
       className={cn(
-        "h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600",
+        "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300",
         className,
       )}
       {...props}

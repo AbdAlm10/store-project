@@ -1,4 +1,5 @@
-import Link from "next/link";
+import type { ComponentType, ReactNode } from "react";
+import { ActionTile } from "@/components/dashboard/ui";
 
 export function PageHeader({
   title,
@@ -7,19 +8,23 @@ export function PageHeader({
 }: {
   title: string;
   description?: string;
-  actions?: React.ReactNode;
+  actions?: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-tight text-slate-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-[1.75rem]">
           {title}
         </h1>
         {description ? (
-          <p className="mt-1 max-w-2xl text-sm text-slate-600">{description}</p>
+          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-slate-400">
+            {description}
+          </p>
         ) : null}
       </div>
-      {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className="flex flex-wrap items-center gap-2">{actions}</div>
+      ) : null}
     </div>
   );
 }
@@ -30,18 +35,19 @@ export function QuickAction({
   href,
   label,
   description,
+  icon,
 }: {
   href: string;
   label: string;
   description: string;
+  icon?: ComponentType<{ className?: string; strokeWidth?: number }>;
 }) {
   return (
-    <Link
+    <ActionTile
       href={href}
-      className="rounded-2xl bg-white p-4 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-slate-900/5"
-    >
-      <p className="font-semibold text-slate-900">{label}</p>
-      <p className="mt-1 text-sm text-slate-500">{description}</p>
-    </Link>
+      label={label}
+      description={description}
+      icon={icon}
+    />
   );
 }

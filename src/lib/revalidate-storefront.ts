@@ -5,6 +5,7 @@ import {
   storeProductsTag,
   storeTag,
 } from "@/lib/cache-tags";
+import { revalidateDashboard } from "@/lib/revalidate-dashboard";
 
 type StoreRef = { id: string; slug: string };
 
@@ -21,6 +22,9 @@ export function revalidateStorefrontStore(store: StoreRef): void {
 
   revalidatePath(`/${store.slug}`);
   revalidatePath(`/${store.slug}`, "layout");
+  // Catalog/settings changed → drop dashboard path caches for next fetch
+  // (client tab hops still use staleTimes until mutation triggers refresh).
+  revalidateDashboard(store.id);
 }
 
 export function revalidateStorefrontProduct(

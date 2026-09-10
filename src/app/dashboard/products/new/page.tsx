@@ -22,7 +22,7 @@ export default async function NewProductPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <PageHeader title={t("addProduct")} description={t("addProductDesc")} />
-      <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200">
+      <div className="rounded-[1.35rem] bg-white p-6 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
         <ProductForm storeId={store.id} categories={categories} />
       </div>
     </div>

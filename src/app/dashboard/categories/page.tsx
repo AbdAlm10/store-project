@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServices } from "@/infrastructure/container";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { EmptyState } from "@/components/ui/feedback";
 import { CategoryManager } from "@/features/categories/category-manager";
 import { Button } from "@/components/ui/button";
 import { getRequestLocale } from "@/i18n/get-locale";
@@ -25,12 +24,6 @@ export default async function CategoriesPage() {
   return (
     <div className="space-y-6">
       <PageHeader title={t("categories")} description={t("categoriesPageDesc")} />
-      {categories.length === 0 ? (
-        <EmptyState
-          title={t("noCategoriesYet")}
-          description={t("noCategoriesHint")}
-        />
-      ) : null}
       <CategoryManager storeId={store.id} initial={categories} />
       <Link href="/dashboard/products/new">
         <Button variant="outline">{t("addProductToCategory")}</Button>

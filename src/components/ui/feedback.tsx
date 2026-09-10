@@ -34,12 +34,14 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/60 px-6 py-16 text-center">
-      <h3 className="font-[family-name:var(--font-display)] text-xl text-slate-900">
+    <div className="flex flex-col items-center justify-center rounded-[1.35rem] bg-white px-6 py-16 text-center shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
+      <h3 className="text-lg font-semibold tracking-tight text-slate-900">
         {title}
       </h3>
       {description ? (
-        <p className="mt-2 max-w-md text-sm text-slate-600">{description}</p>
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-400">
+          {description}
+        </p>
       ) : null}
       {action ? <div className="mt-6">{action}</div> : null}
     </div>

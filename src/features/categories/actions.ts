@@ -2,6 +2,7 @@
 
 import { getServices } from "@/infrastructure/container";
 import { toUserMessage } from "@/domain/errors";
+import type { Category } from "@/domain/types/entities";
 import { revalidateStorefrontStore } from "@/lib/revalidate-storefront";
 
 async function storeRef(storeId: string) {
@@ -11,12 +12,12 @@ async function storeRef(storeId: string) {
 export async function createCategoryAction(
   storeId: string,
   input: unknown,
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<{ ok: true; category: Category } | { ok: false; error: string }> {
   try {
     const store = await storeRef(storeId);
-    await getServices().categories.create(storeId, input);
+    const category = await getServices().categories.create(storeId, input);
     revalidateStorefrontStore(store);
-    return { ok: true };
+    return { ok: true, category };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };
   }
@@ -26,12 +27,16 @@ export async function updateCategoryAction(
   storeId: string,
   categoryId: string,
   input: unknown,
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<{ ok: true; category: Category } | { ok: false; error: string }> {
   try {
     const store = await storeRef(storeId);
-    await getServices().categories.updateOptions(storeId, categoryId, input);
+    const category = await getServices().categories.updateOptions(
+      storeId,
+      categoryId,
+      input,
+    );
     revalidateStorefrontStore(store);
-    return { ok: true };
+    return { ok: true, category };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };
   }

@@ -1,6 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Check, Circle } from "lucide-react";
+import {
+  Check,
+  Circle,
+  Eye,
+  Palette,
+  Plus,
+  Share2,
+  Store,
+  Tags,
+} from "lucide-react";
 import { CopyStoreUrl } from "@/features/dashboard/copy-store-url";
 import { getServices } from "@/infrastructure/container";
 import { storeUrl } from "@/lib/social/sharing";
@@ -10,6 +19,11 @@ import {
   QuickAction,
   StatusBadge,
 } from "@/components/dashboard/page-header";
+import {
+  DashboardCard,
+  SectionTitle,
+} from "@/components/dashboard/ui";
+import { LiveMetrics } from "@/components/dashboard/live-metrics";
 import { computeStoreHealth } from "@/domain/rules/store-health";
 import { EmptyState } from "@/components/ui/feedback";
 import { getRequestLocale } from "@/i18n/get-locale";
@@ -40,17 +54,10 @@ export default async function DashboardHomePage() {
     categoryCount: categories.length,
   });
 
-  const cards = [
-    { label: t("productsCount"), value: products.total },
-    { label: t("storeViews7d"), value: stats.storeViews },
-    { label: t("productViews7d"), value: stats.productViews },
-    { label: t("whatsappClicks7d"), value: stats.whatsappClicks },
-  ];
-
   const isNew = products.total === 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       <PageHeader
         title={store.name}
         description={t("dashboardDesc")}
@@ -68,12 +75,12 @@ export default async function DashboardHomePage() {
 
       <div className="flex flex-wrap items-center gap-2">
         <StatusBadge status={store.status} />
-        <span className="text-sm text-slate-500">/{store.slug}</span>
+        <span className="text-sm text-slate-400">/{store.slug}</span>
       </div>
 
-      <div className="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-        <p className="text-sm text-slate-500">{t("shareStore")}</p>
-        <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <DashboardCard>
+        <p className="text-sm text-slate-400">{t("shareStore")}</p>
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <code className="break-all text-sm font-medium text-slate-900">
             {storeUrl(store.slug)}
           </code>
@@ -86,7 +93,7 @@ export default async function DashboardHomePage() {
             </Link>
           </div>
         </div>
-      </div>
+      </DashboardCard>
 
       {isNew ? (
         <EmptyState
@@ -100,143 +107,160 @@ export default async function DashboardHomePage() {
         />
       ) : null}
 
+      <LiveMetrics
+        storeId={store.id}
+        rangeDays={7}
+        initial={stats}
+        productsCount={products.total}
+        productsLabel={t("productsCount")}
+        productsHint="7d"
+        cards={[
+          {
+            key: "storeViews",
+            label: t("storeViews7d"),
+            icon: "eye",
+            hint: t("storeViews"),
+          },
+          {
+            key: "productViews",
+            label: t("productViews7d"),
+            icon: "share",
+          },
+          {
+            key: "whatsappClicks",
+            label: t("whatsappClicks7d"),
+            icon: "message",
+          },
+        ]}
+      />
+
       <section>
-        <h2 className="text-lg font-semibold text-slate-900">
-          {t("quickActions")}
-        </h2>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <SectionTitle title={t("quickActions")} />
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           <QuickAction
             href="/dashboard/products/new"
             label={t("qaAddProduct")}
             description={t("qaAddProductDesc")}
+            icon={Plus}
           />
           <QuickAction
             href="/dashboard/store"
             label={t("qaEditStore")}
             description={t("qaEditStoreDesc")}
+            icon={Store}
           />
           <QuickAction
             href="/dashboard/store-design"
             label={t("qaCustomize")}
             description={t("qaCustomizeDesc")}
+            icon={Palette}
           />
           <QuickAction
             href="/dashboard/categories"
             label={t("qaCategories")}
             description={t("qaCategoriesDesc")}
+            icon={Tags}
           />
           <QuickAction
             href="/dashboard/analytics"
             label={t("qaAnalytics")}
             description={t("qaAnalyticsDesc")}
+            icon={Eye}
           />
           <QuickAction
             href={`/${store.slug}`}
             label={t("qaPreview")}
             description={t("qaPreviewDesc")}
+            icon={Share2}
           />
         </div>
       </section>
 
-      <section className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+      <DashboardCard>
         <div className="flex items-end justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className="text-base font-semibold text-slate-900">
               {t("storeSetup")}
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-400">
               {t("healthComplete", {
                 completed: health.completed,
                 total: health.total,
               })}
             </p>
           </div>
-          <p className="font-[family-name:var(--font-display)] text-2xl text-slate-900">
+          <p className="text-2xl font-semibold text-slate-900">
             {health.percent}%
           </p>
         </div>
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
           <div
-            className="h-full rounded-full bg-teal-600 transition-all"
+            className="h-full rounded-full bg-teal-400 transition-all"
             style={{ width: `${health.percent}%` }}
           />
         </div>
-        <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+        <ul className="mt-4 grid gap-1 sm:grid-cols-2">
           {health.items.map((item) => (
             <li key={item.id}>
               <Link
                 href={item.href}
-                className="flex items-center gap-2 rounded-xl px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+                className="flex items-center gap-2 rounded-xl px-2 py-2 text-sm text-slate-600 hover:bg-slate-50"
               >
                 {item.done ? (
                   <Check className="h-4 w-4 text-teal-600" aria-hidden />
                 ) : (
                   <Circle className="h-4 w-4 text-slate-300" aria-hidden />
                 )}
-                <span className={item.done ? "text-slate-500" : "font-medium"}>
+                <span className={item.done ? "text-slate-400" : "font-medium text-slate-800"}>
                   {t(item.labelKey)}
                 </span>
               </Link>
             </li>
           ))}
         </ul>
-      </section>
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map((card) => (
-          <div
-            key={card.label}
-            className="rounded-2xl bg-white p-4 ring-1 ring-slate-200"
-          >
-            <p className="text-sm text-slate-500">{card.label}</p>
-            <p className="mt-2 font-[family-name:var(--font-display)] text-3xl text-slate-900">
-              {card.value}
-            </p>
-          </div>
-        ))}
-      </div>
+      </DashboardCard>
 
       <section>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">
-            {t("recentProducts")}
-          </h2>
-          <Link
-            href="/dashboard/products"
-            className="text-sm font-medium text-teal-700"
-          >
-            {t("viewAll")}
-          </Link>
-        </div>
+        <SectionTitle
+          title={t("recentProducts")}
+          action={
+            <Link
+              href="/dashboard/products"
+              className="text-sm font-medium text-teal-700 hover:underline"
+            >
+              {t("viewAll")}
+            </Link>
+          }
+        />
         {products.items.length === 0 ? (
-          <div className="mt-3">
-            <EmptyState
-              title={t("emptyProducts")}
-              description={t("emptyProductsHint")}
-              action={
-                <Link href="/dashboard/products/new">
-                  <Button>{t("addProduct")}</Button>
-                </Link>
-              }
-            />
-          </div>
+          <EmptyState
+            title={t("emptyProducts")}
+            description={t("emptyProductsHint")}
+            action={
+              <Link href="/dashboard/products/new">
+                <Button>{t("addProduct")}</Button>
+              </Link>
+            }
+          />
         ) : (
-          <ul className="mt-3 divide-y divide-slate-200 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200">
-            {products.items.map((product) => (
-              <li
-                key={product.id}
-                className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
-              >
-                <Link
-                  href={`/dashboard/products/${product.id}`}
-                  className="font-medium text-slate-900 hover:underline"
+          <DashboardCard padding="none">
+            <ul className="divide-y divide-slate-100">
+              {products.items.map((product) => (
+                <li
+                  key={product.id}
+                  className="flex items-center justify-between gap-3 px-5 py-3.5 text-sm"
                 >
-                  {product.name}
-                </Link>
-                <StatusBadge status={product.status} />
-              </li>
-            ))}
-          </ul>
+                  <Link
+                    href={`/dashboard/products/${product.id}`}
+                    className="font-medium text-slate-900 hover:underline"
+                  >
+                    {product.name}
+                  </Link>
+                  <StatusBadge status={product.status} />
+                </li>
+              ))}
+            </ul>
+          </DashboardCard>
         )}
       </section>
     </div>

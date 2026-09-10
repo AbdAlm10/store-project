@@ -1,7 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import type {
   Category,
   CategoryOptionDef,
@@ -30,16 +29,20 @@ export function CategoryManager({
   initial: Category[];
 }) {
   const { t } = useI18n();
-  const router = useRouter();
+  const [categories, setCategories] = useState(initial);
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  useEffect(() => {
+    setCategories(initial);
+  }, [initial]);
+
   return (
     <div className="space-y-4">
       <form
-        className="flex flex-col gap-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200 sm:flex-row"
+        className="flex flex-col gap-3 rounded-[1.35rem] bg-white p-4 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)] sm:flex-row"
         onSubmit={(event) => {
           event.preventDefault();
           setError(null);
@@ -53,7 +56,7 @@ export function CategoryManager({
               return;
             }
             setName("");
-            router.refresh();
+            setCategories((list) => [...list, result.category]);
           });
         }}
       >
@@ -70,10 +73,10 @@ export function CategoryManager({
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       <ul className="space-y-3">
-        {initial.map((category) => (
+        {categories.map((category) => (
           <li
             key={category.id}
-            className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200"
+            className="overflow-hidden rounded-[1.35rem] bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]"
           >
             <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
               <div>
@@ -101,8 +104,20 @@ export function CategoryManager({
                   onClick={() =>
                     startTransition(async () => {
                       if (!confirm(t("deleteCategoryConfirm"))) return;
-                      await deleteCategoryAction(storeId, category.id);
-                      router.refresh();
+                      const result = await deleteCategoryAction(
+                        storeId,
+                        category.id,
+                      );
+                      if (!result.ok) {
+                        setError(result.error);
+                        return;
+                      }
+                      setExpandedId((id) =>
+                        id === category.id ? null : id,
+                      );
+                      setCategories((list) =>
+                        list.filter((item) => item.id !== category.id),
+                      );
                     })
                   }
                 >
@@ -112,18 +127,23 @@ export function CategoryManager({
             </div>
             {expandedId === category.id ? (
               <CategoryOptionsEditor
+                key={`${category.id}-${category.updatedAt}`}
                 storeId={storeId}
                 category={category}
                 pending={pending}
                 startTransition={startTransition}
-                onSaved={() => router.refresh()}
+                onSaved={(next) => {
+                  setCategories((list) =>
+                    list.map((item) => (item.id === next.id ? next : item)),
+                  );
+                }}
                 onError={setError}
               />
             ) : null}
           </li>
         ))}
-        {initial.length === 0 ? (
-          <li className="rounded-2xl bg-white px-4 py-8 text-center text-slate-500 ring-1 ring-slate-200">
+        {categories.length === 0 ? (
+          <li className="rounded-[1.35rem] bg-white px-4 py-8 text-center text-slate-400 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
             {t("noCategoriesYet")}
           </li>
         ) : null}
@@ -144,7 +164,7 @@ function CategoryOptionsEditor({
   category: Category;
   pending: boolean;
   startTransition: (fn: () => void) => void;
-  onSaved: () => void;
+  onSaved: (category: Category) => void;
   onError: (message: string | null) => void;
 }) {
   const { t } = useI18n();
@@ -386,7 +406,7 @@ function CategoryOptionsEditor({
               onError(result.error);
               return;
             }
-            onSaved();
+            onSaved(result.category);
           });
         }}
       >
