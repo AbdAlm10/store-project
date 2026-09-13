@@ -57,7 +57,7 @@ export function NavigationProgress() {
       aria-label="جاري التحميل"
       aria-busy="true"
     >
-      <div className="ys-nav-progress h-full w-1/3 rounded-full bg-teal-600" />
+      <div className="ys-nav-progress h-full w-1/3 rounded-full bg-brand-600" />
     </div>
   );
 }

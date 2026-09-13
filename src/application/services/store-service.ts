@@ -78,7 +78,7 @@ export class StoreService {
       facebook: null,
       telegram: null,
       tiktok: null,
-      primaryColor: "#0D9488",
+      primaryColor: "#58A379",
       themeId: "clean",
       // Omit until DB has theme_overrides (migration 00007). Default lives in SQL.
       themeOverrides: null,

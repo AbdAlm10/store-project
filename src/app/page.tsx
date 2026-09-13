@@ -16,6 +16,7 @@ import {
   MarketingFooter,
   MarketingHeader,
 } from "@/components/marketing/shell";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator, type MessageKey } from "@/i18n/messages";
 
@@ -71,13 +72,15 @@ export default async function HomePage() {
           <div className="ys-noise pointer-events-none absolute inset-0" />
           <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pb-20 pt-16 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-end lg:pt-24">
             <div className="animate-ys-rise">
-              <p className="font-[family-name:var(--font-display)] text-5xl leading-[0.95] tracking-tight sm:text-6xl lg:text-7xl">
-                {t("brand")}
-              </p>
-              <h1 className="mt-5 max-w-xl text-2xl font-medium leading-snug text-slate-200 sm:text-3xl">
+              <BrandLogo
+                variant="horizontal-white"
+                className="h-14 w-auto sm:h-16"
+                priority
+              />
+              <h1 className="mt-6 max-w-xl text-2xl font-medium leading-snug text-sand-100 sm:text-3xl">
                 {t("heroHeadline")}
               </h1>
-              <p className="mt-4 max-w-lg text-base text-slate-400 sm:text-lg">
+              <p className="mt-4 max-w-lg text-base text-sand-200/80 sm:text-lg">
                 {t("tagline")} {t("heroSupport")}
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
@@ -99,7 +102,7 @@ export default async function HomePage() {
               </div>
             </div>
             <div className="animate-ys-rise-delay relative">
-              <div className="animate-ys-float overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-900/60 shadow-[var(--shadow)] backdrop-blur">
+              <div className="animate-ys-float overflow-hidden rounded-4xl border border-white/10 bg-slate-900/60 shadow-[var(--shadow)] backdrop-blur">
                 <Image
                   src="https://placehold.co/1200x900/0f766e/ecfdf5/png?text=Your+storefront"
                   alt={t("brand")}
@@ -133,7 +136,7 @@ export default async function HomePage() {
                   key={step.titleKey}
                   className="rounded-2xl bg-[var(--background)] p-6"
                 >
-                  <span className="text-sm font-semibold text-teal-700">
+                  <span className="text-sm font-semibold text-brand-700">
                     {t("stepLabel", { n: index + 1 })}
                   </span>
                   <h3 className="mt-3 text-xl font-semibold text-slate-900">
@@ -163,7 +166,7 @@ export default async function HomePage() {
                 </Button>
               </Link>
             </div>
-            <div className="overflow-hidden rounded-[1.5rem] shadow-[var(--shadow)] ring-1 ring-slate-200">
+            <div className="overflow-hidden rounded-4xl shadow-[var(--shadow)] ring-1 ring-slate-200">
               <Image
                 src="https://placehold.co/1200x800/0f172a/e2e8f0/png?text=Al+Noor+demo"
                 alt={t("demoTitle")}
@@ -187,7 +190,7 @@ export default async function HomePage() {
                   key={feature.titleKey}
                   className="rounded-2xl border border-white/10 bg-white/5 p-6"
                 >
-                  <feature.icon className="h-5 w-5 text-teal-300" />
+                  <feature.icon className="h-5 w-5 text-brand-300" />
                   <h3 className="mt-4 text-lg font-semibold">
                     {t(feature.titleKey)}
                   </h3>
@@ -268,17 +271,17 @@ export default async function HomePage() {
                   </p>
                   <ul className="mt-6 space-y-2 text-sm">
                     <li className="flex gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-teal-500" />
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" />
                       {t("upToProducts", { count: plan.limits.maxProducts })}
                     </li>
                     <li className="flex gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-teal-500" />
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" />
                       {plan.limits.advancedAnalytics
                         ? t("advancedAnalytics")
                         : t("basicAnalytics")}
                     </li>
                     <li className="flex gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-teal-500" />
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" />
                       {plan.limits.customDomain
                         ? t("customDomainReady")
                         : t("platformUrl")}

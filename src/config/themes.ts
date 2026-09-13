@@ -35,20 +35,20 @@ export type ThemeColorKey = (typeof THEME_TOKEN_KEYS)[number];
 
 /** Single base look — merchants customize via themeOverrides, not preset themes. */
 export const DEFAULT_THEME_TOKENS: ThemeTokens = {
-  background: "#F4F7FB",
+  background: "#F7F4EF",
   surface: "#FFFFFF",
   card: "#FFFFFF",
-  text: "#0B1220",
-  muted: "#64748B",
-  border: "#E2E8F0",
-  accent: "#0F766E",
-  headerFrom: "#0F172A",
-  headerTo: "#0F766E",
+  text: "#1C241E",
+  muted: "#6B746E",
+  border: "#EBE0C4",
+  accent: "#58A379",
+  headerFrom: "#163024",
+  headerTo: "#3A7A56",
   navBg: "#FFFFFF",
   buttonText: "#FFFFFF",
-  radius: "1.25rem",
-  fontDisplay: "var(--font-arabic), ui-sans-serif",
-  fontBody: "var(--font-arabic), ui-sans-serif",
+  radius: "1.125rem",
+  fontDisplay: "var(--font-arabic), 'IBM Plex Sans Arabic', ui-sans-serif",
+  fontBody: "var(--font-arabic), 'IBM Plex Sans Arabic', ui-sans-serif",
 };
 
 export type ThemeDefinition = {

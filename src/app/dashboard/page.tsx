@@ -195,7 +195,7 @@ export default async function DashboardHomePage() {
         </div>
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
           <div
-            className="h-full rounded-full bg-teal-400 transition-all"
+            className="h-full rounded-full bg-brand-400 transition-all"
             style={{ width: `${health.percent}%` }}
           />
         </div>
@@ -207,7 +207,7 @@ export default async function DashboardHomePage() {
                 className="flex items-center gap-2 rounded-xl px-2 py-2 text-sm text-slate-600 hover:bg-slate-50"
               >
                 {item.done ? (
-                  <Check className="h-4 w-4 text-teal-600" aria-hidden />
+                  <Check className="h-4 w-4 text-brand-600" aria-hidden />
                 ) : (
                   <Circle className="h-4 w-4 text-slate-300" aria-hidden />
                 )}
@@ -226,7 +226,7 @@ export default async function DashboardHomePage() {
           action={
             <Link
               href="/dashboard/products"
-              className="text-sm font-medium text-teal-700 hover:underline"
+              className="text-sm font-medium text-brand-700 hover:underline"
             >
               {t("viewAll")}
             </Link>

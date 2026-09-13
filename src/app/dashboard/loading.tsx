@@ -7,11 +7,11 @@ export default function DashboardLoading() {
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={index}
-            className="h-28 rounded-[1.35rem] bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.12)]"
+            className="h-28 rounded-3xl bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.12)]"
           />
         ))}
       </div>
-      <div className="h-48 rounded-[1.35rem] bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.12)]" />
+      <div className="h-48 rounded-3xl bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.12)]" />
     </div>
   );
 }

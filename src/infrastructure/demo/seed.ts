@@ -380,7 +380,7 @@ export const demoSeed = {
       facebook: "https://facebook.com/alnoor",
       telegram: "https://t.me/alnoor",
       tiktok: null,
-      primaryColor: "#0D9488",
+      primaryColor: "#58A379",
       themeId: "clean",
       themeOverrides: null,
       defaultLocale: "ar",

@@ -51,7 +51,7 @@ export function mapStore(row: Json): Store {
     facebook: (row.facebook as string | null) ?? null,
     telegram: (row.telegram as string | null) ?? null,
     tiktok: (row.tiktok as string | null) ?? null,
-    primaryColor: String(row.primary_color ?? "#0D9488"),
+    primaryColor: String(row.primary_color ?? "#58A379"),
     themeId: row.theme_id as Store["themeId"],
     themeOverrides:
       row.theme_overrides && typeof row.theme_overrides === "object"

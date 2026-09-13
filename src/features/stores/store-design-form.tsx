@@ -161,7 +161,7 @@ export function StoreDesignForm({ store }: { store: Store }) {
         </div>
       </section>
 
-      <section className="rounded-[1.35rem] bg-white p-6 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
+      <section className="rounded-3xl bg-white p-6 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">
@@ -200,7 +200,7 @@ export function StoreDesignForm({ store }: { store: Store }) {
         </div>
       </section>
 
-      <section className="rounded-[1.35rem] bg-white p-6 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
+      <section className="rounded-3xl bg-white p-6 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
         <h2 className="text-lg font-semibold text-slate-900">{t("branding")}</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
@@ -252,7 +252,7 @@ export function StoreDesignForm({ store }: { store: Store }) {
         </p>
       ) : null}
       {saved ? (
-        <p className="text-sm text-teal-700" role="status">
+        <p className="text-sm text-brand-700" role="status">
           {t("designSaved")}
         </p>
       ) : null}

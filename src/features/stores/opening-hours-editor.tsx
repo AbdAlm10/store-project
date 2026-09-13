@@ -82,7 +82,7 @@ export function OpeningHoursEditor({
           <button
             type="button"
             onClick={applyWeekdays}
-            className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-teal-700 ring-1 ring-teal-200 hover:bg-teal-50"
+            className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
           >
             {t("hoursCopyMonFri")}
           </button>

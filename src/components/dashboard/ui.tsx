@@ -21,7 +21,7 @@ export function DashboardCard({
   return (
     <div
       className={cn(
-        "rounded-[1.35rem] bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]",
+        "rounded-3xl bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]",
         pads[padding],
         className,
       )}
@@ -94,7 +94,7 @@ export function StatCard({
 
 export function SoftTrend({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-teal-50 px-2 py-0.5 text-xs font-semibold text-teal-700">
+    <span className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700">
       {children}
     </span>
   );
@@ -115,8 +115,8 @@ export function PillLink({
       className={cn(
         "rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors",
         active
-          ? "bg-teal-300 text-slate-900"
-          : "bg-white text-slate-500 shadow-[0_4px_16px_-12px_rgba(15,23,42,0.35)] hover:text-slate-800",
+          ? "bg-sand-300 text-brand-900"
+          : "bg-white text-slate-500 shadow-[0_4px_16px_-12px_rgba(58,122,86,0.25)] hover:text-brand-800",
       )}
     >
       {children}
@@ -138,10 +138,10 @@ export function ActionTile({
   return (
     <Link
       href={href}
-      className="group flex gap-3 rounded-[1.25rem] bg-white p-4 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_34px_-20px_rgba(15,23,42,0.28)]"
+      className="group flex gap-3 rounded-2xl bg-white p-4 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_34px_-20px_rgba(15,23,42,0.28)]"
     >
       {Icon ? (
-        <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-slate-500 transition group-hover:bg-teal-50 group-hover:text-teal-700">
+        <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-slate-500 transition group-hover:bg-brand-50 group-hover:text-brand-700">
           <Icon className="h-5 w-5" strokeWidth={1.75} />
         </span>
       ) : null}

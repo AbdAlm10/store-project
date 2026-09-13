@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServices } from "@/infrastructure/container";
-import { appConfig } from "@/config/app";
 import { logoutAction } from "@/features/auth/actions";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { MerchantNav } from "@/components/dashboard/merchant-nav";
 import { DashboardPrefetch } from "@/components/dashboard/dashboard-prefetch";
 import { getRequestLocale } from "@/i18n/get-locale";
@@ -29,26 +29,27 @@ export default async function DashboardLayout({
   const activeStore = stores[0];
 
   return (
-    <div className="min-h-full bg-[#eef1f4]">
+    <div className="min-h-full bg-[#f7f4ef]">
       <DashboardPrefetch />
       <div className="mx-auto flex min-h-full max-w-[1400px]">
-        <aside className="hidden w-[260px] shrink-0 border-e border-slate-200/70 bg-[#f4f5f7] lg:block">
+        <aside className="hidden w-[260px] shrink-0 border-e border-sand-200/80 bg-[#f3f0ea] lg:block">
           <div className="sticky top-0 flex h-screen flex-col px-3 py-5">
             <Link
               href="/dashboard"
-              className="mb-6 px-3 text-lg font-semibold tracking-tight text-slate-900"
+              className="mb-6 flex items-center px-2"
+              aria-label="دكّان"
             >
-              {appConfig.name}
+              <BrandLogo variant="horizontal" className="h-14 w-auto max-w-full" priority />
             </Link>
             <div className="ys-scrollbar-none min-h-0 flex-1 overflow-y-auto">
               <MerchantNav storeName={activeStore?.name} locale={locale} embedded />
             </div>
-            <div className="mt-4 space-y-2 border-t border-slate-200/80 px-2 pt-4">
+            <div className="mt-4 space-y-2 border-t border-sand-200/80 px-2 pt-4">
               {activeStore ? (
                 <Link
                   href={`/${activeStore.slug}`}
                   target="_blank"
-                  className="block rounded-2xl px-3 py-2 text-sm font-medium text-slate-500 transition hover:bg-white hover:text-slate-900"
+                  className="block rounded-2xl px-3 py-2 text-sm font-medium text-slate-500 transition hover:bg-white hover:text-brand-900"
                 >
                   {t("viewStore")}
                 </Link>
@@ -68,20 +69,17 @@ export default async function DashboardLayout({
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 border-b border-slate-200/60 bg-[#eef1f4]/90 px-4 py-3 backdrop-blur sm:px-6 lg:hidden">
+          <header className="sticky top-0 z-20 border-b border-sand-200/70 bg-[#f7f4ef]/90 px-4 py-3 backdrop-blur sm:px-6 lg:hidden">
             <div className="flex items-center justify-between gap-3">
-              <Link
-                href="/dashboard"
-                className="text-base font-semibold text-slate-900"
-              >
-                {appConfig.name}
+              <Link href="/dashboard" aria-label="دكّان">
+                <BrandLogo variant="icon" className="h-12 w-12" priority />
               </Link>
               <div className="flex items-center gap-2">
                 {activeStore ? (
                   <Link
                     href={`/${activeStore.slug}`}
                     target="_blank"
-                    className="text-sm font-medium text-teal-700"
+                    className="text-sm font-medium text-brand-700"
                   >
                     {t("viewStore")}
                   </Link>

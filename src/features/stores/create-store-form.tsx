@@ -87,7 +87,7 @@ export function CreateStoreForm({
       <div>
         <Label htmlFor="slug">{t("storeUrl")}</Label>
         <div className="flex items-center gap-2">
-          <span className="shrink-0 text-sm text-slate-500">yourstore.app/</span>
+          <span className="shrink-0 text-sm text-slate-500">dukkan.app/</span>
           <Input
             id="slug"
             name="slug"

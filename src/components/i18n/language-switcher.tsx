@@ -29,7 +29,7 @@ export function LanguageSwitcher({
       )}
       <select
         className={cn(
-          "h-9 rounded-xl border border-slate-300 bg-white px-2 text-sm font-medium text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600",
+          "h-9 rounded-xl border border-slate-300 bg-white px-2 text-sm font-medium text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600",
           compact && "border-white/20 bg-white/10 text-white",
         )}
         value={locale}

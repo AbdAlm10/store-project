@@ -40,7 +40,7 @@ export function ColorSwatchButton({
       style={{
         background: hex,
         boxShadow: selected
-          ? `0 0 0 2px var(--store-bg, #fff), 0 0 0 4px var(--store-accent, #0d9488)`
+          ? `0 0 0 2px var(--store-bg, #fff), 0 0 0 4px var(--store-accent, #58a379)`
           : `inset 0 0 0 1px rgb(0 0 0 / 18%)`,
       }}
     >

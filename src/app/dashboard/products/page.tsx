@@ -191,7 +191,7 @@ export default async function ProductsPage({ searchParams }: Props) {
                                 {product.name}
                               </Link>
                               {product.featured ? (
-                                <p className="text-xs text-teal-700">
+                                <p className="text-xs text-brand-700">
                                   {t("featured")}
                                 </p>
                               ) : null}

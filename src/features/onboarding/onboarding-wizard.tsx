@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { appConfig } from "@/config/app";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { CreateStoreForm } from "@/features/stores/create-store-form";
 import { useI18n } from "@/i18n/provider";
 
@@ -20,11 +20,8 @@ export function OnboardingWizard() {
   return (
     <div className="mx-auto flex min-h-full max-w-xl flex-col justify-center px-4 py-12">
       <div className="flex items-center justify-between gap-3">
-        <Link
-          href="/"
-          className="font-[family-name:var(--font-display)] text-2xl text-slate-900"
-        >
-          {appConfig.name}
+        <Link href="/" aria-label={t("brand")}>
+          <BrandLogo variant="horizontal" className="h-10 w-auto" priority />
         </Link>
       </div>
 
@@ -33,7 +30,7 @@ export function OnboardingWizard() {
           <li
             key={key}
             className={`h-1.5 flex-1 rounded-full ${
-              index + 1 <= step ? "bg-teal-600" : "bg-slate-200"
+              index + 1 <= step ? "bg-brand-600" : "bg-slate-200"
             }`}
             aria-current={index + 1 === step ? "step" : undefined}
           />

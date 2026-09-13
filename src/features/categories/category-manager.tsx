@@ -42,7 +42,7 @@ export function CategoryManager({
   return (
     <div className="space-y-4">
       <form
-        className="flex flex-col gap-3 rounded-[1.35rem] bg-white p-4 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)] sm:flex-row"
+        className="flex flex-col gap-3 rounded-3xl bg-white p-4 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)] sm:flex-row"
         onSubmit={(event) => {
           event.preventDefault();
           setError(null);
@@ -76,7 +76,7 @@ export function CategoryManager({
         {categories.map((category) => (
           <li
             key={category.id}
-            className="overflow-hidden rounded-[1.35rem] bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]"
+            className="overflow-hidden rounded-3xl bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]"
           >
             <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
               <div>
@@ -88,7 +88,7 @@ export function CategoryManager({
               <div className="flex gap-2">
                 <button
                   type="button"
-                  className="text-sm font-semibold text-teal-700"
+                  className="text-sm font-semibold text-brand-700"
                   onClick={() =>
                     setExpandedId((id) =>
                       id === category.id ? null : category.id,
@@ -143,7 +143,7 @@ export function CategoryManager({
           </li>
         ))}
         {categories.length === 0 ? (
-          <li className="rounded-[1.35rem] bg-white px-4 py-8 text-center text-slate-400 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
+          <li className="rounded-3xl bg-white px-4 py-8 text-center text-slate-400 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
             {t("noCategoriesYet")}
           </li>
         ) : null}
@@ -226,7 +226,7 @@ function CategoryOptionsEditor({
         ))}
         <button
           type="button"
-          className="rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-800 ring-1 ring-teal-200"
+          className="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-800 ring-1 ring-brand-200"
           onClick={() => setOptions((list) => [...list, newOptionDef("")])}
         >
           + {t("customOption")}

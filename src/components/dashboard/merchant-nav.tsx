@@ -96,18 +96,7 @@ export function MerchantNav({
 
   const navBody = (
     <>
-      {storeName ? (
-        <div className={cn("mb-4 px-3", embedded ? "pt-1" : "pt-2")}>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-slate-400">
-            {t("activeStore")}
-          </p>
-          <p className="mt-1 truncate text-sm font-semibold text-slate-900">
-            {storeName}
-          </p>
-        </div>
-      ) : null}
-
-      <div className="space-y-5">
+      <div className="space-y-3 mt-5">
         {groups.map((group) => (
           <div key={group.titleKey}>
             <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
@@ -132,9 +121,9 @@ export function MerchantNav({
                       className={cn(
                         "group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors",
                         active
-                          ? "bg-teal-300 text-slate-900 shadow-sm shadow-teal-900/5"
+                          ? "bg-brand-300 text-slate-900 shadow-sm shadow-brand-900/5"
                           : "text-slate-400 hover:bg-white/80 hover:text-slate-700",
-                        loading && "bg-white text-teal-700 ring-1 ring-teal-200",
+                        loading && "bg-white text-brand-700 ring-1 ring-brand-200",
                       )}
                       aria-current={active ? "page" : undefined}
                       aria-busy={loading || undefined}
@@ -143,13 +132,13 @@ export function MerchantNav({
                         className={cn(
                           "h-[18px] w-[18px] shrink-0",
                           active ? "text-slate-900" : "text-slate-400",
-                          loading && "text-teal-600",
+                          loading && "text-brand-600",
                         )}
                         strokeWidth={1.75}
                       />
                       <span className="flex-1 truncate">{t(item.labelKey)}</span>
                       {loading ? (
-                        <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-teal-600" />
+                        <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-brand-600" />
                       ) : active ? (
                         <ChevronRight className="h-4 w-4 shrink-0 text-slate-800 rtl:rotate-180" />
                       ) : null}
@@ -189,7 +178,7 @@ export function MerchantNav({
       <nav
         id="merchant-nav"
         className={cn(
-          "mt-3 rounded-[1.35rem] bg-white/80 p-3 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]",
+          "mt-3 rounded-3xl bg-white/80 p-3 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]",
           open ? "block" : "hidden",
         )}
       >

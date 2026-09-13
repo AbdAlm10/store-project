@@ -16,7 +16,7 @@ const STATUS_KEY: Record<string, MessageKey> = {
 export function StatusBadge({ status }: { status: string }) {
   const { t } = useI18n();
   const styles: Record<string, string> = {
-    published: "bg-teal-50 text-teal-800",
+    published: "bg-brand-50 text-brand-800",
     draft: "bg-slate-100 text-slate-600",
     hidden: "bg-amber-50 text-amber-800",
     archived: "bg-slate-100 text-slate-500",

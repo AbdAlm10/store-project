@@ -28,7 +28,7 @@ export function ProductActions({
     <div className="flex flex-wrap gap-2 text-xs font-semibold">
       <Link
         href={`/dashboard/products/${productId}`}
-        className="text-teal-700 hover:underline"
+        className="text-brand-700 hover:underline"
       >
         {t("edit")}
       </Link>

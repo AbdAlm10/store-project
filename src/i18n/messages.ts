@@ -1,7 +1,7 @@
 import type { Locale } from "@/i18n/config";
 
 const en = {
-  brand: "YourStore",
+  brand: "دكّان",
   tagline: "All your store products in one link.",
   ctaCreate: "Create your store",
   ctaDemo: "View demo store",
@@ -367,7 +367,7 @@ const en = {
   faqTitle: "FAQ",
   faq1Q: "Is this Shopify?",
   faq1A:
-    "No. YourStore is a simpler catalog and social-selling storefront for merchants who sell through WhatsApp and social media.",
+    "No. Dukkan is a simpler catalog and social-selling storefront for merchants who sell through WhatsApp and social media.",
   faq2Q: "Do customers need an account?",
   faq2A:
     "No. Visitors browse freely and can order via WhatsApp without signing up.",
@@ -451,7 +451,7 @@ const en = {
 export type MessageKey = keyof typeof en;
 
 const ar: Record<MessageKey, string> = {
-  brand: "YourStore",
+  brand: "دكّان",
   tagline: "كل منتجات متجرك في رابط واحد.",
   ctaCreate: "أنشئ متجرك",
   ctaDemo: "شاهد متجر تجريبي",
@@ -805,7 +805,7 @@ const ar: Record<MessageKey, string> = {
   faqTitle: "الأسئلة الشائعة",
   faq1Q: "هل هذا Shopify؟",
   faq1A:
-    "لا. YourStore كتالوج أبسط للبيع عبر التواصل الاجتماعي وواتساب.",
+    "لا. دكّان كتالوج أبسط للبيع عبر التواصل الاجتماعي وواتساب.",
   faq2Q: "هل يحتاج العملاء حسابًا؟",
   faq2A: "لا. يتصفح الزوار بحرية ويمكنهم الطلب عبر واتساب دون تسجيل.",
   faq3Q: "هل يمكنني استخدام نطاقي لاحقًا؟",
@@ -883,7 +883,7 @@ const ar: Record<MessageKey, string> = {
 };
 
 const tr: Record<MessageKey, string> = {
-  brand: "YourStore",
+  brand: "دكّان",
   tagline: "Tüm mağaza ürünleriniz tek bir bağlantıda.",
   ctaCreate: "Mağazanı oluştur",
   ctaDemo: "Demo mağazayı gör",
@@ -1248,7 +1248,7 @@ const tr: Record<MessageKey, string> = {
   faqTitle: "SSS",
   faq1Q: "Bu Shopify mı?",
   faq1A:
-    "Hayır. YourStore; WhatsApp ve sosyal medya üzerinden satanlar için daha basit bir katalog vitrinidir.",
+    "Hayır. Dukkan; WhatsApp ve sosyal medya üzerinden satanlar için daha basit bir katalog vitrinidir.",
   faq2Q: "Müşterilerin hesap açması gerekir mi?",
   faq2A:
     "Hayır. Ziyaretçiler serbestçe gezer ve kayıtsız WhatsApp ile sipariş verebilir.",

@@ -21,7 +21,7 @@ const baseStore: Store = {
   facebook: null,
   telegram: null,
   tiktok: null,
-  primaryColor: "#0D9488",
+  primaryColor: "#58A379",
   themeId: "clean",
   themeOverrides: null,
   defaultLocale: "ar",

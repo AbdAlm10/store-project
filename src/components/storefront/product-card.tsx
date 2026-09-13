@@ -115,7 +115,7 @@ export function ProductCard({
             <span
               className="rounded-full px-2 py-1 text-[10px] font-bold text-white"
               style={{
-                backgroundColor: accent ?? "var(--store-accent, #0d9488)",
+                backgroundColor: accent ?? "var(--store-accent, #58a379)",
                 color: "var(--store-button-text, #fff)",
               }}
             >

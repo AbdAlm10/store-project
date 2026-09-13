@@ -54,7 +54,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="space-y-4 rounded-[1.35rem] bg-white p-4 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)] sm:p-5">
+    <section className="space-y-4 rounded-3xl bg-white p-4 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)] sm:p-5">
       <div>
         <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
         {description ? (

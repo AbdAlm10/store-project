@@ -1,15 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f8fb;
-  --foreground: #0c1222;
+  /* Dukkan brand — green bag + sand cursor/wordmark */
+  --background: #f7f4ef;
+  --foreground: #1c241e;
   --surface: #ffffff;
-  --muted: #64748b;
-  --accent: #0d9488;
-  --accent-ink: #115e59;
-  --ring: #0d9488;
-  --radius: 1rem;
-  --shadow: 0 18px 50px -28px rgb(15 23 42 / 0.35);
+  --muted: #6b746e;
+  --accent: #58a379;
+  --accent-ink: #3a7a56;
+  --sand: #e3d2ad;
+  --sand-ink: #8a7349;
+  --ring: #58a379;
+  /* Apple-like continuous corners */
+  --radius-control: 0.875rem; /* 14px — buttons, inputs */
+  --radius-card: 1.125rem; /* 18px — cards */
+  --radius-panel: 1.375rem; /* 22px — large cards / containers */
+  --radius-surface: 1.75rem; /* 28px — hero / large surfaces */
+  --radius: var(--radius-card);
+  --shadow: 0 18px 50px -28px rgb(58 122 86 / 0.28);
   --font-body: var(--font-arabic);
   --font-display: var(--font-arabic);
   --font-geist-sans: var(--font-arabic);
@@ -21,9 +29,40 @@
   --color-surface: var(--surface);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-sand: var(--sand);
+
+  --color-brand-50: #f3faf6;
+  --color-brand-100: #e4f3eb;
+  --color-brand-200: #c5e6d3;
+  --color-brand-300: #97d1b3;
+  --color-brand-400: #6bb892;
+  --color-brand-500: #58a379;
+  --color-brand-600: #3f8560;
+  --color-brand-700: #346b4e;
+  --color-brand-800: #2d5540;
+  --color-brand-900: #264636;
+
+  --color-sand-50: #fbf8f1;
+  --color-sand-100: #f5eedd;
+  --color-sand-200: #ebe0c4;
+  --color-sand-300: #e3d2ad;
+  --color-sand-400: #d4bc8a;
+  --color-sand-500: #c4a86e;
+  --color-sand-600: #a88a52;
+  --color-sand-700: #866c42;
+  --color-sand-800: #6e583a;
+  --color-sand-900: #5c4a33;
+
   --font-sans: var(--font-arabic);
   --font-display: var(--font-arabic);
   --font-arabic: var(--font-arabic);
+
+  /* Remap Tailwind radius scale toward Apple service design */
+  --radius-lg: 0.625rem; /* 10px */
+  --radius-xl: var(--radius-control); /* 14px */
+  --radius-2xl: var(--radius-card); /* 18px */
+  --radius-3xl: var(--radius-panel); /* 22px */
+  --radius-4xl: var(--radius-surface); /* 28px */
 }
 
 * {
@@ -37,7 +76,8 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-arabic), ui-sans-serif, sans-serif;
+  font-family: var(--font-arabic), "IBM Plex Sans Arabic", ui-sans-serif, sans-serif;
+  font-weight: 400;
 }
 
 ::selection {
@@ -46,9 +86,9 @@ body {
 
 .ys-grid-bg {
   background-image:
-    radial-gradient(circle at 20% 20%, rgb(13 148 136 / 0.18), transparent 28%),
-    radial-gradient(circle at 80% 0%, rgb(14 165 233 / 0.16), transparent 32%),
-    linear-gradient(180deg, #07111f 0%, #0b1a2b 55%, #0f172a 100%);
+    radial-gradient(circle at 20% 20%, rgb(88 163 121 / 0.22), transparent 28%),
+    radial-gradient(circle at 80% 0%, rgb(227 210 173 / 0.28), transparent 32%),
+    linear-gradient(180deg, #163024 0%, #1c3a2c 55%, #243f32 100%);
 }
 
 .ys-noise {

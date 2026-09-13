@@ -30,7 +30,7 @@ export default async function EditProductPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <PageHeader title={t("editProduct")} description={t("editProductDesc")} />
-      <div className="rounded-[1.35rem] bg-white p-6 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
+      <div className="rounded-3xl bg-white p-6 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
         <ProductForm
           storeId={store.id}
           productId={product.id}
