@@ -154,7 +154,7 @@ export class MemoryStorageProvider implements StorageProvider {
 
   async upload(input: {
     storeId: string;
-    folder: "products" | "stores" | "avatars";
+    folder: "products" | "stores" | "avatars" | "categories";
     fileName: string;
     contentType: string;
     data: ArrayBuffer | Buffer | Blob;

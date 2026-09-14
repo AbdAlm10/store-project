@@ -1,15 +1,28 @@
-import Link from "next/link";
-import type { ProductWithMedia } from "@/domain/types/entities";
-import { discountPercent } from "@/domain/rules/store-rules";
-import { formatMoney } from "@/lib/social/sharing";
+"use client";
+
 import { SafeImage } from "@/components/ui/safe-image";
-import { cn } from "@/lib/utils/cn";
+import { discountPercent } from "@/domain/rules/store-rules";
+import type { ProductWithMedia } from "@/domain/types/entities";
 import type { Locale } from "@/i18n/config";
+import { useI18n } from "@/i18n/provider";
 import {
   findHexInSchema,
   isColorOptionName,
   resolveValueHex,
 } from "@/lib/option-colors";
+import { formatMoney } from "@/lib/social/sharing";
+import { cn } from "@/lib/utils/cn";
+import Link from "next/link";
+
+/** Truncate on a word boundary and append ellipsis when there is more text. */
+function truncateWithEllipsis(text: string, maxChars: number): string {
+  if (text.length <= maxChars) return text;
+  const slice = text.slice(0, maxChars + 1);
+  const breakAt = Math.max(slice.lastIndexOf(" "), slice.lastIndexOf("\u00a0"));
+  const cut =
+    breakAt > Math.floor(maxChars * 0.55) ? slice.slice(0, breakAt) : text.slice(0, maxChars);
+  return `${cut.trimEnd()}...`;
+}
 
 export function ProductCard({
   product,
@@ -17,171 +30,301 @@ export function ProductCard({
   accent,
   className,
   locale = "ar",
+  priority = false,
 }: {
   product: ProductWithMedia;
   href: string;
   accent?: string;
   className?: string;
   locale?: Locale;
+  priority?: boolean;
 }) {
-  const image = product.images[0];
+  const { t } = useI18n();
+  const primary = product.images[0];
+  const secondary = product.images[1];
+  const imageCount = Math.min(product.images.length, 4);
   const discount = discountPercent(product.price, product.compareAtPrice);
+  const subtitle = product.category?.name ?? null;
+  const fullDescription = product.description
+    ? product.description.replace(/\s+/g, " ").trim()
+    : null;
+  const description = fullDescription
+    ? truncateWithEllipsis(fullDescription, 110)
+    : null;
+
   const schema = product.category?.optionSchema ?? [];
-
-  const colorOption =
-    schema.find((opt) => opt.kind === "color" || isColorOptionName(opt.name)) ??
-    null;
-
+  const colorOption = schema.find(
+    (opt) => opt.kind === "color" || isColorOptionName(opt.name),
+  );
   const colorLabelsFromVariants = new Set<string>();
   if (colorOption) {
     for (const variant of product.variants) {
-      const value = variant.options[colorOption.name];
-      if (value) colorLabelsFromVariants.add(value);
+      for (const [key, value] of Object.entries(variant.options)) {
+        if (
+          key.toLowerCase() === colorOption.name.toLowerCase() ||
+          isColorOptionName(key)
+        ) {
+          colorLabelsFromVariants.add(value.toLowerCase());
+        }
+      }
     }
   }
 
-  const colorSwatches = (
-    colorOption
-      ? colorOption.values
-          .filter(
-            (value) =>
-              colorLabelsFromVariants.size === 0 ||
-              colorLabelsFromVariants.has(value.label),
-          )
-          .map((value) => ({
-            label: value.label,
-            hex:
-              resolveValueHex(value) ??
-              findHexInSchema(schema, colorOption.name, value.label) ??
-              "#94A3B8",
-          }))
-      : []
-  ).slice(0, 6);
-
-  const otherOptions = schema
-    .filter((opt) => opt !== colorOption)
-    .slice(0, 3);
+  const allColorSwatches = colorOption
+    ? colorOption.values
+        .filter((value) =>
+          colorLabelsFromVariants.has(value.label.toLowerCase()),
+        )
+        .map((value) => ({
+          label: value.label,
+          hex:
+            resolveValueHex(value) ??
+            findHexInSchema(schema, colorOption.name, value.label) ??
+            "#94A3B8",
+        }))
+    : [];
+  const colorSwatches = allColorSwatches.slice(0, 3);
+  const extraColors = Math.max(
+    0,
+    allColorSwatches.length - colorSwatches.length,
+  );
 
   return (
     <Link
       href={href}
       prefetch
       className={cn(
-        "group block overflow-hidden transition hover:-translate-y-1 hover:shadow-xl hover:shadow-black/10",
+        "group/card relative flex h-full flex-col overflow-hidden outline-none",
+        "transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        "hover:-translate-y-0.5 hover:shadow-[0_18px_36px_-24px_rgba(0,0,0,0.28)]",
+        "focus-visible:ring-2 focus-visible:ring-(--store-accent) focus-visible:ring-offset-2 focus-visible:ring-offset-(--store-bg)",
         className,
       )}
       style={{
-        background: "var(--store-card, #fff)",
-        color: "var(--store-text, #0f172a)",
-        boxShadow: "inset 0 0 0 1px var(--store-border, #e2e8f0)",
-        borderRadius: "var(--store-radius, 1.25rem)",
+        borderRadius: "1.35rem",
+        background: "var(--store-card)",
+        border: "1px solid color-mix(in srgb, var(--store-border) 70%, transparent)",
+        boxShadow: "0 10px 28px -22px rgba(0,0,0,0.35)",
         fontFamily: "var(--store-font-body)",
+        color: "var(--store-text)",
       }}
     >
-      <div
-        className="relative aspect-[4/5] overflow-hidden"
-        style={{ background: "var(--store-surface, #f1f5f9)" }}
-      >
-        {image ? (
-          <SafeImage
-            src={image.url}
-            alt={image.alt ?? product.name}
-            fill
-            className="object-cover transition duration-500 group-hover:scale-[1.04]"
-            sizes="(max-width: 768px) 50vw, 25vw"
-          />
+      <div className="relative aspect-4/5 overflow-hidden rounded-t-[1.35rem]">
+        {primary ? (
+          <>
+            <SafeImage
+              src={primary.url}
+              alt={primary.alt ?? product.name}
+              fill
+              priority={priority}
+              className={cn(
+                "object-cover transition duration-700 ease-out",
+                secondary
+                  ? "group-hover/card:opacity-0 group-hover/card:scale-105"
+                  : "group-hover/card:scale-[1.04]",
+              )}
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+            />
+            {secondary ? (
+              <SafeImage
+                src={secondary.url}
+                alt={secondary.alt ?? product.name}
+                fill
+                className="object-cover opacity-0 scale-105 transition duration-700 ease-out group-hover/card:opacity-100 group-hover/card:scale-100"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+              />
+            ) : null}
+          </>
         ) : (
           <div
-            className="flex h-full items-center justify-center text-sm"
-            style={{ color: "var(--store-muted, #94a3b8)" }}
+            className="absolute inset-0 flex items-center justify-center"
+            style={{
+              background:
+                "color-mix(in srgb, var(--store-border) 55%, var(--store-surface))",
+              color: "var(--store-muted)",
+            }}
           >
             —
           </div>
         )}
-        <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
-          {product.category ? (
-            <span
-              className="max-w-[70%] truncate rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur"
-              style={{
-                background: "color-mix(in srgb, black 45%, transparent)",
-              }}
-            >
-              {product.category.name}
-            </span>
-          ) : (
-            <span />
-          )}
-          {discount ? (
-            <span
-              className="rounded-full px-2 py-1 text-[10px] font-bold text-white"
-              style={{
-                backgroundColor: accent ?? "var(--store-accent, #58a379)",
-                color: "var(--store-button-text, #fff)",
-              }}
-            >
-              -{discount}%
-            </span>
-          ) : null}
+
+        {/* Soft fog blur kept on the image */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-1 h-[42%]">
+          <div
+            className="absolute inset-x-0 bottom-0 h-[60%] backdrop-blur-[2px]"
+            style={{
+              maskImage: "linear-gradient(to top, black 35%, transparent 100%)",
+              WebkitMaskImage:
+                "linear-gradient(to top, black 35%, transparent 100%)",
+            }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to top, rgba(8,12,10,0.28) 0%, rgba(8,12,10,0.1) 45%, transparent 100%)",
+            }}
+          />
         </div>
-        {colorSwatches.length > 0 ? (
-          <div className="absolute inset-x-0 bottom-0 flex items-center gap-1.5 bg-gradient-to-t from-black/35 to-transparent p-3 pt-8">
-            {colorSwatches.map((swatch) => (
+
+        {product.featured || discount ? (
+          <div className="absolute start-0 top-0 z-2 flex flex-col items-start gap-1 p-2.5">
+            {product.featured ? (
               <span
-                key={swatch.label}
-                title={`${swatch.label} (${swatch.hex})`}
-                className="h-3.5 w-3.5 rounded-full ring-2 ring-white/90"
-                style={{ background: swatch.hex }}
-              />
-            ))}
-            {colorOption && colorOption.values.length > colorSwatches.length ? (
-              <span className="text-[10px] font-semibold text-white/90">
-                +{colorOption.values.length - colorSwatches.length}
+                className="rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide text-white sm:text-[11px]"
+                style={{
+                  background: accent ?? "var(--store-accent)",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                {t("featured")}
+              </span>
+            ) : null}
+            {discount ? (
+              <span
+                className="rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide text-white sm:text-[11px]"
+                style={{
+                  background: "rgba(20, 24, 22, 0.55)",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                -{discount}%
               </span>
             ) : null}
           </div>
         ) : null}
-      </div>
-      <div className="space-y-2 p-3.5 sm:p-4">
-        <h3
-          className="line-clamp-2 text-sm font-semibold leading-snug"
-          style={{ fontFamily: "var(--store-font-display)" }}
-        >
-          {product.name}
-        </h3>
-        {otherOptions.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {otherOptions.map((opt) => (
+
+        {imageCount > 1 ? (
+          <div className="absolute inset-x-0 bottom-2.5 z-2 flex justify-center gap-1.5 max-sm:bottom-11">
+            {Array.from({ length: imageCount }).map((_, index) => (
               <span
-                key={opt.id}
-                className="rounded-full px-2 py-0.5 text-[10px] font-medium"
-                style={{
-                  background: "var(--store-surface)",
-                  color: "var(--store-muted)",
-                  boxShadow: "inset 0 0 0 1px var(--store-border)",
-                }}
-              >
-                {opt.name}
-                {opt.values[0]
-                  ? `: ${opt.values
-                      .slice(0, 2)
-                      .map((value) => value.label)
-                      .join("/")}`
-                  : ""}
-              </span>
+                key={index}
+                className={cn(
+                  "h-1.5 w-1.5 rounded-full transition-colors duration-500",
+                  index === 0
+                    ? "bg-white group-hover/card:bg-white/45"
+                    : index === 1 && secondary
+                      ? "bg-white/45 group-hover/card:bg-white"
+                      : "bg-white/45",
+                )}
+              />
             ))}
           </div>
         ) : null}
-        <div className="flex items-baseline gap-2">
-          <span className="text-base font-bold">
-            {formatMoney(product.price, product.currency, locale)}
-          </span>
-          {product.compareAtPrice ? (
+
+        {/* Mobile: price + color swatches on the image */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-3 sm:hidden">
+          <div className="absolute bottom-2.5 left-2.5 min-w-0" dir="ltr">
+            <div className="flex flex-col items-start gap-0.5 text-left">
+              {product.compareAtPrice ? (
+                <span className="text-[10px] leading-none tabular-nums text-white/70 line-through drop-shadow-sm">
+                  {formatMoney(
+                    product.compareAtPrice,
+                    product.currency,
+                    locale,
+                  )}
+                </span>
+              ) : null}
+              <span className="text-[15px] font-bold leading-none tracking-tight tabular-nums text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.45)]">
+                {formatMoney(product.price, product.currency, locale)}
+              </span>
+            </div>
+          </div>
+
+          {colorSwatches.length > 0 ? (
+            <div className="absolute bottom-2.5 right-2.5 flex shrink-0 items-center">
+              {colorSwatches.map((swatch, index) => (
+                <span
+                  key={swatch.label}
+                  title={swatch.label}
+                  className={cn(
+                    "h-3.5 w-3.5 rounded-full shadow-sm ring-1 ring-white/85",
+                    index > 0 && "-ms-1",
+                  )}
+                  style={{ background: swatch.hex }}
+                />
+              ))}
+              {extraColors > 0 ? (
+                <span className="-ms-0.5 ps-1 text-[11px] font-bold leading-none tracking-widest text-white drop-shadow-sm">
+                  ...
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-1 px-3.5 pb-3.5 pt-3 sm:px-4 sm:pb-4 sm:pt-3.5">
+        <h3
+          className="text-[13px] font-bold leading-snug tracking-tight sm:text-[15px]"
+          style={{
+            fontFamily: "var(--store-font-display)",
+            color: "var(--store-text)",
+          }}
+        >
+          <span className="line-clamp-2">{product.name}</span>
+        </h3>
+
+        {subtitle ? (
+          <p
+            className="line-clamp-1 text-[11px] font-medium leading-snug sm:text-xs"
+            style={{ color: "var(--store-muted)" }}
+          >
+            {subtitle}
+          </p>
+        ) : null}
+
+        {description ? (
+          <p
+            className="text-[10px] leading-relaxed sm:text-[11px]"
+            style={{
+              color: "color-mix(in srgb, var(--store-muted) 78%, transparent)",
+            }}
+          >
+            {description}
+          </p>
+        ) : null}
+
+        <div className="mt-auto hidden items-end justify-between gap-2 pt-3 sm:flex">
+          <div className="flex min-w-0 flex-col items-start gap-0.5 text-left" dir="ltr">
+            {product.compareAtPrice ? (
+              <span
+                className="text-[11px] leading-none tabular-nums line-through"
+                style={{ color: "var(--store-muted)" }}
+              >
+                {formatMoney(product.compareAtPrice, product.currency, locale)}
+              </span>
+            ) : null}
             <span
-              className="text-sm line-through"
-              style={{ color: "var(--store-muted, #94a3b8)" }}
+              className="text-[17px] font-bold leading-none tracking-tight tabular-nums"
+              style={{ color: "var(--store-text)" }}
             >
-              {formatMoney(product.compareAtPrice, product.currency, locale)}
+              {formatMoney(product.price, product.currency, locale)}
             </span>
+          </div>
+
+          {colorSwatches.length > 0 ? (
+            <div className="flex shrink-0 items-center pb-0.5">
+              {colorSwatches.map((swatch, index) => (
+                <span
+                  key={swatch.label}
+                  title={swatch.label}
+                  className={cn(
+                    "h-3.5 w-3.5 rounded-full shadow-sm ring-1 ring-black/10",
+                    index > 0 && "-ms-1",
+                  )}
+                  style={{ background: swatch.hex }}
+                />
+              ))}
+              {extraColors > 0 ? (
+                <span
+                  className="-ms-0.5 ps-1 text-[12px] font-bold leading-none tracking-widest"
+                  style={{ color: "var(--store-muted)" }}
+                >
+                  ...
+                </span>
+              ) : null}
+            </div>
           ) : null}
         </div>
       </div>

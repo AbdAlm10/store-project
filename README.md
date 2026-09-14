@@ -57,12 +57,7 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ## Internationalization
 
-Supported UI locales: **English**, **Arabic** (RTL), **Turkish**.
-
-- Visitor language switcher (cookie `ys_locale`)
-- Store default language in store settings (`defaultLocale`)
-- Public storefront UI follows cookie → store default → English
-- Message catalogs live in `src/i18n/messages.ts`
+The UI is **Arabic-only** (RTL). Message catalog: `src/i18n/messages.ts`.
 
 ## Supabase (production path)
 

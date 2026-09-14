@@ -3,7 +3,7 @@
 import { getServices } from "@/infrastructure/container";
 import { toUserMessage } from "@/domain/errors";
 
-export type UploadImageKind = "product" | "logo" | "cover";
+export type UploadImageKind = "product" | "logo" | "cover" | "category";
 
 export async function uploadImageAction(
   storeId: string,
@@ -15,6 +15,8 @@ export async function uploadImageAction(
     if (!(file instanceof File) || file.size === 0) {
       return { ok: false, error: "No image file provided." };
     }
+
+    const previousUrl = String(formData.get("previousUrl") ?? "").trim() || null;
 
     const payload = {
       name: file.name || "image.webp",
@@ -29,11 +31,25 @@ export async function uploadImageAction(
         ? await services.media.uploadProductImage(storeId, payload)
         : await services.media.uploadStoreAsset(
             storeId,
-            kind === "cover" ? "cover" : "logo",
+            kind === "category" ? "category" : kind === "cover" ? "cover" : "logo",
             payload,
+            kind === "product" ? undefined : { previousUrl },
           );
 
     return { ok: true, url: uploaded.url, path: uploaded.path };
+  } catch (error) {
+    return { ok: false, error: toUserMessage(error) };
+  }
+}
+
+/** Delete a store-owned media object by its public URL (logo/cover cleanup). */
+export async function deleteOwnedImageAction(
+  storeId: string,
+  publicUrl: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await getServices().media.deleteClearedAssetUrl(storeId, publicUrl);
+    return { ok: true };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };
   }

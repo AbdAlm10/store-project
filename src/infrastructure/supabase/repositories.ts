@@ -296,6 +296,8 @@ export class SupabaseCategoryRepository implements CategoryRepository {
         name: input.name,
         slug: input.slug,
         sort_order: input.sortOrder,
+        image_url: input.imageUrl ?? null,
+        icon: input.icon ?? null,
         option_schema: input.optionSchema ?? [],
       })
       .select("*")
@@ -310,6 +312,8 @@ export class SupabaseCategoryRepository implements CategoryRepository {
     if (patch.name !== undefined) row.name = patch.name;
     if (patch.slug !== undefined) row.slug = patch.slug;
     if (patch.sortOrder !== undefined) row.sort_order = patch.sortOrder;
+    if (patch.imageUrl !== undefined) row.image_url = patch.imageUrl;
+    if (patch.icon !== undefined) row.icon = patch.icon;
     if (patch.optionSchema !== undefined) row.option_schema = patch.optionSchema;
     const { data, error } = await supabase
       .from("categories")

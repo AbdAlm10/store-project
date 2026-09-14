@@ -20,11 +20,9 @@ export default async function NewProductPage() {
   const categories = await services.categories.listForMerchant(store.id);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader title={t("addProduct")} description={t("addProductDesc")} />
-      <div className="rounded-3xl bg-white p-6 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
-        <ProductForm storeId={store.id} categories={categories} />
-      </div>
+      <ProductForm storeId={store.id} categories={categories} />
     </div>
   );
 }

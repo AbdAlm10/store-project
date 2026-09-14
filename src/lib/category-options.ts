@@ -123,4 +123,54 @@ export function buildVariantMatrix(
   }));
 }
 
+/** Allowed labels per option name from the current category schema. */
+export function schemaAllowedValues(
+  options: CategoryOptionDef[],
+): Map<string, Set<string>> {
+  const map = new Map<string, Set<string>>();
+  for (const opt of options) {
+    const name = opt.name.trim();
+    if (!name) continue;
+    map.set(
+      name,
+      new Set(
+        opt.values
+          .map((value) => optionValueLabel(value).trim())
+          .filter(Boolean),
+      ),
+    );
+  }
+  return map;
+}
+
+/** True when every option on the variant is still defined on the category schema. */
+export function variantMatchesSchema(
+  variantOptions: Record<string, string>,
+  options: CategoryOptionDef[],
+): boolean {
+  if (!options.length) return true;
+  const allowed = schemaAllowedValues(options);
+  const entries = Object.entries(variantOptions);
+  if (!entries.length) return false;
+  for (const [key, value] of entries) {
+    const set = allowed.get(key);
+    if (!set || !set.has(value)) return false;
+  }
+  // Variant must cover all schema axes that have values
+  for (const [name, set] of allowed) {
+    if (set.size === 0) continue;
+    if (!(name in variantOptions)) return false;
+  }
+  return true;
+}
+
+export function pruneVariantsToSchema<
+  T extends { options: Record<string, string>; name?: string },
+>(variants: T[], options: CategoryOptionDef[]): T[] {
+  if (!options.length) return variants;
+  return variants.filter((variant) =>
+    variantMatchesSchema(variant.options, options),
+  );
+}
+
 export { normalizeOptionSchema };

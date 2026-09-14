@@ -29,7 +29,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     priceMonthlyUsd: 0,
     limits: {
       maxProducts: 50,
-      maxImagesPerProduct: 8,
+      maxImagesPerProduct: 3,
       advancedAnalytics: false,
       customDomain: false,
       customThemes: true,
@@ -42,7 +42,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     priceMonthlyUsd: 9,
     limits: {
       maxProducts: 100,
-      maxImagesPerProduct: 8,
+      maxImagesPerProduct: 3,
       advancedAnalytics: false,
       customDomain: false,
       customThemes: true,
@@ -56,7 +56,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     highlighted: true,
     limits: {
       maxProducts: 1000,
-      maxImagesPerProduct: 16,
+      maxImagesPerProduct: 3,
       advancedAnalytics: true,
       customDomain: true,
       customThemes: true,

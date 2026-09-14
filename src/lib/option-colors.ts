@@ -90,6 +90,11 @@ export function isColorOptionName(name: string): boolean {
   return /color|colour|لون|renk|tone|finish|shade/i.test(name.trim());
 }
 
+export function isSizeOptionName(name: string): boolean {
+  return /^(size|sizes|مقاس|مقاسات|beden|taille)$/i.test(name.trim()) ||
+    /\b(size|مقاس|beden)\b/i.test(name.trim());
+}
+
 export function guessHexFromLabel(label: string): string | null {
   const key = label.trim().toLowerCase();
   if (isHexColor(key)) return normalizeHex(key);

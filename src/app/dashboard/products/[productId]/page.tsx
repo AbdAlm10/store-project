@@ -28,33 +28,35 @@ export default async function EditProductPage({ params }: Props) {
   const categories = await services.categories.listForMerchant(store.id);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader title={t("editProduct")} description={t("editProductDesc")} />
-      <div className="rounded-3xl bg-white p-6 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
-        <ProductForm
-          storeId={store.id}
-          productId={product.id}
-          categories={categories}
-          initial={{
-            name: product.name,
-            description: product.description ?? "",
-            price: product.price,
-            compareAtPrice: product.compareAtPrice,
-            stock: product.stock,
-            categoryId: product.categoryId,
-            status: product.status,
-            tags: product.tags.join(", "),
-            imageUrl: product.images[0]?.url ?? "",
-            featured: product.featured,
-            variants: product.variants.map((variant) => ({
-              name: variant.name,
-              options: variant.options,
-              price: variant.price,
-              stock: variant.stock,
-            })),
-          }}
-        />
-      </div>
+      <ProductForm
+        storeId={store.id}
+        productId={product.id}
+        categories={categories}
+        initial={{
+          name: product.name,
+          description: product.description ?? "",
+          price: product.price,
+          compareAtPrice: product.compareAtPrice,
+          stock: product.stock,
+          categoryId: product.categoryId,
+          status: product.status,
+          tags: product.tags.join(", "),
+          imageUrls: product.images
+            .slice()
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+            .map((image) => image.url)
+            .slice(0, 3),
+          featured: product.featured,
+          variants: product.variants.map((variant) => ({
+            name: variant.name,
+            options: variant.options,
+            price: variant.price,
+            stock: variant.stock,
+          })),
+        }}
+      />
     </div>
   );
 }

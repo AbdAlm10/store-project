@@ -72,6 +72,10 @@ export type Category = {
   name: string;
   slug: string;
   sortOrder: number;
+  /** Optional cover/thumbnail for storefront genre circles. */
+  imageUrl: string | null;
+  /** Iconify icon id, e.g. `mdi:tshirt-crew`. */
+  icon: string | null;
   /** Attribute templates for products in this genre (Color, Size, …). */
   optionSchema: CategoryOptionDef[];
   createdAt: string;

@@ -4,8 +4,6 @@ export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "ar";
 
-export const LOCALE_COOKIE = "ys_locale";
-
 export const LOCALE_LABELS: Record<Locale, string> = {
   ar: "العربية",
 };

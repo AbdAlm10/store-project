@@ -48,6 +48,8 @@ export class CategoryService {
       name: data.name,
       slug,
       sortOrder: current.length,
+      imageUrl: data.imageUrl ?? null,
+      icon: data.icon ?? null,
       optionSchema: data.optionSchema ?? [],
     });
   }
@@ -65,6 +67,9 @@ export class CategoryService {
     }
     return this.categories.update(categoryId, {
       name: data.name,
+      imageUrl:
+        data.imageUrl !== undefined ? data.imageUrl : category.imageUrl,
+      icon: data.icon !== undefined ? data.icon : category.icon,
       optionSchema: data.optionSchema ?? category.optionSchema,
     });
   }

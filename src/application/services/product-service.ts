@@ -133,7 +133,11 @@ export class ProductService {
     }
 
     const maxImages = await this.entitlements.maxImagesPerProduct(storeId);
-    if ((data.images?.length ?? 0) > maxImages) {
+    const imageCount = data.images?.length ?? 0;
+    if (imageCount < 1) {
+      throw new AppError("VALIDATION", "Add at least one product image.");
+    }
+    if (imageCount > maxImages) {
       throw new AppError(
         "LIMIT_REACHED",
         `Your plan allows up to ${maxImages} images per product.`,
@@ -233,6 +237,9 @@ export class ProductService {
 
     if (data.images) {
       const maxImages = await this.entitlements.maxImagesPerProduct(storeId);
+      if (data.images.length < 1) {
+        throw new AppError("VALIDATION", "Add at least one product image.");
+      }
       if (data.images.length > maxImages) {
         throw new AppError(
           "LIMIT_REACHED",

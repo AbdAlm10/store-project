@@ -19,7 +19,7 @@ export class AuthService {
       fullName: data.fullName ?? null,
       avatarUrl: null,
       platformRole: "merchant",
-      locale: "en",
+      locale: "ar",
       suspendedAt: null,
     });
     return { session, profile };

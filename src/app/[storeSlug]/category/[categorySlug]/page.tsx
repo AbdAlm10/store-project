@@ -77,7 +77,7 @@ export default async function CategoryPage({ params }: Props) {
       }}
     >
       <StoreNav store={store} />
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-[100rem] px-3 py-8 sm:px-5 lg:px-6 xl:px-8">
         <Link
           href={`/${store.slug}`}
           prefetch
@@ -87,7 +87,7 @@ export default async function CategoryPage({ params }: Props) {
           ← {store.name}
         </Link>
         <h1
-          className="mt-4 text-3xl tracking-tight"
+          className="mt-4 text-3xl font-bold tracking-tight"
           style={{ fontFamily: "var(--store-font-display)" }}
         >
           {category.name}
@@ -97,7 +97,7 @@ export default async function CategoryPage({ params }: Props) {
             <EmptyState title={t("noProductsFound")} />
           </div>
         ) : (
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-10 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {items.map((product) => (
               <ProductCard
                 key={product.id}

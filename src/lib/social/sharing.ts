@@ -26,13 +26,13 @@ export function buildWhatsAppOrderMessage(input: {
 
   const quantity = input.quantity ?? 1;
   const lines = [
-    `Hello! I would like to order from ${input.store.name}:`,
+    `مرحبًا! أود الطلب من ${input.store.name}:`,
     "",
-    `Product: ${input.product.name}`,
-    input.variantLabel ? `Variant: ${input.variantLabel}` : null,
-    `Quantity: ${quantity}`,
-    `Price: ${formatMoney(input.product.price, input.product.currency)}`,
-    `Link: ${productUrl(input.storeSlug, input.productSlug)}`,
+    `المنتج: ${input.product.name}`,
+    input.variantLabel ? `الخيار: ${input.variantLabel}` : null,
+    `الكمية: ${quantity}`,
+    `السعر: ${formatMoney(input.product.price, input.product.currency, "ar")}`,
+    `الرابط: ${productUrl(input.storeSlug, input.productSlug)}`,
   ].filter(Boolean);
 
   const message = lines.join("\n");
@@ -44,7 +44,7 @@ export function buildWhatsAppOrderMessage(input: {
 export function formatMoney(
   amount: number,
   currency: string,
-  locale: string = "en",
+  locale: string = "ar",
 ): string {
   try {
     return new Intl.NumberFormat(locale, {
@@ -62,9 +62,9 @@ export function productShareText(
   product: Pick<Product, "name" | "price" | "currency" | "compareAtPrice">,
 ): string {
   const discount = discountPercent(product.price, product.compareAtPrice);
-  const price = formatMoney(product.price, product.currency);
-  const discountBit = discount ? ` (${discount}% off)` : "";
-  return `${product.name} — ${price}${discountBit} at ${store.name}`;
+  const price = formatMoney(product.price, product.currency, "ar");
+  const discountBit = discount ? ` (خصم ${discount}%)` : "";
+  return `${product.name} — ${price}${discountBit} في ${store.name}`;
 }
 
 export function socialShareLinks(url: string, text: string) {

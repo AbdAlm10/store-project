@@ -24,7 +24,7 @@ export function mapProfile(row: Json): Profile {
     fullName: (row.full_name as string | null) ?? null,
     avatarUrl: (row.avatar_url as string | null) ?? null,
     platformRole: row.platform_role as Profile["platformRole"],
-    locale: String(row.locale ?? "en"),
+    locale: String(row.locale ?? "ar"),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
     suspendedAt: (row.suspended_at as string | null) ?? null,
@@ -57,7 +57,7 @@ export function mapStore(row: Json): Store {
       row.theme_overrides && typeof row.theme_overrides === "object"
         ? (row.theme_overrides as Store["themeOverrides"])
         : null,
-    defaultLocale: (row.default_locale as Store["defaultLocale"]) ?? "en",
+    defaultLocale: (row.default_locale as Store["defaultLocale"]) ?? "ar",
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
     publishedAt: (row.published_at as string | null) ?? null,
@@ -116,6 +116,8 @@ export function mapCategory(row: Json): Category {
     name: String(row.name),
     slug: String(row.slug),
     sortOrder: num(row.sort_order),
+    imageUrl: (row.image_url as string | null) ?? null,
+    icon: (row.icon as string | null) ?? null,
     optionSchema: normalizeOptionSchema(row.option_schema),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),

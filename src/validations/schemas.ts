@@ -96,10 +96,10 @@ export const updateStoreSchema = z.object({
         "muted",
         "border",
         "accent",
-        "headerFrom",
-        "headerTo",
         "navBg",
+        "navText",
         "buttonText",
+        "logoSize",
         "radius",
         "fontDisplay",
         "fontBody",
@@ -116,6 +116,14 @@ export const updateStoreSchema = z.object({
 export const categorySchema = z.object({
   name: z.string().trim().min(1).max(80),
   slug: slugSchema.optional(),
+  imageUrl: z.string().url().nullable().optional(),
+  icon: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+:[a-z0-9-]+$/i, "Invalid icon id")
+    .max(80)
+    .nullable()
+    .optional(),
   optionSchema: z
     .array(
       z.preprocess(
@@ -180,10 +188,24 @@ export const categorySchema = z.object({
     .optional(),
 });
 
+/** Reference length merchants must meet for product descriptions. */
+export const PRODUCT_DESCRIPTION_MIN_EXAMPLE =
+  "ساعة أبل هي سلسلة من الساعات الذكية التي أنتجتها شركة أبل، وتعمل كجهاز مساعد لهاتفك الآيفون. مميزات ساعة أبلالصحة واللياقة:";
+
+export const MIN_PRODUCT_DESCRIPTION_LENGTH =
+  PRODUCT_DESCRIPTION_MIN_EXAMPLE.length;
+
 export const productSchema = z.object({
   name: z.string().trim().min(1).max(160),
   slug: slugSchema.optional(),
-  description: z.string().trim().max(10000).nullable().optional(),
+  description: z
+    .string()
+    .trim()
+    .min(
+      MIN_PRODUCT_DESCRIPTION_LENGTH,
+      `الوصف قصير جدًا. الحد الأدنى ${MIN_PRODUCT_DESCRIPTION_LENGTH} حرفًا.`,
+    )
+    .max(10000),
   price: z.number().nonnegative(),
   compareAtPrice: z.number().nonnegative().nullable().optional(),
   stock: z.number().int().nonnegative().nullable().optional(),
@@ -200,7 +222,8 @@ export const productSchema = z.object({
         sortOrder: z.number().int().nonnegative(),
       }),
     )
-    .max(16)
+    .min(1, "Add at least one product image.")
+    .max(3)
     .optional(),
   variants: z
     .array(

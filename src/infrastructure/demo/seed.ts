@@ -25,6 +25,8 @@ const categories: Category[] = [
     name: "Phone Cases",
     slug: "phone-cases",
     sortOrder: 0,
+    imageUrl: null,
+    icon: "lucide:smartphone",
     optionSchema: [
       {
         id: "opt-color",
@@ -57,6 +59,8 @@ const categories: Category[] = [
     name: "Chargers",
     slug: "chargers",
     sortOrder: 1,
+    imageUrl: null,
+    icon: "lucide:package",
     optionSchema: [
       {
         id: "opt-watt",
@@ -74,6 +78,8 @@ const categories: Category[] = [
     name: "Audio",
     slug: "audio",
     sortOrder: 2,
+    imageUrl: null,
+    icon: "lucide:headphones",
     optionSchema: [
       {
         id: "opt-color-audio",
@@ -95,6 +101,8 @@ const categories: Category[] = [
     name: "Cables",
     slug: "cables",
     sortOrder: 3,
+    imageUrl: null,
+    icon: "lucide:boxes",
     optionSchema: [
       {
         id: "opt-len",
@@ -342,7 +350,7 @@ export const demoSeed = {
       fullName: "Al Noor Merchant",
       avatarUrl: null,
       platformRole: "merchant",
-      locale: "en",
+      locale: "ar",
       createdAt: now,
       updatedAt: now,
       suspendedAt: null,
@@ -353,7 +361,7 @@ export const demoSeed = {
       fullName: "Platform Admin",
       avatarUrl: null,
       platformRole: "admin",
-      locale: "en",
+      locale: "ar",
       createdAt: now,
       updatedAt: now,
       suspendedAt: null,

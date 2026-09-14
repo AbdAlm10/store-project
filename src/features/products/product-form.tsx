@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Category, CategoryOptionDef } from "@/domain/types/entities";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,11 @@ import {
   updateProductAction,
 } from "@/features/products/actions";
 import { useI18n } from "@/i18n/provider";
-import { buildVariantMatrix } from "@/lib/category-options";
+import {
+  buildVariantMatrix,
+  pruneVariantsToSchema,
+} from "@/lib/category-options";
+import { MIN_PRODUCT_DESCRIPTION_LENGTH } from "@/validations/schemas";
 
 type VariantDraft = {
   name: string;
@@ -33,7 +37,9 @@ type ProductFormProps = {
     categoryId: string | null;
     status: string;
     tags: string;
-    imageUrl: string;
+    imageUrls?: string[];
+    /** @deprecated use imageUrls */
+    imageUrl?: string;
     featured: boolean;
     variants?: Array<{
       name: string;
@@ -43,6 +49,8 @@ type ProductFormProps = {
     }>;
   };
 };
+
+const PRODUCT_IMAGE_SLOTS = 3;
 
 function Section({
   title,
@@ -87,6 +95,18 @@ export function ProductForm({
         stock: variant.stock != null ? String(variant.stock) : "",
       })) ?? [],
   );
+  const [imageUrls, setImageUrls] = useState<string[]>(() => {
+    const fromList = initial?.imageUrls?.filter(Boolean) ?? [];
+    const legacy = initial?.imageUrl?.trim() ? [initial.imageUrl.trim()] : [];
+    const seeds = (fromList.length ? fromList : legacy).slice(
+      0,
+      PRODUCT_IMAGE_SLOTS,
+    );
+    return Array.from(
+      { length: PRODUCT_IMAGE_SLOTS },
+      (_, index) => seeds[index] ?? "",
+    );
+  });
 
   const selectedCategory = useMemo(
     () => categories.find((item) => item.id === categoryId) ?? null,
@@ -94,16 +114,50 @@ export function ProductForm({
   );
   const optionSchema: CategoryOptionDef[] =
     selectedCategory?.optionSchema ?? [];
+  const [prunedCount, setPrunedCount] = useState(0);
+
+  const schemaKey = useMemo(
+    () =>
+      JSON.stringify(
+        optionSchema.map((opt) => ({
+          name: opt.name,
+          values: opt.values.map((value) => value.label),
+        })),
+      ),
+    [optionSchema],
+  );
+
+  // Drop variant rows that no longer match the category Color/Size options.
+  useEffect(() => {
+    if (!optionSchema.length) return;
+    setVariants((list) => {
+      const next = pruneVariantsToSchema(list, optionSchema);
+      const removed = list.length - next.length;
+      if (removed > 0) setPrunedCount((count) => count + removed);
+      return removed > 0 ? next : list;
+    });
+    // schemaKey captures optionSchema contents
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryId, schemaKey]);
 
   function buildPayload(formData: FormData, statusOverride?: string) {
     const tags = String(formData.get("tags") ?? "")
       .split(",")
       .map((tag) => tag.trim())
       .filter(Boolean);
-    const imageUrl = String(formData.get("imageUrl") ?? "").trim();
+    const name = String(formData.get("name") ?? "");
+    const images = imageUrls
+      .map((url) => url.trim())
+      .filter(Boolean)
+      .slice(0, PRODUCT_IMAGE_SLOTS)
+      .map((url, index) => ({
+        url,
+        alt: name,
+        sortOrder: index,
+      }));
     return {
-      name: String(formData.get("name") ?? ""),
-      description: String(formData.get("description") ?? "") || null,
+      name,
+      description: String(formData.get("description") ?? "").trim(),
       price: Number(formData.get("price") ?? 0),
       compareAtPrice: formData.get("compareAtPrice")
         ? Number(formData.get("compareAtPrice"))
@@ -115,22 +169,16 @@ export function ProductForm({
         String(formData.get("status") ?? initial?.status ?? "draft"),
       tags,
       featured: formData.get("featured") === "on",
-      images: imageUrl
-        ? [
-            {
-              url: imageUrl,
-              alt: String(formData.get("name") ?? ""),
-              sortOrder: 0,
-            },
-          ]
-        : [],
-      variants: variants.map((variant) => ({
-        name: variant.name,
-        options: variant.options,
-        price: variant.price ? Number(variant.price) : null,
-        stock: variant.stock ? Number(variant.stock) : null,
-        sku: null,
-      })),
+      images,
+      variants: pruneVariantsToSchema(variants, optionSchema).map(
+        (variant) => ({
+          name: variant.name,
+          options: variant.options,
+          price: variant.price ? Number(variant.price) : null,
+          stock: variant.stock ? Number(variant.stock) : null,
+          sku: null,
+        }),
+      ),
     };
   }
 
@@ -147,6 +195,16 @@ export function ProductForm({
               ? "published"
               : undefined;
         const payload = buildPayload(formData, statusOverride);
+        if (!payload.images.length) {
+          setError(t("productImageRequired"));
+          return;
+        }
+        if (payload.description.length < MIN_PRODUCT_DESCRIPTION_LENGTH) {
+          setError(
+            t("descriptionTooShort", { min: MIN_PRODUCT_DESCRIPTION_LENGTH }),
+          );
+          return;
+        }
 
         setError(null);
         startTransition(async () => {
@@ -172,8 +230,13 @@ export function ProductForm({
           <Textarea
             id="description"
             name="description"
+            required
+            minLength={MIN_PRODUCT_DESCRIPTION_LENGTH}
             defaultValue={initial?.description}
           />
+          <p className="mt-1.5 text-xs text-slate-400">
+            {t("descriptionMinHint", { min: MIN_PRODUCT_DESCRIPTION_LENGTH })}
+          </p>
         </div>
       </Section>
 
@@ -271,6 +334,7 @@ export function ProductForm({
                     stock: "",
                   })),
                 );
+                setPrunedCount(0);
               }}
             >
               {t("generateVariants")}
@@ -283,6 +347,14 @@ export function ProductForm({
                 )
                 .join(" · ")}
             </p>
+            {prunedCount > 0 ? (
+              <p className="w-full rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900 ring-1 ring-amber-200">
+                {t("variantsPrunedNotice").replace(
+                  "{count}",
+                  String(prunedCount),
+                )}
+              </p>
+            ) : null}
           </div>
         ) : (
           <p className="text-sm text-slate-500">{t("variantsHint")}</p>
@@ -352,15 +424,29 @@ export function ProductForm({
       </Section>
 
       <Section title={t("sectionImages")} description={t("sectionImagesHint")}>
-        <div>
-          <Label>{t("primaryImageUrl")}</Label>
-          <ImageUploadField
-            storeId={storeId}
-            kind="product"
-            name="imageUrl"
-            defaultValue={initial?.imageUrl ?? ""}
-          />
+        <div className="grid gap-4 sm:grid-cols-3">
+          {imageUrls.map((url, index) => (
+            <div key={index} className="space-y-2">
+              <Label>
+                {index === 0
+                  ? `${t("primaryImageUrl")} *`
+                  : `${t("optionalImage")} ${index}`}
+              </Label>
+              <ImageUploadField
+                storeId={storeId}
+                kind="product"
+                compact
+                value={url}
+                onChange={(next) =>
+                  setImageUrls((list) =>
+                    list.map((item, i) => (i === index ? next : item)),
+                  )
+                }
+              />
+            </div>
+          ))}
         </div>
+        <p className="text-xs text-slate-500">{t("imageCompressHint")}</p>
       </Section>
 
       <Section title={t("sectionVisibility")}>

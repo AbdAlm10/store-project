@@ -5,7 +5,9 @@ import { useMemo, useState, useTransition } from "react";
 import type { Store } from "@/domain/types/entities";
 import {
   DEFAULT_THEME_TOKENS,
+  LOGO_SIZE_OPTIONS,
   THEME_TOKEN_KEYS,
+  logoSizeIdFromValue,
   type ThemeColorKey,
   type ThemeTokens,
   resolveThemeTokens,
@@ -13,9 +15,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/forms";
 import { ImageUploadField } from "@/components/media/image-upload-field";
+import { SafeImage } from "@/components/ui/safe-image";
 import { updateStoreAction } from "@/features/stores/update-actions";
 import { useI18n } from "@/i18n/provider";
 import type { MessageKey } from "@/i18n/messages";
+import { cn } from "@/lib/utils/cn";
 
 const TOKEN_LABEL_KEYS: Record<ThemeColorKey, MessageKey> = {
   background: "tokenBackground",
@@ -25,9 +29,8 @@ const TOKEN_LABEL_KEYS: Record<ThemeColorKey, MessageKey> = {
   muted: "tokenMuted",
   border: "tokenBorder",
   accent: "tokenAccent",
-  headerFrom: "tokenHeaderFrom",
-  headerTo: "tokenHeaderTo",
   navBg: "tokenNav",
+  navText: "tokenNavText",
   buttonText: "tokenButtonText",
 };
 
@@ -58,6 +61,8 @@ export function StoreDesignForm({ store }: { store: Store }) {
     setPrimaryColor(DEFAULT_THEME_TOKENS.accent);
   }
 
+  const logoSizeId = logoSizeIdFromValue(preview.logoSize);
+
   return (
     <form
       className="space-y-8"
@@ -76,7 +81,6 @@ export function StoreDesignForm({ store }: { store: Store }) {
             primaryColor,
             themeOverrides: Object.keys(cleaned).length ? cleaned : null,
             logoUrl: logoUrl || null,
-            coverUrl: null,
           });
           if (!result.ok) {
             setError(result.error);
@@ -111,28 +115,38 @@ export function StoreDesignForm({ store }: { store: Store }) {
             className="flex items-center gap-3 px-4 py-3"
             style={{
               background: preview.navBg,
-              color: preview.text,
+              color: preview.navText,
               borderBottom: `1px solid ${preview.border}`,
             }}
           >
-            <div
-              className="flex h-9 w-9 items-center justify-center text-sm font-bold"
-              style={{
-                background: preview.accent,
-                color: preview.buttonText,
-                borderRadius: `calc(${preview.radius} * 0.55)`,
-              }}
-            >
-              {store.name.slice(0, 1)}
-            </div>
+            {logoUrl ? (
+              <SafeImage
+                src={logoUrl}
+                alt=""
+                width={240}
+                height={80}
+                className="w-auto max-w-[16rem] object-contain object-start"
+                style={{
+                  height: preview.logoSize,
+                  maxHeight: preview.logoSize,
+                }}
+              />
+            ) : (
+              <div
+                className="flex items-center justify-center text-sm font-bold"
+                style={{
+                  height: preview.logoSize,
+                  width: preview.logoSize,
+                  background: preview.accent,
+                  color: preview.buttonText,
+                  borderRadius: `calc(${preview.radius} * 0.55)`,
+                }}
+              >
+                {store.name.slice(0, 1)}
+              </div>
+            )}
             <span style={{ fontFamily: preview.fontDisplay }}>{store.name}</span>
           </div>
-          <div
-            className="h-16"
-            style={{
-              background: `linear-gradient(135deg, ${preview.headerFrom}, ${preview.headerTo})`,
-            }}
-          />
           <div className="grid grid-cols-3 gap-2 p-4">
             {[0, 1, 2].map((i) => (
               <div
@@ -242,6 +256,35 @@ export function StoreDesignForm({ store }: { store: Store }) {
               onChange={setLogoUrl}
             />
             <p className="mt-1 text-xs text-slate-500">{t("logoNavHint")}</p>
+          </div>
+          <div className="sm:col-span-2">
+            <Label>{t("logoSize")}</Label>
+            <p className="mb-2 text-xs text-slate-500">{t("logoSizeHint")}</p>
+            <div className="flex flex-wrap gap-2">
+              {LOGO_SIZE_OPTIONS.map((option) => {
+                const active = logoSizeId === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() =>
+                      setOverrides((prev) => ({
+                        ...prev,
+                        logoSize: option.value,
+                      }))
+                    }
+                    className={cn(
+                      "rounded-full px-3.5 py-2 text-sm font-semibold transition active:scale-[0.98]",
+                      active
+                        ? "bg-brand-700 text-white"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200",
+                    )}
+                  >
+                    {t(option.labelKey)}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>

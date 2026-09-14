@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServices } from "@/infrastructure/container";
-import { StoreNav, StoreHero } from "@/components/storefront/store-header";
+import { StoreNav } from "@/components/storefront/store-header";
 import { StoreCatalog } from "@/components/storefront/store-catalog";
 import { appConfig } from "@/config/app";
 import {
@@ -79,7 +79,7 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
 
   return (
     <div
-      className="min-h-full"
+      className="flex min-h-dvh flex-col"
       style={{
         ...cssVars,
         background: "var(--store-bg)",
@@ -96,26 +96,27 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
         </div>
       ) : null}
       <StoreNav store={store} />
-      <StoreHero store={store} closedLabel={t("hoursClosed")} />
 
-      <Suspense fallback={<CatalogSkeleton />}>
-        <StoreCatalogSection
-          store={store}
-          search={search}
-          categorySlug={categorySlug}
-        />
-      </Suspense>
+      <div className="flex-1">
+        <Suspense fallback={<CatalogSkeleton />}>
+          <StoreCatalogSection
+            store={store}
+            search={search}
+            categorySlug={categorySlug}
+          />
+        </Suspense>
+      </div>
 
       <footer
-        className="border-t py-10 text-center text-sm"
+        className="mt-auto border-t py-2 text-center"
         style={{
-          borderColor: "var(--store-border)",
+          borderColor: "color-mix(in srgb, var(--store-border) 70%, transparent)",
           background: "var(--store-surface)",
           color: "var(--store-muted)",
         }}
       >
         <p
-          className="text-base"
+          className="text-xs font-semibold tracking-tight"
           style={{
             color: "var(--store-text)",
             fontFamily: "var(--store-font-display)",
@@ -123,7 +124,7 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
         >
           {store.name}
         </p>
-        <p className="mt-1">
+        <p className="mt-0.5 text-[10px] tracking-wide opacity-80">
           {t("poweredBy")} {appConfig.name}
         </p>
       </footer>
@@ -172,17 +173,41 @@ async function StoreCatalogSection({
 
 function CatalogSkeleton() {
   return (
-    <div className="mx-auto grid max-w-6xl grid-cols-2 gap-3 px-4 py-10 sm:grid-cols-3">
-      {Array.from({ length: 6 }).map((_, index) => (
-        <div
-          key={index}
-          className="aspect-[4/5] animate-pulse"
-          style={{
-            background: "var(--store-surface)",
-            borderRadius: "var(--store-radius)",
-          }}
-        />
-      ))}
+    <div className="mx-auto max-w-[100rem] px-3 py-4 sm:px-4 lg:px-5 xl:px-6">
+      <div
+        className="mx-auto h-11 max-w-3xl animate-pulse rounded-full"
+        style={{ background: "var(--store-surface)" }}
+      />
+      <div className="mt-4 flex gap-2.5 overflow-hidden">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div key={index} className="flex shrink-0 flex-col items-center gap-1">
+            <div
+              className="h-10 w-10 animate-pulse rounded-full sm:h-11 sm:w-11"
+              style={{ background: "var(--store-surface)" }}
+            />
+            <div
+              className="h-2 w-8 animate-pulse rounded"
+              style={{ background: "var(--store-surface)" }}
+            />
+          </div>
+        ))}
+      </div>
+      <div
+        className="mt-5 mb-3 h-7 w-40 animate-pulse rounded"
+        style={{ background: "var(--store-surface)" }}
+      />
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 xl:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <div
+            key={index}
+            className="aspect-3/4 animate-pulse"
+            style={{
+              background: "var(--store-surface)",
+              borderRadius: "1.1rem",
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

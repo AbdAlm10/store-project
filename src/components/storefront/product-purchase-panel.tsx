@@ -63,12 +63,20 @@ export function ProductPurchasePanel({
         .filter((opt) => opt.values.length > 0)
         .map((opt) => {
           const available = fromVariants.get(opt.name);
+          // Category schema is source of truth — never show removed colors/sizes.
+          // If the product has variants, only show schema values that exist on them.
           const values = opt.values
             .map((value) => {
               const label = value.label;
-              const inStock = !available || available.has(label);
-              // If variants exist, only show values that appear on this product
-              if (fromVariants.size > 0 && available && !available.has(label)) {
+              if (
+                fromVariants.size > 0 &&
+                available &&
+                !available.has(label)
+              ) {
+                return null;
+              }
+              // Variants exist for other axes but this axis never appears → skip
+              if (fromVariants.size > 0 && !available) {
                 return null;
               }
               return {
@@ -76,23 +84,10 @@ export function ProductPurchasePanel({
                 hex:
                   resolveValueHex(value) ??
                   findHexInSchema(optionSchema, opt.name, label),
-                available: inStock,
+                available: true,
               };
             })
             .filter((item): item is NonNullable<typeof item> => Boolean(item));
-
-          // Include any variant-only values not in schema
-          if (available) {
-            for (const label of available) {
-              if (!values.some((item) => item.label === label)) {
-                values.push({
-                  label,
-                  hex: findHexInSchema(optionSchema, opt.name, label),
-                  available: true,
-                });
-              }
-            }
-          }
 
           return {
             name: opt.name,

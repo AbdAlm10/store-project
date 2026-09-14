@@ -244,6 +244,8 @@ export class MemoryCategoryRepository implements CategoryRepository {
       name: input.name,
       slug: input.slug,
       sortOrder: input.sortOrder,
+      imageUrl: input.imageUrl ?? null,
+      icon: input.icon ?? null,
       optionSchema: normalizeOptionSchema(input.optionSchema ?? []),
       createdAt: now(),
       updatedAt: now(),

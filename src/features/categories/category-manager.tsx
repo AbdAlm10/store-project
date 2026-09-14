@@ -8,6 +8,11 @@ import type {
 } from "@/domain/types/entities";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/forms";
+import { ImageUploadField } from "@/components/media/image-upload-field";
+import {
+  CategoryIcon,
+  CategoryIconPicker,
+} from "@/components/categories/category-icon-picker";
 import {
   createCategoryAction,
   deleteCategoryAction,
@@ -20,6 +25,7 @@ import {
   normalizeHex,
   normalizeOptionSchema,
 } from "@/lib/option-colors";
+import { SafeImage } from "@/components/ui/safe-image";
 
 export function CategoryManager({
   storeId,
@@ -31,6 +37,8 @@ export function CategoryManager({
   const { t } = useI18n();
   const [categories, setCategories] = useState(initial);
   const [name, setName] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [icon, setIcon] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -42,13 +50,15 @@ export function CategoryManager({
   return (
     <div className="space-y-4">
       <form
-        className="flex flex-col gap-3 rounded-3xl bg-white p-4 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)] sm:flex-row"
+        className="space-y-4 rounded-3xl bg-white p-4 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]"
         onSubmit={(event) => {
           event.preventDefault();
           setError(null);
           startTransition(async () => {
             const result = await createCategoryAction(storeId, {
               name,
+              imageUrl: imageUrl || null,
+              icon,
               optionSchema: [],
             });
             if (!result.ok) {
@@ -56,19 +66,38 @@ export function CategoryManager({
               return;
             }
             setName("");
+            setImageUrl("");
+            setIcon(null);
             setCategories((list) => [...list, result.category]);
           });
         }}
       >
-        <Input
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder={t("newCategoryName")}
-          required
-        />
-        <Button type="submit" disabled={pending}>
-          {t("add")}
-        </Button>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder={t("newCategoryName")}
+            required
+          />
+          <Button type="submit" disabled={pending} className="sm:shrink-0">
+            {t("add")}
+          </Button>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div>
+            <p className="mb-2 text-xs font-medium text-slate-600">
+              {t("categoryImage")}
+            </p>
+            <ImageUploadField
+              storeId={storeId}
+              kind="category"
+              name="categoryImageUrl"
+              value={imageUrl}
+              onChange={setImageUrl}
+            />
+          </div>
+          <CategoryIconPicker value={icon} onChange={setIcon} />
+        </div>
       </form>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
@@ -79,11 +108,32 @@ export function CategoryManager({
             className="overflow-hidden rounded-3xl bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]"
           >
             <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-              <div>
-                <p className="font-semibold text-slate-900">{category.name}</p>
-                <p className="text-xs text-slate-500">
-                  {category.optionSchema.length} {t("optionAttributes")}
-                </p>
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sand-100 ring-1 ring-sand-200">
+                  {category.imageUrl ? (
+                    <SafeImage
+                      src={category.imageUrl}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="44px"
+                    />
+                  ) : category.icon ? (
+                    <CategoryIcon icon={category.icon} className="h-5 w-5" />
+                  ) : (
+                    <span className="text-sm font-bold text-brand-800">
+                      {category.name.slice(0, 1)}
+                    </span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-slate-900">
+                    {category.name}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {category.optionSchema.length} {t("optionAttributes")}
+                  </p>
+                </div>
               </div>
               <div className="flex gap-2">
                 <button
@@ -172,6 +222,8 @@ function CategoryOptionsEditor({
     normalizeOptionSchema(category.optionSchema),
   );
   const [name, setName] = useState(category.name ?? "");
+  const [imageUrl, setImageUrl] = useState(category.imageUrl ?? "");
+  const [icon, setIcon] = useState<string | null>(category.icon);
 
   function updateOption(id: string, patch: Partial<CategoryOptionDef>) {
     setOptions((list) =>
@@ -206,6 +258,22 @@ function CategoryOptionsEditor({
           onChange={(event) => setName(event.target.value)}
           className="mt-1"
         />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div>
+          <p className="mb-2 text-xs font-medium text-slate-600">
+            {t("categoryImage")}
+          </p>
+          <ImageUploadField
+            storeId={storeId}
+            kind="category"
+            name="editCategoryImageUrl"
+            value={imageUrl}
+            onChange={setImageUrl}
+          />
+        </div>
+        <CategoryIconPicker value={icon} onChange={setIcon} />
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -400,6 +468,8 @@ function CategoryOptionsEditor({
               }));
             const result = await updateCategoryAction(storeId, category.id, {
               name,
+              imageUrl: imageUrl || null,
+              icon,
               optionSchema: cleaned,
             });
             if (!result.ok) {
