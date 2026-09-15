@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  CategoryIcon,
-  CategoryIconPicker,
-} from "@/components/categories/category-icon-picker";
-import { ImageUploadField } from "@/components/media/image-upload-field";
+import { CategoryIcon } from "@/components/categories/category-icon-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/forms";
 import { SafeImage } from "@/components/ui/safe-image";
@@ -18,6 +14,7 @@ import {
   deleteCategoryAction,
   updateCategoryAction,
 } from "@/features/categories/actions";
+import { CategoryMediaActions } from "@/features/categories/category-media-actions";
 import { useI18n } from "@/i18n/provider";
 import { OPTION_PRESETS, newOptionDef } from "@/lib/category-options";
 import {
@@ -25,6 +22,7 @@ import {
   normalizeHex,
   normalizeOptionSchema,
 } from "@/lib/option-colors";
+import { Pencil, Trash2, X } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 
 export function CategoryManager({
@@ -50,7 +48,7 @@ export function CategoryManager({
   return (
     <div className="space-y-4">
       <form
-        className="space-y-4 rounded-[1.35rem] border border-slate-100/80 bg-white p-4 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)]"
+        className="space-y-3 rounded-[1.35rem] border border-slate-100/80 bg-white p-4 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)]"
         onSubmit={(event) => {
           event.preventDefault();
           setError(null);
@@ -80,24 +78,20 @@ export function CategoryManager({
             required
           />
           <Button type="submit" disabled={pending} className="sm:shrink-0">
-            {t("add")}
+            {pending ? (
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            ) : null}
+            {pending ? t("saving") : t("add")}
           </Button>
         </div>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div>
-            <p className="mb-2 text-xs font-medium text-slate-600">
-              {t("categoryImage")}
-            </p>
-            <ImageUploadField
-              storeId={storeId}
-              kind="category"
-              name="categoryImageUrl"
-              value={imageUrl}
-              onChange={setImageUrl}
-            />
-          </div>
-          <CategoryIconPicker value={icon} onChange={setIcon} />
-        </div>
+
+        <CategoryMediaActions
+          storeId={storeId}
+          imageUrl={imageUrl}
+          icon={icon}
+          onImageUrlChange={setImageUrl}
+          onIconChange={setIcon}
+        />
       </form>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
@@ -135,21 +129,26 @@ export function CategoryManager({
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <button
                   type="button"
-                  className="text-sm font-semibold text-brand-700"
+                  className="inline-flex h-8 items-center gap-1.5 rounded-full bg-brand-50 px-2.5 text-xs font-semibold text-brand-800 transition hover:bg-brand-100"
                   onClick={() =>
                     setExpandedId((id) =>
                       id === category.id ? null : category.id,
                     )
                   }
                 >
+                  {expandedId === category.id ? (
+                    <X className="h-3.5 w-3.5" strokeWidth={1.75} />
+                  ) : (
+                    <Pencil className="h-3.5 w-3.5" strokeWidth={1.75} />
+                  )}
                   {expandedId === category.id ? t("close") : t("editOptions")}
                 </button>
                 <button
                   type="button"
-                  className="text-sm font-semibold text-red-600"
+                  className="inline-flex h-8 items-center gap-1.5 rounded-full bg-red-50 px-2.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
                   disabled={pending}
                   onClick={() =>
                     startTransition(async () => {
@@ -171,6 +170,7 @@ export function CategoryManager({
                     })
                   }
                 >
+                  <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
                   {t("delete")}
                 </button>
               </div>
@@ -260,21 +260,13 @@ function CategoryOptionsEditor({
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div>
-          <p className="mb-2 text-xs font-medium text-slate-600">
-            {t("categoryImage")}
-          </p>
-          <ImageUploadField
-            storeId={storeId}
-            kind="category"
-            name="editCategoryImageUrl"
-            value={imageUrl}
-            onChange={setImageUrl}
-          />
-        </div>
-        <CategoryIconPicker value={icon} onChange={setIcon} />
-      </div>
+      <CategoryMediaActions
+        storeId={storeId}
+        imageUrl={imageUrl}
+        icon={icon}
+        onImageUrlChange={setImageUrl}
+        onIconChange={setIcon}
+      />
 
       <div className="flex flex-wrap gap-2">
         {OPTION_PRESETS.map((preset) => (
@@ -480,6 +472,9 @@ function CategoryOptionsEditor({
           });
         }}
       >
+        {pending ? (
+          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        ) : null}
         {pending ? t("saving") : t("saveOptions")}
       </Button>
     </div>

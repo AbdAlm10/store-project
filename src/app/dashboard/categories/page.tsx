@@ -1,11 +1,9 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { getServices } from "@/infrastructure/container";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { CategoryManager } from "@/features/categories/category-manager";
-import { Button } from "@/components/ui/button";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
+import { getServices } from "@/infrastructure/container";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Categories",
@@ -22,12 +20,9 @@ export default async function CategoriesPage() {
   const categories = await services.categories.listForMerchant(store.id);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-10">
       <PageHeader title={t("categories")} description={t("categoriesPageDesc")} />
       <CategoryManager storeId={store.id} initial={categories} />
-      <Link href="/dashboard/products/new">
-        <Button variant="outline">{t("addProductToCategory")}</Button>
-      </Link>
     </div>
   );
 }

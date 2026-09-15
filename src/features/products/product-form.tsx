@@ -84,7 +84,7 @@ export function ProductForm({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const [intent, setIntent] = useState<"draft" | "publish" | "save">("save");
+  const [intent, setIntent] = useState<"archive" | "publish" | "save">("save");
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? "");
   const [variants, setVariants] = useState<VariantDraft[]>(
     () =>
@@ -166,7 +166,7 @@ export function ProductForm({
       categoryId: categoryId || null,
       status:
         statusOverride ??
-        String(formData.get("status") ?? initial?.status ?? "draft"),
+        String(formData.get("status") ?? initial?.status ?? "published"),
       tags,
       featured: formData.get("featured") === "on",
       images,
@@ -189,8 +189,8 @@ export function ProductForm({
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const statusOverride =
-          intent === "draft"
-            ? "draft"
+          intent === "archive"
+            ? "archived"
             : intent === "publish"
               ? "published"
               : undefined;
@@ -449,22 +449,6 @@ export function ProductForm({
         <p className="text-xs text-slate-500">{t("imageCompressHint")}</p>
       </Section>
 
-      <Section title={t("sectionVisibility")}>
-        <div>
-          <Label htmlFor="status">{t("status")}</Label>
-          <Select
-            id="status"
-            name="status"
-            defaultValue={initial?.status ?? "draft"}
-          >
-            <option value="draft">{t("draft")}</option>
-            <option value="published">{t("published")}</option>
-            <option value="hidden">{t("hidden")}</option>
-            <option value="archived">{t("archived")}</option>
-          </Select>
-        </div>
-      </Section>
-
       {error ? (
         <p className="text-sm text-red-600" role="alert">
           {error}
@@ -477,15 +461,25 @@ export function ProductForm({
           disabled={pending}
           onClick={() => setIntent("save")}
         >
-          {pending ? t("saving") : productId ? t("saveChanges") : t("save")}
+          {pending && intent === "save" ? (
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          ) : null}
+          {pending && intent === "save"
+            ? t("saving")
+            : productId
+              ? t("saveChanges")
+              : t("save")}
         </Button>
         <Button
           type="submit"
           variant="outline"
           disabled={pending}
-          onClick={() => setIntent("draft")}
+          onClick={() => setIntent("archive")}
         >
-          {t("saveAsDraft")}
+          {pending && intent === "archive" ? (
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-brand-600" />
+          ) : null}
+          {pending && intent === "archive" ? t("archiving") : t("archive")}
         </Button>
         <Button
           type="submit"
@@ -493,7 +487,10 @@ export function ProductForm({
           disabled={pending}
           onClick={() => setIntent("publish")}
         >
-          {t("saveAndPublish")}
+          {pending && intent === "publish" ? (
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-brand-200 border-t-brand-700" />
+          ) : null}
+          {pending && intent === "publish" ? t("saving") : t("saveAndPublish")}
         </Button>
         <Button
           type="button"

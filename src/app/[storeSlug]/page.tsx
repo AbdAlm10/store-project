@@ -174,34 +174,51 @@ async function StoreCatalogSection({
 }
 
 function CatalogSkeleton() {
+  const pulse = {
+    background:
+      "color-mix(in srgb, var(--store-border) 55%, var(--store-surface))",
+  } as const;
+
   return (
-    <div className="mx-auto max-w-[100rem] px-3 py-4 sm:px-4 lg:px-5 xl:px-6">
-      <div
-        className="mx-auto h-11 max-w-3xl animate-pulse rounded-full"
-        style={{ background: "var(--store-surface)" }}
-      />
-      <div className="mt-4 flex gap-2.5 overflow-hidden">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <div key={index} className="flex shrink-0 flex-col items-center gap-1">
+    <div className="relative mx-auto w-full max-w-[100rem] px-3 pb-10 pt-2 sm:px-4 lg:px-5 xl:px-6 lg:pt-2.5">
+      <div className="flex items-start gap-3 lg:gap-4" dir="ltr">
+        <div className="min-w-0 flex-1" dir="rtl">
+          <div className="mb-2.5 flex flex-col items-start gap-3">
             <div
-              className="h-10 w-10 animate-pulse rounded-full sm:h-11 sm:w-11"
-              style={{ background: "var(--store-surface)" }}
+              className="h-9 w-full max-w-md animate-pulse rounded-full sm:h-10"
+              style={pulse}
             />
-            <div
-              className="h-2 w-8 animate-pulse rounded"
-              style={{ background: "var(--store-surface)" }}
-            />
+            <div className="flex gap-2 overflow-hidden">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="flex shrink-0 flex-col items-center gap-1"
+                >
+                  <div
+                    className="h-10 w-10 animate-pulse rounded-full sm:h-11 sm:w-11"
+                    style={pulse}
+                  />
+                  <div className="h-2 w-10 animate-pulse rounded" style={pulse} />
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
-      <div
-        className="mt-5 mb-3 h-7 w-40 animate-pulse rounded"
-        style={{ background: "var(--store-surface)" }}
-      />
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-        {Array.from({ length: 12 }).map((_, index) => (
-          <ProductCardSkeleton key={index} />
-        ))}
+          <div className="mb-3 mt-2 h-7 w-40 animate-pulse rounded" style={pulse} />
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+            {Array.from({ length: 12 }).map((_, index) => (
+              <ProductCardSkeleton key={index} />
+            ))}
+          </div>
+        </div>
+        <aside
+          className="sticky top-24 hidden w-[17.5rem] shrink-0 animate-pulse rounded-[1.35rem] lg:block"
+          style={{
+            minHeight: "28rem",
+            background: "var(--store-surface)",
+            boxShadow:
+              "inset 0 0 0 1px color-mix(in srgb, var(--store-border) 55%, transparent)",
+          }}
+        />
       </div>
     </div>
   );

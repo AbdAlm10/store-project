@@ -368,7 +368,9 @@ export function StoreCatalog({
                         count={genreMeta.countByCategory.get(item.id) ?? 0}
                         imageUrl={
                           item.imageUrl ??
-                          genreMeta.thumbByCategory.get(item.id)
+                          (item.icon
+                            ? undefined
+                            : genreMeta.thumbByCategory.get(item.id))
                         }
                         icon={item.icon}
                         onClick={() => setCategorySlug(item.slug)}

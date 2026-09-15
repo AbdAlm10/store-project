@@ -40,42 +40,78 @@ export function ProductCardSkeleton({ className }: { className?: string }) {
       }}
     >
       <div
-        className="aspect-4/5 animate-pulse rounded-t-[1.35rem]"
+        className="relative aspect-4/5 animate-pulse rounded-t-[1.35rem]"
         style={{
           background:
             "color-mix(in srgb, var(--store-border, #ebe0c4) 55%, var(--store-surface, #fff))",
         }}
-      />
+      >
+        <div
+          className="absolute start-2.5 top-2.5 h-5 w-10 animate-pulse rounded-full"
+          style={{
+            background:
+              "color-mix(in srgb, var(--store-surface, #fff) 80%, transparent)",
+          }}
+        />
+      </div>
       <div className="flex flex-1 flex-col gap-2 px-3.5 pb-3.5 pt-3 sm:px-4 sm:pb-4 sm:pt-3.5">
         <div
-          className="h-3.5 w-4/5 animate-pulse rounded"
-          style={{ background: "color-mix(in srgb, var(--store-border, #ebe0c4) 70%, transparent)" }}
+          className="h-3.5 w-[82%] animate-pulse rounded"
+          style={{
+            background:
+              "color-mix(in srgb, var(--store-border, #ebe0c4) 70%, transparent)",
+          }}
         />
         <div
-          className="h-2.5 w-2/5 animate-pulse rounded"
-          style={{ background: "color-mix(in srgb, var(--store-border, #ebe0c4) 55%, transparent)" }}
+          className="h-2.5 w-[38%] animate-pulse rounded"
+          style={{
+            background:
+              "color-mix(in srgb, var(--store-border, #ebe0c4) 55%, transparent)",
+          }}
         />
         <div
-          className="mt-1 h-2.5 w-full animate-pulse rounded"
-          style={{ background: "color-mix(in srgb, var(--store-border, #ebe0c4) 45%, transparent)" }}
+          className="mt-0.5 h-2.5 w-full animate-pulse rounded"
+          style={{
+            background:
+              "color-mix(in srgb, var(--store-border, #ebe0c4) 45%, transparent)",
+          }}
         />
         <div
-          className="h-2.5 w-3/4 animate-pulse rounded"
-          style={{ background: "color-mix(in srgb, var(--store-border, #ebe0c4) 45%, transparent)" }}
+          className="h-2.5 w-[72%] animate-pulse rounded"
+          style={{
+            background:
+              "color-mix(in srgb, var(--store-border, #ebe0c4) 45%, transparent)",
+          }}
         />
-        <div className="mt-auto hidden items-end justify-between pt-3 sm:flex">
+        <div className="mt-auto flex items-end justify-between pt-3">
           <div
             className="h-4 w-16 animate-pulse rounded"
-            style={{ background: "color-mix(in srgb, var(--store-border, #ebe0c4) 70%, transparent)" }}
+            style={{
+              background:
+                "color-mix(in srgb, var(--store-border, #ebe0c4) 70%, transparent)",
+            }}
           />
           <div className="flex gap-1">
             <div
               className="h-3.5 w-3.5 animate-pulse rounded-full"
-              style={{ background: "color-mix(in srgb, var(--store-border, #ebe0c4) 70%, transparent)" }}
+              style={{
+                background:
+                  "color-mix(in srgb, var(--store-border, #ebe0c4) 70%, transparent)",
+              }}
             />
             <div
               className="h-3.5 w-3.5 animate-pulse rounded-full"
-              style={{ background: "color-mix(in srgb, var(--store-border, #ebe0c4) 55%, transparent)" }}
+              style={{
+                background:
+                  "color-mix(in srgb, var(--store-border, #ebe0c4) 55%, transparent)",
+              }}
+            />
+            <div
+              className="hidden h-3.5 w-3.5 animate-pulse rounded-full sm:block"
+              style={{
+                background:
+                  "color-mix(in srgb, var(--store-border, #ebe0c4) 45%, transparent)",
+              }}
             />
           </div>
         </div>
