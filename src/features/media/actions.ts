@@ -33,7 +33,7 @@ export async function uploadImageAction(
             storeId,
             kind === "category" ? "category" : kind === "cover" ? "cover" : "logo",
             payload,
-            kind === "product" ? undefined : { previousUrl },
+            { previousUrl },
           );
 
     return { ok: true, url: uploaded.url, path: uploaded.path };

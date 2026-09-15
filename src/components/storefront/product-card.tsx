@@ -1,5 +1,8 @@
 "use client";
 
+import { useState, type MouseEvent } from "react";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { SafeImage } from "@/components/ui/safe-image";
 import { discountPercent } from "@/domain/rules/store-rules";
 import type { ProductWithMedia } from "@/domain/types/entities";
@@ -12,7 +15,6 @@ import {
 } from "@/lib/option-colors";
 import { formatMoney } from "@/lib/social/sharing";
 import { cn } from "@/lib/utils/cn";
-import Link from "next/link";
 
 /** Truncate on a word boundary and append ellipsis when there is more text. */
 function truncateWithEllipsis(text: string, maxChars: number): string {
@@ -20,8 +22,66 @@ function truncateWithEllipsis(text: string, maxChars: number): string {
   const slice = text.slice(0, maxChars + 1);
   const breakAt = Math.max(slice.lastIndexOf(" "), slice.lastIndexOf("\u00a0"));
   const cut =
-    breakAt > Math.floor(maxChars * 0.55) ? slice.slice(0, breakAt) : text.slice(0, maxChars);
+    breakAt > Math.floor(maxChars * 0.55)
+      ? slice.slice(0, breakAt)
+      : text.slice(0, maxChars);
   return `${cut.trimEnd()}...`;
+}
+
+export function ProductCardSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn("flex h-full flex-col overflow-hidden", className)}
+      style={{
+        borderRadius: "1.35rem",
+        background: "var(--store-card, #fff)",
+        border:
+          "1px solid color-mix(in srgb, var(--store-border, #ebe0c4) 70%, transparent)",
+      }}
+    >
+      <div
+        className="aspect-4/5 animate-pulse rounded-t-[1.35rem]"
+        style={{
+          background:
+            "color-mix(in srgb, var(--store-border, #ebe0c4) 55%, var(--store-surface, #fff))",
+        }}
+      />
+      <div className="flex flex-1 flex-col gap-2 px-3.5 pb-3.5 pt-3 sm:px-4 sm:pb-4 sm:pt-3.5">
+        <div
+          className="h-3.5 w-4/5 animate-pulse rounded"
+          style={{ background: "color-mix(in srgb, var(--store-border, #ebe0c4) 70%, transparent)" }}
+        />
+        <div
+          className="h-2.5 w-2/5 animate-pulse rounded"
+          style={{ background: "color-mix(in srgb, var(--store-border, #ebe0c4) 55%, transparent)" }}
+        />
+        <div
+          className="mt-1 h-2.5 w-full animate-pulse rounded"
+          style={{ background: "color-mix(in srgb, var(--store-border, #ebe0c4) 45%, transparent)" }}
+        />
+        <div
+          className="h-2.5 w-3/4 animate-pulse rounded"
+          style={{ background: "color-mix(in srgb, var(--store-border, #ebe0c4) 45%, transparent)" }}
+        />
+        <div className="mt-auto hidden items-end justify-between pt-3 sm:flex">
+          <div
+            className="h-4 w-16 animate-pulse rounded"
+            style={{ background: "color-mix(in srgb, var(--store-border, #ebe0c4) 70%, transparent)" }}
+          />
+          <div className="flex gap-1">
+            <div
+              className="h-3.5 w-3.5 animate-pulse rounded-full"
+              style={{ background: "color-mix(in srgb, var(--store-border, #ebe0c4) 70%, transparent)" }}
+            />
+            <div
+              className="h-3.5 w-3.5 animate-pulse rounded-full"
+              style={{ background: "color-mix(in srgb, var(--store-border, #ebe0c4) 55%, transparent)" }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function ProductCard({
@@ -40,9 +100,11 @@ export function ProductCard({
   priority?: boolean;
 }) {
   const { t } = useI18n();
-  const primary = product.images[0];
-  const secondary = product.images[1];
-  const imageCount = Math.min(product.images.length, 4);
+  const images = product.images;
+  const [activeIndex, setActiveIndex] = useState(0);
+  const active = images[activeIndex] ?? images[0] ?? null;
+  const imageCount = Math.min(images.length, 4);
+  const canFlip = images.length > 1;
   const discount = discountPercent(product.price, product.compareAtPrice);
   const subtitle = product.category?.name ?? null;
   const fullDescription = product.description
@@ -89,6 +151,13 @@ export function ProductCard({
     allColorSwatches.length - colorSwatches.length,
   );
 
+  function stepImage(delta: number, event: MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (images.length < 2) return;
+    setActiveIndex((current) => (current + delta + images.length) % images.length);
+  }
+
   return (
     <Link
       href={href}
@@ -103,38 +172,23 @@ export function ProductCard({
       style={{
         borderRadius: "1.35rem",
         background: "var(--store-card)",
-        border: "1px solid color-mix(in srgb, var(--store-border) 70%, transparent)",
+        border:
+          "1px solid color-mix(in srgb, var(--store-border) 70%, transparent)",
         boxShadow: "0 10px 28px -22px rgba(0,0,0,0.35)",
         fontFamily: "var(--store-font-body)",
         color: "var(--store-text)",
       }}
     >
       <div className="relative aspect-4/5 overflow-hidden rounded-t-[1.35rem]">
-        {primary ? (
-          <>
-            <SafeImage
-              src={primary.url}
-              alt={primary.alt ?? product.name}
-              fill
-              priority={priority}
-              className={cn(
-                "object-cover transition duration-700 ease-out",
-                secondary
-                  ? "group-hover/card:opacity-0 group-hover/card:scale-105"
-                  : "group-hover/card:scale-[1.04]",
-              )}
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-            />
-            {secondary ? (
-              <SafeImage
-                src={secondary.url}
-                alt={secondary.alt ?? product.name}
-                fill
-                className="object-cover opacity-0 scale-105 transition duration-700 ease-out group-hover/card:opacity-100 group-hover/card:scale-100"
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-              />
-            ) : null}
-          </>
+        {active ? (
+          <SafeImage
+            src={active.url}
+            alt={active.alt ?? product.name}
+            fill
+            priority={priority}
+            className="object-cover transition duration-500 ease-out group-hover/card:scale-[1.03]"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+          />
         ) : (
           <div
             className="absolute inset-0 flex items-center justify-center"
@@ -194,18 +248,37 @@ export function ProductCard({
           </div>
         ) : null}
 
+        {canFlip ? (
+          <>
+            <button
+              type="button"
+              aria-label="Previous image"
+              onClick={(event) => stepImage(-1, event)}
+              className="absolute start-1.5 top-1/2 z-3 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white opacity-80 backdrop-blur-[2px] transition hover:bg-black/50 hover:opacity-100 sm:h-7 sm:w-7 sm:opacity-0 sm:group-hover/card:opacity-90"
+            >
+              <ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" strokeWidth={2.25} />
+            </button>
+            <button
+              type="button"
+              aria-label="Next image"
+              onClick={(event) => stepImage(1, event)}
+              className="absolute end-1.5 top-1/2 z-3 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white opacity-80 backdrop-blur-[2px] transition hover:bg-black/50 hover:opacity-100 sm:h-7 sm:w-7 sm:opacity-0 sm:group-hover/card:opacity-90"
+            >
+              <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" strokeWidth={2.25} />
+            </button>
+          </>
+        ) : null}
+
         {imageCount > 1 ? (
           <div className="absolute inset-x-0 bottom-2.5 z-2 flex justify-center gap-1.5 max-sm:bottom-11">
             {Array.from({ length: imageCount }).map((_, index) => (
               <span
                 key={index}
                 className={cn(
-                  "h-1.5 w-1.5 rounded-full transition-colors duration-500",
-                  index === 0
-                    ? "bg-white group-hover/card:bg-white/45"
-                    : index === 1 && secondary
-                      ? "bg-white/45 group-hover/card:bg-white"
-                      : "bg-white/45",
+                  "h-1.5 w-1.5 rounded-full transition-colors duration-300",
+                  index === Math.min(activeIndex, imageCount - 1)
+                    ? "bg-white"
+                    : "bg-white/45",
                 )}
               />
             ))}
@@ -286,7 +359,10 @@ export function ProductCard({
         ) : null}
 
         <div className="mt-auto hidden items-end justify-between gap-2 pt-3 sm:flex">
-          <div className="flex min-w-0 flex-col items-start gap-0.5 text-left" dir="ltr">
+          <div
+            className="flex min-w-0 flex-col items-start gap-0.5 text-left"
+            dir="ltr"
+          >
             {product.compareAtPrice ? (
               <span
                 className="text-[11px] leading-none tabular-nums line-through"

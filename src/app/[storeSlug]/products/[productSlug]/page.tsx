@@ -1,31 +1,29 @@
-import { Suspense } from "react";
-import type { Metadata } from "next";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getServices } from "@/infrastructure/container";
-import { Badge } from "@/components/ui/feedback";
-import { SafeImage } from "@/components/ui/safe-image";
-import { StoreNav } from "@/components/storefront/store-header";
+import { PoweredByBrand } from "@/components/brand/powered-by-brand";
+import { ProductGallery } from "@/components/storefront/product-gallery";
 import { ProductPurchasePanel } from "@/components/storefront/product-purchase-panel";
+import { StoreNav } from "@/components/storefront/store-header";
+import {
+  DEFAULT_THEME_TOKENS,
+  resolveThemeTokens,
+  storefrontCssVars,
+} from "@/config/themes";
 import { discountPercent } from "@/domain/rules/store-rules";
+import { getRequestLocale } from "@/i18n/get-locale";
+import { createTranslator } from "@/i18n/messages";
+import { getServices } from "@/infrastructure/container";
 import {
   buildWhatsAppOrderMessage,
   formatMoney,
   productShareText,
   productUrl,
 } from "@/lib/social/sharing";
-import { appConfig } from "@/config/app";
-import {
-  DEFAULT_THEME_TOKENS,
-  resolveThemeTokens,
-  storefrontCssVars,
-} from "@/config/themes";
-import { getRequestLocale } from "@/i18n/get-locale";
-import { createTranslator } from "@/i18n/messages";
 import {
   getCachedStorefront,
   getStorefrontProduct,
 } from "@/lib/storefront-data";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 type Props = PageProps<"/[storeSlug]/products/[productSlug]">;
 
@@ -96,7 +94,7 @@ export default async function ProductPage({ params }: Props) {
   });
   const url = productUrl(store.slug, product.slug);
   const shareText = productShareText(store, product);
-  const primaryImage = product.images[0];
+  const subtitle = product.category?.name ?? null;
 
   return (
     <div
@@ -110,146 +108,155 @@ export default async function ProductPage({ params }: Props) {
     >
       <StoreNav store={store} />
 
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 lg:grid-cols-2 lg:py-12 sm:px-6">
-        <div>
-          <Link
-            href={`/${store.slug}`}
-            prefetch
-            className="text-sm font-medium transition hover:opacity-80"
-            style={{ color: "var(--store-accent)" }}
-          >
-            ← {store.name}
-          </Link>
-          <div
-            className="relative mt-4 aspect-square overflow-hidden"
-            style={{
-              background: "var(--store-card)",
-              boxShadow: "inset 0 0 0 1px var(--store-border)",
-              borderRadius: "var(--store-radius)",
-            }}
-          >
-            {primaryImage ? (
-              <SafeImage
-                src={primaryImage.url}
-                alt={primaryImage.alt ?? product.name}
-                fill
-                priority
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
-            ) : null}
+      <div className="w-full px-4 pt-4 pb-5 sm:px-8 sm:pt-5 sm:pb-8 lg:px-12 xl:px-16">
+        <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-20 2xl:gap-24">
+          <div className="lg:sticky lg:top-[calc(var(--store-logo-size)+2rem)] lg:self-start">
+            <ProductGallery
+              images={product.images}
+              productName={product.name}
+              featured={product.featured}
+              discount={discount}
+              featuredLabel={t("featured")}
+              accent={store.primaryColor}
+            />
           </div>
-          {product.images.length > 1 ? (
-            <div className="mt-3 grid grid-cols-4 gap-2">
-              {product.images.map((image) => (
-                <div
-                  key={image.id}
-                  className="relative aspect-square overflow-hidden"
-                  style={{
-                    background: "var(--store-card)",
-                    boxShadow: "inset 0 0 0 1px var(--store-border)",
-                    borderRadius: "calc(var(--store-radius) * 0.55)",
-                  }}
-                >
-                  <SafeImage
-                    src={image.url}
-                    alt={image.alt ?? product.name}
-                    fill
-                    className="object-cover"
-                    sizes="120px"
+
+
+          <Suspense
+            fallback={
+              <div className="flex min-w-0 flex-col gap-5 lg:gap-8">
+                <div className="space-y-3">
+                  <div
+                    className="h-10 w-2/3 animate-pulse rounded"
+                    style={{
+                      background:
+                        "color-mix(in srgb, var(--store-border) 55%, transparent)",
+                    }}
+                  />
+                  <div
+                    className="h-3.5 w-full animate-pulse rounded"
+                    style={{
+                      background:
+                        "color-mix(in srgb, var(--store-border) 40%, transparent)",
+                    }}
+                  />
+                  <div
+                    className="h-3.5 w-4/5 animate-pulse rounded"
+                    style={{
+                      background:
+                        "color-mix(in srgb, var(--store-border) 35%, transparent)",
+                    }}
                   />
                 </div>
-              ))}
-            </div>
-          ) : null}
-        </div>
-
-        <Suspense
-          fallback={
-            <div className="h-64 animate-pulse rounded-2xl bg-[var(--store-surface)]" />
-          }
-        >
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-2">
-              {product.category ? (
-                <Badge
-                  style={{
-                    background: "var(--store-surface)",
-                    color: "var(--store-text)",
-                    boxShadow: "inset 0 0 0 1px var(--store-border)",
-                  }}
-                >
-                  {product.category.name}
-                </Badge>
-              ) : null}
-              {discount ? (
-                <Badge
-                  style={{
-                    background: "var(--store-accent)",
-                    color: "var(--store-button-text)",
-                  }}
-                >
-                  -{discount}%
-                </Badge>
-              ) : null}
-            </div>
-            <h1
-              className="text-3xl tracking-tight sm:text-4xl"
-              style={{ fontFamily: "var(--store-font-display)" }}
-            >
-              {product.name}
-            </h1>
-            {product.description ? (
-              <p
-                className="leading-relaxed"
-                style={{ color: "var(--store-muted)" }}
-              >
-                {product.description}
-              </p>
-            ) : null}
-
-            {Object.keys(product.specifications).length > 0 ? (
-              <dl
-                className="grid grid-cols-2 gap-3 p-4"
-                style={{
-                  background: "var(--store-card)",
-                  boxShadow: "inset 0 0 0 1px var(--store-border)",
-                  borderRadius: "var(--store-radius)",
-                }}
-              >
-                {Object.entries(product.specifications).map(([key, value]) => (
-                  <div key={key}>
-                    <dt
-                      className="text-xs uppercase tracking-wide"
-                      style={{ color: "var(--store-muted)" }}
+                <div className="flex gap-3">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="h-11 w-11 animate-pulse rounded-full"
+                      style={{
+                        background:
+                          "color-mix(in srgb, var(--store-border) 50%, transparent)",
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="mt-auto flex gap-3 pt-4">
+                  <div
+                    className="h-14 flex-1 animate-pulse rounded-2xl"
+                    style={{
+                      background:
+                        "color-mix(in srgb, var(--store-border) 50%, transparent)",
+                    }}
+                  />
+                  <div
+                    className="h-14 w-14 animate-pulse rounded-2xl"
+                    style={{
+                      background:
+                        "color-mix(in srgb, var(--store-border) 50%, transparent)",
+                    }}
+                  />
+                </div>
+              </div>
+            }
+          >
+            <div className="flex min-w-0 flex-col gap-5 lg:gap-8">
+              <header className="space-y-2">
+                <div className="hidden flex-wrap items-center gap-2.5 sm:flex">
+                  {discount ? (
+                    <span
+                      className="text-sm font-bold"
+                      style={{ color: "var(--store-accent)" }}
                     >
-                      {key}
-                    </dt>
-                    <dd className="text-sm font-medium">{value}</dd>
-                  </div>
-                ))}
-              </dl>
-            ) : null}
+                      -{discount}%
+                    </span>
+                  ) : null}
+                  {product.featured ? (
+                    <span
+                      className="text-md font-bold"
+                      style={{ color: "var(--store-text)" }}
+                    >
+                      {t("featured")}
+                    </span>
+                  ) : null}
+                </div>
 
-            <ProductPurchasePanel
-              store={store}
-              productName={product.name}
-              basePrice={product.price}
-              compareAtPrice={product.compareAtPrice}
-              currency={product.currency}
-              stock={product.stock}
-              variants={product.variants}
-              optionSchema={product.category?.optionSchema ?? []}
-              whatsappUrl={wa?.url ?? null}
-              shareUrl={url}
-              shareText={shareText}
-            />
+                <h1
+                  className="text-3xl font-bold tracking-tight sm:text-4xl xl:text-5xl"
+                  style={{ fontFamily: "var(--store-font-display)" }}
+                >
+                  {product.name}
+                </h1>
 
-            <p className="text-xs" style={{ color: "var(--store-muted)" }}>
-              {t("poweredBy")} {appConfig.name}
-            </p>
-          </div>
-        </Suspense>
+                {subtitle ? (
+                  <p
+                    className="text-base sm:text-lg"
+                    style={{ color: "var(--store-muted)" }}
+                  >
+                    {subtitle}
+                  </p>
+                ) : null}
+
+                {product.description ? (
+                  <p
+                    className="max-w-2xl text-base leading-relaxed sm:text-lg"
+                    style={{
+                      color:
+                        "color-mix(in srgb, var(--store-muted) 88%, var(--store-text))",
+                    }}
+                  >
+                    {product.description}
+                  </p>
+                ) : null}
+
+                  {/* <Link
+          href={`/${store.slug}`}
+          prefetch
+          className="mb-6 inline-flex text-sm font-medium transition hover:opacity-80 lg:mb-8"
+          style={{ color: "var(--store-accent)" }}
+        >
+          ← {t("backToStore")}
+        </Link> */}
+              </header>
+
+              <ProductPurchasePanel
+                store={store}
+                productName={product.name}
+                basePrice={product.price}
+                compareAtPrice={product.compareAtPrice}
+                currency={product.currency}
+                stock={product.stock}
+                variants={product.variants}
+                optionSchema={product.category?.optionSchema ?? []}
+                specifications={product.specifications}
+                whatsappUrl={wa?.url ?? null}
+                shareUrl={url}
+                shareText={shareText}
+              />
+
+              <PoweredByBrand className="mt-1" />
+            </div>
+          </Suspense>
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils/cn";
-import { contrastingInk } from "@/lib/option-colors";
 
 export function ColorSwatchButton({
   label,
@@ -20,7 +19,6 @@ export function ColorSwatchButton({
 }) {
   const dim =
     size === "sm" ? "h-5 w-5" : size === "lg" ? "h-11 w-11" : "h-9 w-9";
-  const ink = contrastingInk(hex);
 
   return (
     <button
@@ -40,19 +38,10 @@ export function ColorSwatchButton({
       style={{
         background: hex,
         boxShadow: selected
-          ? `0 0 0 2px var(--store-bg, #fff), 0 0 0 4px var(--store-accent, #58a379)`
-          : `inset 0 0 0 1px rgb(0 0 0 / 18%)`,
+          ? `0 0 0 2px var(--store-bg, #fff), 0 0 0 3px var(--store-text, #1c241e)`
+          : undefined,
       }}
-    >
-      {selected && size !== "sm" ? (
-        <span
-          className="absolute inset-0 flex items-center justify-center text-[10px] font-bold"
-          style={{ color: ink }}
-        >
-          ✓
-        </span>
-      ) : null}
-    </button>
+    />
   );
 }
 
@@ -83,9 +72,8 @@ export function TextOptionChip({
               color: "var(--store-button-text)",
             }
           : {
-              background: "var(--store-card)",
-              color: "var(--store-text)",
-              boxShadow: "inset 0 0 0 1px var(--store-border)",
+              background: "transparent",
+              color: "var(--store-muted)",
             }
       }
     >

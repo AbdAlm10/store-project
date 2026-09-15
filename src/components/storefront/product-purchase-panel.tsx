@@ -1,23 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  ColorSwatchButton,
+  TextOptionChip,
+} from "@/components/storefront/option-swatches";
 import type {
   CategoryOptionDef,
   ProductVariant,
   Store,
 } from "@/domain/types/entities";
-import { formatMoney } from "@/lib/social/sharing";
 import { useI18n } from "@/i18n/provider";
-import { ShareBar } from "@/components/storefront/share-bar";
-import {
-  ColorSwatchButton,
-  TextOptionChip,
-} from "@/components/storefront/option-swatches";
 import {
   findHexInSchema,
   isColorOptionName,
   resolveValueHex,
 } from "@/lib/option-colors";
+import { formatMoney } from "@/lib/social/sharing";
+import { cn } from "@/lib/utils/cn";
+import { Share2 } from "lucide-react";
+import { useMemo, useState } from "react";
 
 export function ProductPurchasePanel({
   store,
@@ -28,6 +29,7 @@ export function ProductPurchasePanel({
   stock,
   variants,
   optionSchema = [],
+  specifications = {},
   whatsappUrl,
   shareUrl,
   shareText,
@@ -40,6 +42,7 @@ export function ProductPurchasePanel({
   stock: number | null;
   variants: ProductVariant[];
   optionSchema?: CategoryOptionDef[];
+  specifications?: Record<string, string>;
   whatsappUrl: string | null;
   shareUrl: string;
   shareText: string;
@@ -48,6 +51,7 @@ export function ProductPurchasePanel({
   const [selectedId, setSelectedId] = useState<string | null>(
     variants[0]?.id ?? null,
   );
+  const [shareHint, setShareHint] = useState(false);
 
   const optionAxes = useMemo(() => {
     const fromVariants = new Map<string, Set<string>>();
@@ -63,8 +67,6 @@ export function ProductPurchasePanel({
         .filter((opt) => opt.values.length > 0)
         .map((opt) => {
           const available = fromVariants.get(opt.name);
-          // Category schema is source of truth — never show removed colors/sizes.
-          // If the product has variants, only show schema values that exist on them.
           const values = opt.values
             .map((value) => {
               const label = value.label;
@@ -75,7 +77,6 @@ export function ProductPurchasePanel({
               ) {
                 return null;
               }
-              // Variants exist for other axes but this axis never appears → skip
               if (fromVariants.size > 0 && !available) {
                 return null;
               }
@@ -131,6 +132,7 @@ export function ProductPurchasePanel({
   const active = matched ?? variants.find((item) => item.id === selectedId);
   const price = active?.price ?? basePrice;
   const activeStock = active?.stock ?? stock;
+  const specEntries = Object.entries(specifications);
 
   let waHref = whatsappUrl;
   const optionLines = active
@@ -143,70 +145,41 @@ export function ProductPurchasePanel({
     waHref = waHref.includes("?") ? `${waHref}${extra}` : waHref;
   }
 
-  const selectionSummary = optionAxes
-    .map((axis) => {
-      const value = picked[axis.name];
-      return value ? `${axis.name}: ${value}` : null;
-    })
-    .filter(Boolean)
-    .join(" · ");
+  async function handleShare() {
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share({ title: productName, text: shareText, url: shareUrl });
+        return;
+      }
+      await navigator.clipboard.writeText(shareUrl);
+      setShareHint(true);
+      setTimeout(() => setShareHint(false), 1600);
+    } catch {
+      /* user cancelled share */
+    }
+  }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-baseline gap-3">
-        <span className="text-3xl font-bold">
-          {formatMoney(price, currency as "USD", locale)}
-        </span>
-        {compareAtPrice ? (
-          <span className="text-lg opacity-50 line-through">
-            {formatMoney(compareAtPrice, currency as "USD", locale)}
-          </span>
-        ) : null}
-      </div>
-
-      <p className="text-sm opacity-70">
-        {activeStock === 0
-          ? t("outOfStock")
-          : activeStock != null
-            ? `${activeStock} ${t("inStock")}`
-            : t("available")}
-      </p>
-
+    <div className="flex h-full flex-col gap-4 lg:gap-8">
       {optionAxes.length > 0 ? (
-        <div className="space-y-5">
-          <div className="flex items-end justify-between gap-3">
-            <h2 className="text-sm font-semibold">{t("chooseOptions")}</h2>
-            {selectionSummary ? (
-              <p
-                className="text-xs"
-                style={{ color: "var(--store-muted)" }}
-              >
-                {selectionSummary}
-              </p>
-            ) : null}
-          </div>
+        <div className="space-y-3">
           {optionAxes.map((axis) => (
-            <div key={axis.name} className="space-y-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <p
-                  className="text-xs font-semibold uppercase tracking-wide"
-                  style={{ color: "var(--store-muted)" }}
-                >
-                  {axis.name}
-                </p>
-                {picked[axis.name] ? (
-                  <span className="text-xs font-medium">{picked[axis.name]}</span>
-                ) : null}
-              </div>
+            <div key={axis.name} className="space-y-3">
+              <p
+                className="text-[11px] font-bold uppercase tracking-[0.14em]"
+                style={{ color: "var(--store-text)" }}
+              >
+                {axis.name}
+              </p>
               {axis.kind === "color" ? (
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-start gap-4">
                   {axis.values.map((value) => {
                     const hex = value.hex ?? "#94A3B8";
                     const selected = picked[axis.name] === value.label;
                     return (
                       <div
                         key={value.label}
-                        className="flex flex-col items-center gap-1.5"
+                        className="flex flex-col items-center gap-2"
                       >
                         <ColorSwatchButton
                           label={value.label}
@@ -221,15 +194,13 @@ export function ProductPurchasePanel({
                           }
                         />
                         <span
-                          className="max-w-[4.5rem] truncate text-[10px] font-medium"
-                          style={{
-                            color: selected
-                              ? "var(--store-text)"
-                              : "var(--store-muted)",
-                          }}
-                        >
-                          {value.label}
-                        </span>
+                          className={cn(
+                            "h-0.5 w-7 rounded-full transition",
+                            selected ? "opacity-100" : "opacity-0",
+                          )}
+                          style={{ background: "var(--store-text)" }}
+                          aria-hidden
+                        />
                       </div>
                     );
                   })}
@@ -255,8 +226,13 @@ export function ProductPurchasePanel({
           ))}
         </div>
       ) : variants.length > 0 ? (
-        <div>
-          <h2 className="mb-2 text-sm font-semibold">{t("variants")}</h2>
+        <div className="space-y-3">
+          <p
+            className="text-[11px] font-bold uppercase tracking-[0.14em]"
+            style={{ color: "var(--store-text)" }}
+          >
+            {t("variants")}
+          </p>
           <div className="flex flex-wrap gap-2">
             {variants.map((variant) => (
               <TextOptionChip
@@ -270,31 +246,104 @@ export function ProductPurchasePanel({
         </div>
       ) : null}
 
-      {waHref ? (
-        <a
-          href={waHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex h-12 w-full items-center justify-center text-base font-semibold transition active:scale-[0.99] sm:w-auto sm:px-8"
-          style={{
-            backgroundColor: "var(--store-accent)",
-            color: "var(--store-button-text)",
-            borderRadius: "var(--store-radius)",
-          }}
-        >
-          {t("orderWhatsApp")}
-          {active ? ` · ${active.name}` : ""}
-        </a>
+      {specEntries.length > 0 ? (
+        <dl className="space-y-4">
+          {specEntries.map(([key, value]) => (
+            <div
+              key={key}
+              className="flex items-baseline justify-between gap-6"
+            >
+              <dt
+                className="text-xs font-bold uppercase tracking-[0.12em]"
+                style={{ color: "var(--store-text)" }}
+              >
+                {key}
+              </dt>
+              <dd
+                className="text-end text-base leading-snug"
+                style={{ color: "var(--store-muted)" }}
+              >
+                {value}
+              </dd>
+            </div>
+          ))}
+        </dl>
       ) : null}
 
-      <div>
-        <h2 className="mb-2 text-sm font-semibold">{t("share")}</h2>
-        <ShareBar url={shareUrl} text={shareText} />
-      </div>
+      <div className="mt-auto space-y-4 pt-1">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-end gap-x-4">
+            <span
+              className="text-3xl font-bold tracking-tight tabular-nums sm:text-4xl"
+              style={{ color: "var(--store-text)" }}
+            >
+              {formatMoney(price, currency as "USD", locale)}
+            </span>
+            {compareAtPrice ? (
+              <span
+                className="pb-1.5 text-lg tabular-nums line-through"
+                style={{ color: "var(--store-muted)" }}
+              >
+                {formatMoney(compareAtPrice, currency as "USD", locale)}
+              </span>
+            ) : null}
+          </div>
+          <p className="text-sm" style={{ color: "var(--store-muted)" }} dir="rtl">
+            {activeStock === 0
+              ? t("outOfStock")
+              : activeStock != null
+                ? `${activeStock} ${t("inStock")}`
+                : t("available")}
+          </p>
+        </div>
 
-      <p className="text-xs opacity-50">
-        {store.name} · {productName}
-      </p>
+        <div className="flex items-stretch gap-3">
+          {waHref ? (
+            <a
+              href={waHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex rounded-2xl h-14 min-h-14 flex-1 items-center justify-center px-6 text-sm font-bold tracking-[0.08em] uppercase transition active:scale-[0.99]"
+              style={{
+                backgroundColor:
+                  activeStock === 0
+                    ? "color-mix(in srgb, var(--store-accent) 55%, transparent)"
+                    : "var(--store-accent)",
+                color: "var(--store-button-text)",
+                pointerEvents: activeStock === 0 ? "none" : undefined,
+                opacity: activeStock === 0 ? 0.7 : 1,
+              }}
+            >
+              {activeStock === 0 ? t("outOfStock") : t("orderWhatsApp")}
+            </a>
+          ) : (
+            <div
+              className="inline-flex rounded-2xl h-14 flex-1 items-center justify-center px-6 text-sm font-bold"
+              style={{
+                background: "var(--store-text)",
+                color: "var(--store-bg)",
+              }}
+            >
+              {t("orderWhatsApp")}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={handleShare}
+            aria-label={t("share")}
+            title={shareHint ? t("copied") : t("share")}
+            className="inline-flex rounded-2xl h-14 w-14 shrink-0 items-center justify-center transition active:scale-[0.97]"
+            style={{
+              backgroundColor: "var(--store-text)",
+              color: "var(--store-bg)",
+            }}
+          >
+            <Share2 className="h-5 w-5" strokeWidth={2} />
+          </button>
+        </div>
+
+      </div>
     </div>
   );
 }

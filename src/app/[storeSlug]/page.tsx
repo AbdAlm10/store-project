@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { getServices } from "@/infrastructure/container";
 import { StoreNav } from "@/components/storefront/store-header";
 import { StoreCatalog } from "@/components/storefront/store-catalog";
+import { ProductCardSkeleton } from "@/components/storefront/product-card";
+import { PoweredByBrand } from "@/components/brand/powered-by-brand";
 import { appConfig } from "@/config/app";
 import {
   DEFAULT_THEME_TOKENS,
@@ -124,9 +126,9 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
         >
           {store.name}
         </p>
-        <p className="mt-0.5 text-[10px] tracking-wide opacity-80">
-          {t("poweredBy")} {appConfig.name}
-        </p>
+        <div className="mt-1.5 flex justify-center">
+          <PoweredByBrand />
+        </div>
       </footer>
     </div>
   );
@@ -196,16 +198,9 @@ function CatalogSkeleton() {
         className="mt-5 mb-3 h-7 w-40 animate-pulse rounded"
         style={{ background: "var(--store-surface)" }}
       />
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 xl:grid-cols-4">
-        {Array.from({ length: 8 }).map((_, index) => (
-          <div
-            key={index}
-            className="aspect-3/4 animate-pulse"
-            style={{
-              background: "var(--store-surface)",
-              borderRadius: "1.1rem",
-            }}
-          />
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        {Array.from({ length: 12 }).map((_, index) => (
+          <ProductCardSkeleton key={index} />
         ))}
       </div>
     </div>
