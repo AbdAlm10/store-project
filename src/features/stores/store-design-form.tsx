@@ -65,7 +65,7 @@ export function StoreDesignForm({ store }: { store: Store }) {
 
   return (
     <form
-      className="space-y-8"
+      className="min-w-0 max-w-full space-y-8"
       onSubmit={(event) => {
         event.preventDefault();
         setError(null);
@@ -92,7 +92,7 @@ export function StoreDesignForm({ store }: { store: Store }) {
       }}
     >
       <section
-        className="rounded-3xl p-6"
+        className="min-w-0 max-w-full overflow-hidden rounded-3xl p-6"
         style={
           {
             background: preview.surface,
@@ -175,7 +175,7 @@ export function StoreDesignForm({ store }: { store: Store }) {
         </div>
       </section>
 
-      <section className="rounded-3xl bg-white p-6 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
+      <section className="rounded-[1.35rem] border border-slate-100/80 bg-white p-6 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)]">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">
@@ -193,19 +193,20 @@ export function StoreDesignForm({ store }: { store: Store }) {
           {THEME_TOKEN_KEYS.map((key) => {
             const value = preview[key];
             return (
-              <div key={key}>
+              <div key={key} className="min-w-0">
                 <Label htmlFor={`token-${key}`}>{t(TOKEN_LABEL_KEYS[key])}</Label>
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 items-center gap-2">
                   <Input
                     id={`token-${key}`}
                     type="color"
                     value={normalizeHex(value)}
                     onChange={(event) => setToken(key, event.target.value)}
-                    className="h-11 w-14 p-1"
+                    className="h-11 w-14 shrink-0 p-1"
                   />
                   <Input
                     value={value}
                     onChange={(event) => setToken(key, event.target.value)}
+                    className="min-w-0"
                   />
                 </div>
               </div>
@@ -214,7 +215,7 @@ export function StoreDesignForm({ store }: { store: Store }) {
         </div>
       </section>
 
-      <section className="rounded-3xl bg-white p-6 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
+      <section className="rounded-[1.35rem] border border-slate-100/80 bg-white p-6 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)]">
         <h2 className="text-lg font-semibold text-slate-900">{t("branding")}</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>

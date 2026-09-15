@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import type { Category, CategoryOptionDef } from "@/domain/types/entities";
+import { ImageUploadField } from "@/components/media/image-upload-field";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/forms";
-import { ImageUploadField } from "@/components/media/image-upload-field";
+import type { Category, CategoryOptionDef } from "@/domain/types/entities";
 import {
   createProductAction,
   updateProductAction,
@@ -16,6 +14,8 @@ import {
   pruneVariantsToSchema,
 } from "@/lib/category-options";
 import { MIN_PRODUCT_DESCRIPTION_LENGTH } from "@/validations/schemas";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState, useTransition } from "react";
 
 type VariantDraft = {
   name: string;
@@ -62,7 +62,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="space-y-4 rounded-3xl bg-white p-4 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)] sm:p-5">
+    <section className="space-y-4 rounded-[1.35rem] border border-slate-100/80 bg-white p-4 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)] sm:p-5">
       <div>
         <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
         {description ? (

@@ -27,7 +27,7 @@ export default async function SettingsPage() {
     <div className="space-y-6">
       <PageHeader title={t("settings")} description={t("settingsDesc")} />
 
-      <DashboardCard padding="sm" className="bg-slate-50/80">
+      <DashboardCard padding="sm" className="bg-[#f3f5f8] border-transparent shadow-none">
         <p className="text-sm text-slate-500">
           Data mode:{" "}
           <span className="font-semibold text-slate-900">
@@ -68,7 +68,7 @@ export default async function SettingsPage() {
       <section className="grid gap-3 sm:grid-cols-2">
         <Link
           href="/dashboard/store"
-          className="rounded-2xl bg-white p-5 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5"
+          className="rounded-[1.25rem] border border-slate-100/80 bg-white p-5 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:border-brand-200/60"
         >
           <p className="font-semibold text-slate-900">{t("storefrontSettings")}</p>
           <p className="mt-1 text-sm text-slate-400">
@@ -77,21 +77,21 @@ export default async function SettingsPage() {
         </Link>
         <Link
           href="/dashboard/store-design"
-          className="rounded-2xl bg-white p-5 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5"
+          className="rounded-[1.25rem] border border-slate-100/80 bg-white p-5 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:border-brand-200/60"
         >
           <p className="font-semibold text-slate-900">{t("design")}</p>
           <p className="mt-1 text-sm text-slate-400">{t("designCardDesc")}</p>
         </Link>
         <Link
           href="/dashboard/subscription"
-          className="rounded-2xl bg-white p-5 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5"
+          className="rounded-[1.25rem] border border-slate-100/80 bg-white p-5 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:border-brand-200/60"
         >
           <p className="font-semibold text-slate-900">{t("subscription")}</p>
           <p className="mt-1 text-sm text-slate-400">
             {t("subscriptionCardDesc")}
           </p>
         </Link>
-        <div className="rounded-2xl bg-white p-5 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
+        <div className="rounded-[1.25rem] border border-slate-100/80 bg-white p-5 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)]">
           <p className="font-semibold text-slate-900">{t("passwordReset")}</p>
           <p className="mt-1 text-sm text-slate-400">{t("passwordResetDesc")}</p>
           <Link href="/login" className="mt-3 inline-block">

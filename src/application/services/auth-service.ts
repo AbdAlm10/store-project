@@ -1,8 +1,35 @@
+import { cache } from "react";
 import { AppError } from "@/domain/errors";
 import type { Profile } from "@/domain/types/entities";
 import type { AuthProvider, AuthSession } from "@/application/ports/providers";
 import type { UserRepository } from "@/application/ports/repositories";
 import { signInSchema, signUpSchema } from "@/validations/schemas";
+
+/**
+ * Request-scoped dedupe: layout + page + service methods often call these
+ * multiple times in one RSC render.
+ */
+const cachedSession = cache(async (auth: AuthProvider) => auth.getSession());
+
+const cachedProfile = cache(
+  async (
+    auth: AuthProvider,
+    users: UserRepository,
+  ): Promise<{ session: AuthSession; profile: Profile }> => {
+    const session = await cachedSession(auth);
+    if (!session) {
+      throw new AppError("UNAUTHORIZED", "Please sign in to continue.");
+    }
+    const profile = await users.findProfileById(session.user.id);
+    if (!profile) {
+      throw new AppError("UNAUTHORIZED", "Profile not found.");
+    }
+    if (profile.suspendedAt) {
+      throw new AppError("FORBIDDEN", "This account has been suspended.");
+    }
+    return { session, profile };
+  },
+);
 
 export class AuthService {
   constructor(
@@ -35,7 +62,7 @@ export class AuthService {
   }
 
   async requireSession(): Promise<AuthSession> {
-    const session = await this.auth.getSession();
+    const session = await cachedSession(this.auth);
     if (!session) {
       throw new AppError("UNAUTHORIZED", "Please sign in to continue.");
     }
@@ -43,15 +70,7 @@ export class AuthService {
   }
 
   async requireProfile(): Promise<{ session: AuthSession; profile: Profile }> {
-    const session = await this.requireSession();
-    const profile = await this.users.findProfileById(session.user.id);
-    if (!profile) {
-      throw new AppError("UNAUTHORIZED", "Profile not found.");
-    }
-    if (profile.suspendedAt) {
-      throw new AppError("FORBIDDEN", "This account has been suspended.");
-    }
-    return { session, profile };
+    return cachedProfile(this.auth, this.users);
   }
 
   async requireAdmin(): Promise<{ session: AuthSession; profile: Profile }> {

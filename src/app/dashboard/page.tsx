@@ -10,8 +10,12 @@ import {
   Store,
   Tags,
 } from "lucide-react";
-import { CopyStoreUrl } from "@/features/dashboard/copy-store-url";
+import { ShareStoreLinkButton } from "@/features/dashboard/copy-store-url";
 import { getServices } from "@/infrastructure/container";
+import {
+  getDashboardProfile,
+  getDashboardStores,
+} from "@/lib/dashboard-request";
 import { storeUrl } from "@/lib/social/sharing";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +27,7 @@ import {
   DashboardCard,
   SectionTitle,
 } from "@/components/dashboard/ui";
+import { DashboardTopBar } from "@/components/dashboard/dashboard-top-bar";
 import { LiveMetrics } from "@/components/dashboard/live-metrics";
 import { computeStoreHealth } from "@/domain/rules/store-health";
 import { EmptyState } from "@/components/ui/feedback";
@@ -36,7 +41,10 @@ export const metadata = {
 
 export default async function DashboardHomePage() {
   const services = getServices();
-  const stores = await services.stores.listMyStores();
+  const [{ profile }, stores] = await Promise.all([
+    getDashboardProfile(),
+    getDashboardStores(),
+  ]);
   if (stores.length === 0) redirect("/onboarding");
 
   const locale = await getRequestLocale();
@@ -45,7 +53,10 @@ export default async function DashboardHomePage() {
   const [products, categories, stats] = await Promise.all([
     services.products.listForMerchant(store.id, { pageSize: 5 }),
     services.categories.listForMerchant(store.id),
-    services.analytics.getDashboardStats(store.id, 7),
+    // Home cards only — skip expensive topProducts scan.
+    services.analytics.getDashboardStats(store.id, 7, {
+      includeTopProducts: false,
+    }),
   ]);
 
   const health = computeStoreHealth({
@@ -57,43 +68,80 @@ export default async function DashboardHomePage() {
   const isNew = products.total === 0;
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-8">
       <PageHeader
         title={store.name}
         description={t("dashboardDesc")}
         actions={
-          <>
-            <Link href={`/${store.slug}`} target="_blank">
-              <Button variant="outline">{t("viewStore")}</Button>
-            </Link>
-            <Link href="/dashboard/products/new">
-              <Button>{t("addProduct")}</Button>
-            </Link>
-          </>
+          <DashboardTopBar
+            storeName={store.name}
+            storeSlug={store.slug}
+            storeLogoUrl={store.logoUrl}
+            userName={profile.fullName ?? ""}
+            userEmail={profile.email}
+            labels={{
+              addProduct: t("addProduct"),
+              store: t("store"),
+              account: t("account"),
+              name: t("name"),
+              email: t("email"),
+              signOut: t("navSignOut"),
+            }}
+          />
         }
       />
 
       <div className="flex flex-wrap items-center gap-2">
         <StatusBadge status={store.status} />
-        <span className="text-sm text-slate-400">/{store.slug}</span>
+        <code className="max-w-full truncate text-sm text-slate-500">
+          {storeUrl(store.slug)}
+        </code>
+        <ShareStoreLinkButton url={storeUrl(store.slug)} />
       </div>
 
-      <DashboardCard>
-        <p className="text-sm text-slate-400">{t("shareStore")}</p>
-        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <code className="break-all text-sm font-medium text-slate-900">
-            {storeUrl(store.slug)}
-          </code>
-          <div className="flex flex-wrap gap-2">
-            <CopyStoreUrl url={storeUrl(store.slug)} />
-            <Link href={`/${store.slug}`} target="_blank">
-              <Button variant="outline" size="sm">
-                {t("open")}
-              </Button>
-            </Link>
+      {health.percent < 100 ? (
+        <DashboardCard className="bg-[#f7f2e8] border-transparent shadow-none">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">
+                {t("storeSetup")}
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                {t("healthComplete", {
+                  completed: health.completed,
+                  total: health.total,
+                })}
+              </p>
+            </div>
+            <p className="text-2xl font-semibold text-slate-900">{health.percent}%</p>
           </div>
-        </div>
-      </DashboardCard>
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/70">
+            <div
+              className="h-full rounded-full bg-brand-400 transition-all"
+              style={{ width: `${health.percent}%` }}
+            />
+          </div>
+          <ul className="mt-4 max-h-40 space-y-0.5 overflow-y-auto ys-scrollbar-none">
+            {health.items.map((item) => (
+              <li key={item.id}>
+                <Link
+                  href={item.href}
+                  className="flex items-center gap-2 rounded-xl px-1 py-1.5 text-sm text-slate-600 transition hover:bg-white/60 hover:text-slate-900"
+                >
+                  {item.done ? (
+                    <Check className="h-4 w-4 text-brand-600" aria-hidden />
+                  ) : (
+                    <Circle className="h-4 w-4 text-slate-300" aria-hidden />
+                  )}
+                  <span className={item.done ? "text-slate-400" : "font-medium text-slate-800"}>
+                    {t(item.labelKey)}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </DashboardCard>
+      ) : null}
 
       {isNew ? (
         <EmptyState
@@ -111,6 +159,7 @@ export default async function DashboardHomePage() {
         storeId={store.id}
         rangeDays={7}
         initial={stats}
+        includeTopProducts={false}
         productsCount={products.total}
         productsLabel={t("productsCount")}
         productsHint="7d"
@@ -175,50 +224,6 @@ export default async function DashboardHomePage() {
           />
         </div>
       </section>
-
-      <DashboardCard>
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <h2 className="text-base font-semibold text-slate-900">
-              {t("storeSetup")}
-            </h2>
-            <p className="mt-1 text-sm text-slate-400">
-              {t("healthComplete", {
-                completed: health.completed,
-                total: health.total,
-              })}
-            </p>
-          </div>
-          <p className="text-2xl font-semibold text-slate-900">
-            {health.percent}%
-          </p>
-        </div>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
-          <div
-            className="h-full rounded-full bg-brand-400 transition-all"
-            style={{ width: `${health.percent}%` }}
-          />
-        </div>
-        <ul className="mt-4 grid gap-1 sm:grid-cols-2">
-          {health.items.map((item) => (
-            <li key={item.id}>
-              <Link
-                href={item.href}
-                className="flex items-center gap-2 rounded-xl px-2 py-2 text-sm text-slate-600 hover:bg-slate-50"
-              >
-                {item.done ? (
-                  <Check className="h-4 w-4 text-brand-600" aria-hidden />
-                ) : (
-                  <Circle className="h-4 w-4 text-slate-300" aria-hidden />
-                )}
-                <span className={item.done ? "text-slate-400" : "font-medium text-slate-800"}>
-                  {t(item.labelKey)}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </DashboardCard>
 
       <section>
         <SectionTitle

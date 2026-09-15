@@ -1,13 +1,16 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { getServices } from "@/infrastructure/container";
-import { logoutAction } from "@/features/auth/actions";
-import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { MerchantNav } from "@/components/dashboard/merchant-nav";
 import { DashboardPrefetch } from "@/components/dashboard/dashboard-prefetch";
+import { MerchantNav } from "@/components/dashboard/merchant-nav";
+import { logoutAction } from "@/features/auth/actions";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
+import {
+  getDashboardProfile,
+  getDashboardStores,
+} from "@/lib/dashboard-request";
+import { ExternalLink, LogOut } from "lucide-react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -16,90 +19,80 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const services = getServices();
   try {
-    await services.auth.requireProfile();
+    await getDashboardProfile();
   } catch {
     redirect("/login");
   }
 
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
-  const stores = await services.stores.listMyStores().catch(() => []);
+  const stores = await getDashboardStores().catch(() => []);
   const activeStore = stores[0];
 
   return (
-    <div className="min-h-full bg-[#f7f4ef]">
+    <div className="dashboard-shell grid h-dvh w-full overflow-hidden bg-white lg:grid-cols-[248px_minmax(0,1fr)]">
       <DashboardPrefetch />
-      <div className="mx-auto flex min-h-full max-w-[1400px]">
-        <aside className="hidden w-[260px] shrink-0 border-e border-sand-200/80 bg-[#f3f0ea] lg:block">
-          <div className="sticky top-0 flex h-screen flex-col px-3 py-5">
-            <Link
-              href="/dashboard"
-              className="mb-6 flex items-center px-2"
-              aria-label="دكّان"
-            >
-              <BrandLogo variant="horizontal" className="h-14 w-auto max-w-full" priority />
-            </Link>
-            <div className="ys-scrollbar-none min-h-0 flex-1 overflow-y-auto">
-              <MerchantNav storeName={activeStore?.name} locale={locale} embedded />
-            </div>
-            <div className="mt-4 space-y-2 border-t border-sand-200/80 px-2 pt-4">
-              {activeStore ? (
-                <Link
-                  href={`/${activeStore.slug}`}
-                  target="_blank"
-                  className="block rounded-2xl px-3 py-2 text-sm font-medium text-slate-500 transition hover:bg-white hover:text-brand-900"
-                >
-                  {t("viewStore")}
-                </Link>
-              ) : null}
-              <form action={logoutAction}>
-                <Button
-                  type="submit"
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start text-slate-500"
-                >
-                  {t("navSignOut")}
-                </Button>
-              </form>
-            </div>
+
+      <aside className="relative z-10 hidden h-full min-w-0 flex-col bg-white shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)] lg:flex">
+        <div className="flex h-full min-w-0 flex-col px-3 py-5">
+          <Link
+            href="/dashboard"
+            className="mb-7 flex min-w-0 items-center px-2"
+            aria-label="دكّان"
+          >
+            <BrandLogo
+              variant="horizontal"
+              className="h-11 w-auto max-w-full"
+              priority
+            />
+          </Link>
+
+          <div className="ys-scrollbar-none min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
+            <MerchantNav storeName={activeStore?.name} locale={locale} embedded />
           </div>
-        </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 border-b border-sand-200/70 bg-[#f7f4ef]/90 px-4 py-3 backdrop-blur sm:px-6 lg:hidden">
-            <div className="flex items-center justify-between gap-3">
-              <Link href="/dashboard" aria-label="دكّان">
-                <BrandLogo variant="icon" className="h-12 w-12" priority />
+          <div className="mt-4 space-y-1 border-t border-slate-100 px-1 pt-4">
+            {activeStore ? (
+              <Link
+                href={`/${activeStore.slug}`}
+                target="_blank"
+                className="flex min-w-0 items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+              >
+                <ExternalLink className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
+                <span className="truncate">{t("viewStore")}</span>
               </Link>
-              <div className="flex items-center gap-2">
-                {activeStore ? (
-                  <Link
-                    href={`/${activeStore.slug}`}
-                    target="_blank"
-                    className="text-sm font-medium text-brand-700"
-                  >
-                    {t("viewStore")}
-                  </Link>
-                ) : null}
-                <form action={logoutAction}>
-                  <Button type="submit" variant="ghost" size="sm">
-                    {t("navSignOut")}
-                  </Button>
-                </form>
-              </div>
-            </div>
-            <div className="mt-2">
-              <MerchantNav storeName={activeStore?.name} locale={locale} />
-            </div>
-          </header>
-
-          <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-            {children}
-          </main>
+            ) : null}
+            <form action={logoutAction}>
+              <button
+                type="submit"
+                className="flex w-full min-w-0 items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+              >
+                <LogOut className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
+                <span className="truncate">{t("navSignOut")}</span>
+              </button>
+            </form>
+          </div>
         </div>
+      </aside>
+
+      <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-white">
+        <header className="relative z-50 shrink-0 border-b border-slate-100/80 bg-white px-4 py-2 sm:px-6 lg:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <Link href="/dashboard" aria-label="دكّان" className="relative z-[60] min-w-0">
+              <BrandLogo
+                variant="horizontal"
+                className="h-10 w-auto max-w-[9.5rem]"
+                priority
+              />
+            </Link>
+            <MerchantNav locale={locale} compact />
+          </div>
+        </header>
+
+        <main className="dashboard-main min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          {children}
+        </main>
       </div>
     </div>
   );

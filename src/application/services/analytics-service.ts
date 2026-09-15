@@ -42,7 +42,9 @@ export class AnalyticsService {
   async getDashboardStats(
     storeId: string,
     rangeDays: 1 | 7 | 30 | 90,
+    options?: { includeTopProducts?: boolean },
   ): Promise<DashboardStats> {
+    const includeTopProducts = options?.includeTopProducts ?? true;
     const { session } = await this.auth.requireProfile();
     const store = await this.stores.findById(storeId);
     if (!store) throw new AppError("NOT_FOUND", "Store not found.");
@@ -53,16 +55,19 @@ export class AnalyticsService {
     since.setDate(since.getDate() - rangeDays);
     const sinceIso = since.toISOString();
 
-    const [storeViews, productViews, whatsappClicks, shares, topProducts] =
+    const [storeViews, productViews, whatsappClicks, shares, topProducts, advanced] =
       await Promise.all([
         this.analytics.countEvents(storeId, "store_view", sinceIso),
         this.analytics.countEvents(storeId, "product_view", sinceIso),
         this.analytics.countEvents(storeId, "whatsapp_click", sinceIso),
         this.analytics.countEvents(storeId, "share", sinceIso),
-        this.analytics.topProducts(storeId, sinceIso, 5),
+        includeTopProducts
+          ? this.analytics.topProducts(storeId, sinceIso, 5)
+          : Promise.resolve([] as Array<{ productId: string; views: number }>),
+        includeTopProducts
+          ? this.entitlements.canUseAdvancedAnalytics(storeId)
+          : Promise.resolve(false),
       ]);
-
-    const advanced = await this.entitlements.canUseAdvancedAnalytics(storeId);
 
     return {
       storeViews,

@@ -7,6 +7,7 @@ import type { DashboardStats } from "@/application/services/analytics-service";
 export async function getDashboardStatsAction(
   storeId: string,
   rangeDays: 1 | 7 | 30 | 90 = 7,
+  includeTopProducts = true,
 ): Promise<
   { ok: true; stats: DashboardStats } | { ok: false; error: string }
 > {
@@ -14,6 +15,7 @@ export async function getDashboardStatsAction(
     const stats = await getServices().analytics.getDashboardStats(
       storeId,
       rangeDays,
+      { includeTopProducts },
     );
     return { ok: true, stats };
   } catch (error) {

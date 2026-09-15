@@ -80,6 +80,32 @@ body {
   font-weight: 400;
 }
 
+/* Lock document scroll inside the dashboard shell so tall pages
+   (e.g. store design) never add a window scrollbar that shifts the sidebar. */
+html:has(.dashboard-shell),
+html:has(.dashboard-shell) body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.dashboard-main {
+  scrollbar-gutter: stable;
+}
+
+@media (max-width: 1023px) {
+  .dashboard-main {
+    scrollbar-gutter: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .dashboard-main::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
 ::selection {
   background: color-mix(in oklab, var(--accent) 35%, white);
 }

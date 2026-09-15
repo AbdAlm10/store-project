@@ -8,6 +8,8 @@ import type {
   SubscriptionRepository,
   UserRepository,
 } from "@/application/ports/repositories";
+import type { PlanId } from "@/config/plans";
+import { AppError } from "@/domain/errors";
 import type {
   AnalyticsEvent,
   Category,
@@ -22,9 +24,6 @@ import type {
   Subscription,
 } from "@/domain/types/entities";
 import type { AnalyticsEventType, ProductStatus } from "@/domain/types/enums";
-import type { PlanId } from "@/config/plans";
-import { AppError } from "@/domain/errors";
-import { createSupabaseServerClient } from "@/infrastructure/supabase/server";
 import {
   mapCategory,
   mapImage,
@@ -38,6 +37,7 @@ import {
   storeToRow,
   withMedia,
 } from "@/infrastructure/supabase/mappers";
+import { createSupabaseServerClient } from "@/infrastructure/supabase/server";
 
 async function db() {
   return createSupabaseServerClient();
@@ -672,13 +672,16 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
 
   async topProducts(storeId: string, since: string, limit = 5) {
     const supabase = await db();
+    // Cap the scan so a busy store cannot pull the entire events table into Node.
     const { data, error } = await supabase
       .from("analytics_events")
       .select("product_id")
       .eq("store_id", storeId)
       .eq("event_type", "product_view")
       .gte("created_at", since)
-      .not("product_id", "is", null);
+      .not("product_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(2_000);
     if (error) fail(error.message);
     const counts = new Map<string, number>();
     for (const row of data ?? []) {

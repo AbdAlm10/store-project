@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import {
+  CategoryIcon,
+  CategoryIconPicker,
+} from "@/components/categories/category-icon-picker";
+import { ImageUploadField } from "@/components/media/image-upload-field";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/forms";
+import { SafeImage } from "@/components/ui/safe-image";
 import type {
   Category,
   CategoryOptionDef,
   CategoryOptionValue,
 } from "@/domain/types/entities";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/forms";
-import { ImageUploadField } from "@/components/media/image-upload-field";
-import {
-  CategoryIcon,
-  CategoryIconPicker,
-} from "@/components/categories/category-icon-picker";
 import {
   createCategoryAction,
   deleteCategoryAction,
@@ -25,7 +25,7 @@ import {
   normalizeHex,
   normalizeOptionSchema,
 } from "@/lib/option-colors";
-import { SafeImage } from "@/components/ui/safe-image";
+import { useEffect, useState, useTransition } from "react";
 
 export function CategoryManager({
   storeId,
@@ -50,7 +50,7 @@ export function CategoryManager({
   return (
     <div className="space-y-4">
       <form
-        className="space-y-4 rounded-3xl bg-white p-4 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]"
+        className="space-y-4 rounded-[1.35rem] border border-slate-100/80 bg-white p-4 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)]"
         onSubmit={(event) => {
           event.preventDefault();
           setError(null);
@@ -105,11 +105,11 @@ export function CategoryManager({
         {categories.map((category) => (
           <li
             key={category.id}
-            className="overflow-hidden rounded-3xl bg-white shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]"
+            className="overflow-hidden rounded-[1.35rem] border border-slate-100/80 bg-white shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)]"
           >
             <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sand-100 ring-1 ring-sand-200">
+                <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-50 ring-1 ring-brand-100">
                   {category.imageUrl ? (
                     <SafeImage
                       src={category.imageUrl}
@@ -193,7 +193,7 @@ export function CategoryManager({
           </li>
         ))}
         {categories.length === 0 ? (
-          <li className="rounded-3xl bg-white px-4 py-8 text-center text-slate-400 shadow-[0_8px_30px_-18px_rgba(15,23,42,0.18)]">
+          <li className="rounded-[1.35rem] border border-slate-100/80 bg-white px-4 py-8 text-center text-slate-400 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)]">
             {t("noCategoriesYet")}
           </li>
         ) : null}

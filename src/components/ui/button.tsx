@@ -9,10 +9,10 @@ const buttonVariants = cva(
         primary:
           "bg-brand-600 text-white hover:bg-brand-700 shadow-sm shadow-brand-900/15",
         secondary:
-          "bg-sand-300 text-brand-900 hover:bg-sand-200 shadow-sm shadow-sand-900/10",
+          "bg-brand-50 text-brand-900 hover:bg-brand-100 shadow-sm shadow-brand-900/5",
         outline:
-          "border border-sand-200 bg-white text-brand-900 hover:bg-sand-50",
-        ghost: "text-brand-800 hover:bg-brand-50",
+          "border border-slate-200 bg-white text-slate-800 hover:bg-slate-50",
+        ghost: "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
         danger: "bg-red-600 text-white hover:bg-red-700",
         whatsapp: "bg-[#128C7E] text-white hover:bg-[#0e6e63]",
       },
