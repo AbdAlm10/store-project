@@ -1,11 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/forms";
 import { loginAction } from "@/features/auth/actions";
 import { useI18n } from "@/i18n/provider";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 
 export function LoginForm() {
   const router = useRouter();
@@ -15,6 +15,7 @@ export function LoginForm() {
 
   return (
     <form
+      method="post"
       className="space-y-4"
       onSubmit={(event) => {
         event.preventDefault();

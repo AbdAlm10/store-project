@@ -1,34 +1,11 @@
-import Link from "next/link";
-import {
-  Facebook,
-  Instagram,
-  MapPin,
-  MessageCircle,
-  Phone,
-  Send,
-  type LucideIcon,
-} from "lucide-react";
-import type { Store } from "@/domain/types/entities";
+import { StoreNavActions } from "@/components/storefront/store-nav-actions";
 import { SafeImage } from "@/components/ui/safe-image";
-import {
-  NAVBAR_ACTION_LABEL_KEY,
-  hrefForNavbarAction,
-  resolveNavbarActions,
-  type NavbarActionId,
-} from "@/lib/navbar-actions";
-import { createTranslator } from "@/i18n/messages";
-
-const NAV_ICONS: Record<NavbarActionId, LucideIcon> = {
-  whatsapp: MessageCircle,
-  phone: Phone,
-  instagram: Instagram,
-  facebook: Facebook,
-  telegram: Send,
-  location: MapPin,
-};
+import type { Store } from "@/domain/types/entities";
+import { resolveNavbarActions } from "@/lib/navbar-actions";
+import { MapPin } from "lucide-react";
+import Link from "next/link";
 
 export function StoreNav({ store }: { store: Store }) {
-  const t = createTranslator(store.defaultLocale);
   const actions = resolveNavbarActions(store);
 
   return (
@@ -98,36 +75,7 @@ export function StoreNav({ store }: { store: Store }) {
           </div>
         </Link>
 
-        {actions.length > 0 ? (
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            {actions.map((id) => {
-              const href = hrefForNavbarAction(store, id);
-              if (!href) return null;
-              const Icon = NAV_ICONS[id];
-              const label = t(NAVBAR_ACTION_LABEL_KEY[id]);
-              const external = id !== "phone";
-              return (
-                <a
-                  key={id}
-                  href={href}
-                  target={external ? "_blank" : undefined}
-                  rel={external ? "noopener noreferrer" : undefined}
-                  aria-label={label}
-                  title={label}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:scale-105 active:scale-95 sm:h-10 sm:w-10"
-                  style={{
-                    backgroundColor: "var(--store-accent)",
-                    color: "var(--store-button-text)",
-                    boxShadow:
-                      "0 8px 22px -12px color-mix(in srgb, var(--store-accent) 75%, transparent)",
-                  }}
-                >
-                  <Icon className="h-4 w-4 sm:h-[1.125rem] sm:w-[1.125rem]" strokeWidth={2} />
-                </a>
-              );
-            })}
-          </div>
-        ) : null}
+        <StoreNavActions store={store} actions={actions} />
       </div>
     </nav>
   );

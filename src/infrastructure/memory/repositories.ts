@@ -1,4 +1,15 @@
 import type {
+  AnalyticsRepository,
+  CategoryRepository,
+  ListProductsQuery,
+  ProductRepository,
+  StoreMemberRepository,
+  StoreRepository,
+  SubscriptionRepository,
+  UserRepository,
+} from "@/application/ports/repositories";
+import type { PlanId } from "@/config/plans";
+import type {
   AnalyticsEvent,
   Category,
   Paginated,
@@ -12,17 +23,6 @@ import type {
   Subscription,
 } from "@/domain/types/entities";
 import type { AnalyticsEventType, ProductStatus } from "@/domain/types/enums";
-import type { PlanId } from "@/config/plans";
-import type {
-  AnalyticsRepository,
-  CategoryRepository,
-  ListProductsQuery,
-  ProductRepository,
-  StoreMemberRepository,
-  StoreRepository,
-  SubscriptionRepository,
-  UserRepository,
-} from "@/application/ports/repositories";
 import { demoSeed } from "@/infrastructure/demo/seed";
 import { normalizeOptionSchema } from "@/lib/option-colors";
 
@@ -480,5 +480,20 @@ export class MemoryAnalyticsRepository implements AnalyticsRepository {
       .map(([productId, views]) => ({ productId, views }))
       .sort((a, b) => b.views - a.views)
       .slice(0, limit);
+  }
+
+  async listRecent(storeId: string, since: string, limit = 5_000) {
+    return db.events
+      .filter((event) => event.storeId === storeId && event.createdAt >= since)
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+      .slice(0, limit)
+      .map((event) => ({
+        productId: event.productId,
+        eventType: event.eventType,
+        source: event.source,
+        visitorKey: event.visitorKey,
+        createdAt: event.createdAt,
+        metadata: event.metadata,
+      }));
   }
 }

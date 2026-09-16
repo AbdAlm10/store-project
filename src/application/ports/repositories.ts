@@ -1,4 +1,6 @@
+import type { PlanId } from "@/config/plans";
 import type {
+  AnalyticsEvent,
   Category,
   Paginated,
   Product,
@@ -9,10 +11,8 @@ import type {
   Store,
   StoreMember,
   Subscription,
-  AnalyticsEvent,
 } from "@/domain/types/entities";
 import type { AnalyticsEventType, ProductStatus } from "@/domain/types/enums";
-import type { PlanId } from "@/config/plans";
 
 export type ListProductsQuery = {
   storeId: string;
@@ -74,6 +74,11 @@ export interface SubscriptionRepository {
   changePlan(storeId: string, planId: PlanId): Promise<Subscription>;
 }
 
+export type AnalyticsEventRow = Pick<
+  AnalyticsEvent,
+  "productId" | "eventType" | "source" | "visitorKey" | "createdAt" | "metadata"
+>;
+
 export interface AnalyticsRepository {
   track(event: Omit<AnalyticsEvent, "id" | "createdAt"> & { id?: string }): Promise<void>;
   countEvents(
@@ -86,4 +91,10 @@ export interface AnalyticsRepository {
     since: string,
     limit?: number,
   ): Promise<Array<{ productId: string; views: number }>>;
+  /** Recent events for dashboard aggregation (capped). */
+  listRecent(
+    storeId: string,
+    since: string,
+    limit?: number,
+  ): Promise<AnalyticsEventRow[]>;
 }

@@ -3,6 +3,7 @@ import { ProductGallery } from "@/components/storefront/product-gallery";
 import { ProductPurchasePanel } from "@/components/storefront/product-purchase-panel";
 import { RelatedProductsSection } from "@/components/storefront/related-products";
 import { StoreNav } from "@/components/storefront/store-header";
+import { StorefrontViewTracker } from "@/components/storefront/storefront-view-tracker";
 import {
   DEFAULT_THEME_TOKENS,
   resolveThemeTokens,
@@ -11,7 +12,6 @@ import {
 import { discountPercent } from "@/domain/rules/store-rules";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
-import { getServices } from "@/infrastructure/container";
 import { getRelatedProducts } from "@/lib/recommendations/related";
 import {
   buildWhatsAppOrderMessage,
@@ -80,13 +80,6 @@ export default async function ProductPage({ params }: Props) {
   );
   const cssVars = storefrontCssVars(themeTokens);
 
-  void getServices().analytics.track({
-    storeId: store.id,
-    productId: product.id,
-    eventType: "product_view",
-    path: `/${store.slug}/products/${product.slug}`,
-  });
-
   const discount = discountPercent(product.price, product.compareAtPrice);
   const wa = buildWhatsAppOrderMessage({
     store,
@@ -109,6 +102,12 @@ export default async function ProductPage({ params }: Props) {
         fontFamily: "var(--store-font-body)",
       }}
     >
+      <StorefrontViewTracker
+        storeId={store.id}
+        productId={product.id}
+        eventType="product_view"
+        path={`/${store.slug}/products/${product.slug}`}
+      />
       <StoreNav store={store} />
 
       <div className="w-full px-4 pt-4 pb-5 sm:px-8 sm:pt-5 sm:pb-8 lg:px-12 xl:px-16">

@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Check, Copy, Send, Share2 } from "lucide-react";
-import { socialShareLinks } from "@/lib/social/sharing";
 import { useI18n } from "@/i18n/provider";
+import { trackAnalyticsEvent } from "@/lib/analytics/client-track";
+import { socialShareLinks } from "@/lib/social/sharing";
+import { Check, Copy, Send, Share2 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function ShareBar({
   url,
   text,
+  storeId,
+  productId,
   onShared,
 }: {
   url: string;
   text: string;
+  storeId?: string;
+  productId?: string | null;
   onShared?: (channel: string) => void;
 }) {
   const { t } = useI18n();
@@ -23,17 +28,30 @@ export function ShareBar({
     setCanNativeShare(typeof navigator.share === "function");
   }, []);
 
+  function emit(channel: string, eventType: "share" | "whatsapp_click" = "share") {
+    if (storeId) {
+      trackAnalyticsEvent({
+        storeId,
+        productId: productId ?? null,
+        eventType,
+        path: url,
+        source: channel,
+      });
+    }
+    onShared?.(channel);
+  }
+
   async function copy() {
     await navigator.clipboard.writeText(url);
     setCopied(true);
-    onShared?.("copy");
+    emit("copy");
     setTimeout(() => setCopied(false), 1600);
   }
 
   async function nativeShare() {
     if (navigator.share) {
       await navigator.share({ title: text, text, url });
-      onShared?.("native");
+      emit("native");
     }
   }
 
@@ -59,7 +77,7 @@ export function ShareBar({
         href={links.whatsapp}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={() => onShared?.("whatsapp")}
+        onClick={() => emit("whatsapp", "whatsapp_click")}
         className="inline-flex h-9 items-center gap-2 px-3 text-sm font-semibold transition active:scale-[0.98]"
         style={chipStyle}
       >
@@ -71,7 +89,7 @@ export function ShareBar({
         rel="noopener noreferrer"
         className="inline-flex h-9 items-center gap-2 px-3 text-sm font-semibold transition active:scale-[0.98]"
         style={chipStyle}
-        onClick={() => onShared?.("facebook")}
+        onClick={() => emit("facebook")}
       >
         {t("facebook")}
       </a>
@@ -81,7 +99,7 @@ export function ShareBar({
         rel="noopener noreferrer"
         className="inline-flex h-9 items-center gap-2 px-3 text-sm font-semibold transition active:scale-[0.98]"
         style={chipStyle}
-        onClick={() => onShared?.("telegram")}
+        onClick={() => emit("telegram")}
       >
         <Send className="h-4 w-4" />
         {t("telegram")}

@@ -1,27 +1,28 @@
-import { Suspense } from "react";
-import type { Metadata } from "next";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getServices } from "@/infrastructure/container";
-import { StoreNav } from "@/components/storefront/store-header";
-import { StoreCatalog } from "@/components/storefront/store-catalog";
-import { ProductCardSkeleton } from "@/components/storefront/product-card";
 import { PoweredByBrand } from "@/components/brand/powered-by-brand";
+import { ProductCardSkeleton } from "@/components/storefront/product-card";
+import { StoreCatalog } from "@/components/storefront/store-catalog";
+import { StoreNav } from "@/components/storefront/store-header";
+import { StorefrontViewTracker } from "@/components/storefront/storefront-view-tracker";
 import { appConfig } from "@/config/app";
 import {
   DEFAULT_THEME_TOKENS,
   resolveThemeTokens,
   storefrontCssVars,
 } from "@/config/themes";
-import { storeUrl } from "@/lib/social/sharing";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
+import { getServices } from "@/infrastructure/container";
+import { storeUrl } from "@/lib/social/sharing";
 import {
   getCachedPublicCatalog,
   getCachedPublicCategories,
   getCachedPublicFeatured,
   getCachedStorefront,
 } from "@/lib/storefront-data";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 type Props = PageProps<"/[storeSlug]">;
 
@@ -72,12 +73,8 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
   );
   const cssVars = storefrontCssVars(themeTokens);
 
-  void getServices().analytics.track({
-    storeId: store.id,
-    eventType: "store_view",
-    path: `/${store.slug}`,
-    source: typeof query.utm_source === "string" ? query.utm_source : null,
-  });
+  const utmSource =
+    typeof query.utm_source === "string" ? query.utm_source : null;
 
   return (
     <div
@@ -89,6 +86,12 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
         fontFamily: "var(--store-font-body)",
       }}
     >
+      <StorefrontViewTracker
+        storeId={store.id}
+        eventType="store_view"
+        path={`/${store.slug}`}
+        source={utmSource}
+      />
       {isPreview ? (
         <div className="bg-amber-500 px-4 py-2 text-center text-sm font-medium text-amber-950">
           {t("draftStorePreview")}{" "}

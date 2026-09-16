@@ -1,13 +1,11 @@
-import { redirect } from "next/navigation";
-import { getServices } from "@/infrastructure/container";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { PillLink } from "@/components/dashboard/ui";
-import { LiveMetrics } from "@/components/dashboard/live-metrics";
+import { AnalyticsDashboard } from "@/components/dashboard/analytics-dashboard";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
+import { getServices } from "@/infrastructure/container";
+import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Analytics",
+  title: "التحليلات",
   robots: { index: false, follow: false },
 };
 
@@ -30,43 +28,44 @@ export default async function AnalyticsPage({
   const stats = await services.analytics.getDashboardStats(store.id, range);
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={t("analytics")}
-        description={t("analyticsDesc", { store: store.name })}
-        actions={
-          <div className="flex flex-wrap gap-2">
-            {[1, 7, 30, 90].map((days) => (
-              <PillLink
-                key={days}
-                href={`/dashboard/analytics?range=${days}`}
-                active={range === days}
-              >
-                {days === 1 ? t("today") : t("daysShort", { days })}
-              </PillLink>
-            ))}
-          </div>
-        }
-      />
+    <div className="space-y-6 bg-white">
+      <div>
+        <h1 className="text-[1.75rem] font-semibold tracking-tight text-slate-900 sm:text-[2rem]">
+          {t("analytics")}
+        </h1>
+        <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-slate-500">
+          {t("analyticsDesc", { store: store.name })}
+        </p>
+      </div>
 
-      <LiveMetrics
+      <AnalyticsDashboard
         storeId={store.id}
+        storeSlug={store.slug}
         rangeDays={range}
         initial={stats}
-        cards={[
-          { key: "storeViews", label: t("storeViews"), icon: "store" },
-          { key: "productViews", label: t("productViews"), icon: "eye" },
-          {
-            key: "whatsappClicks",
-            label: t("whatsappClicks"),
-            icon: "message",
-          },
-          { key: "shares", label: t("shares"), icon: "share" },
-        ]}
-        showTopProducts
-        topProductsTitle={t("topProducts")}
-        viewsCountTemplate={t("viewsCount", { count: "__COUNT__" })}
-        emptyLabel={t("noProductViews")}
+        labels={{
+          galleryVisits: t("galleryVisits"),
+          productViews: t("productViews"),
+          whatsappClicks: t("whatsappClicks"),
+          engagementRate: t("engagementRate"),
+          topViewed: t("topProducts"),
+          visitsByDay: t("visitsByDay"),
+          viewsCount: t("viewsUnit"),
+          empty: t("noProductViews"),
+          upgradeCta: t("analyticsUpgradeCta"),
+          upgradeHint: t("analyticsUpgradeHint"),
+          locations: t("locationsActivity"),
+          peakHours: t("peakActivityHours"),
+          topShared: t("topSharedProducts"),
+          interest: t("productInterest"),
+          refreshData: t("refreshAnalytics"),
+          today: t("today"),
+          range7: t("daysShort", { days: 7 }),
+          range30: t("daysShort", { days: 30 }),
+          range90: t("daysShort", { days: 90 }),
+          sharesUnit: t("sharesUnit"),
+          noLocations: t("noLocationsYet"),
+        }}
       />
     </div>
   );

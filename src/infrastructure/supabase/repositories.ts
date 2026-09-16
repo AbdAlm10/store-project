@@ -693,4 +693,24 @@ export class SupabaseAnalyticsRepository implements AnalyticsRepository {
       .sort((a, b) => b.views - a.views)
       .slice(0, limit);
   }
+
+  async listRecent(storeId: string, since: string, limit = 5_000) {
+    const supabase = await db();
+    const { data, error } = await supabase
+      .from("analytics_events")
+      .select("product_id, event_type, source, visitor_key, created_at, metadata")
+      .eq("store_id", storeId)
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (error) fail(error.message);
+    return (data ?? []).map((row) => ({
+      productId: (row.product_id as string | null) ?? null,
+      eventType: row.event_type as AnalyticsEvent["eventType"],
+      source: (row.source as string | null) ?? null,
+      visitorKey: (row.visitor_key as string | null) ?? null,
+      createdAt: row.created_at as string,
+      metadata: (row.metadata as Record<string, unknown>) ?? {},
+    }));
+  }
 }

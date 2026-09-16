@@ -1,15 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  Boxes,
-  Eye,
-  MessageCircle,
-  Share2,
-  Store,
-} from "lucide-react";
 import type { DashboardStats } from "@/application/services/analytics-service";
-import { getDashboardStatsAction } from "@/features/dashboard/stats-actions";
 import {
   DashboardCard,
   SectionTitle,
@@ -17,8 +8,17 @@ import {
   StatCard,
   type StatTone,
 } from "@/components/dashboard/ui";
+import { getDashboardStatsAction } from "@/features/dashboard/stats-actions";
 import { DASHBOARD_STATS_POLL_MS } from "@/lib/dashboard-cache";
 import { cn } from "@/lib/utils/cn";
+import {
+  Boxes,
+  Eye,
+  MessageCircle,
+  Share2,
+  Store,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 const TONE_CYCLE: StatTone[] = ["mint", "sand", "mist", "sage"];
 
@@ -88,6 +88,8 @@ export function LiveMetrics({
   }, [initial]);
 
   useEffect(() => {
+    if (!initial.isPro) return;
+
     let cancelled = false;
 
     async function refresh() {
@@ -107,7 +109,7 @@ export function LiveMetrics({
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [storeId, rangeDays, fetchTopProducts]);
+  }, [initial.isPro, storeId, rangeDays, fetchTopProducts]);
 
   return (
     <>
@@ -156,10 +158,12 @@ export function LiveMetrics({
                 key={item.productId}
                 className="flex items-center justify-between px-1 py-3.5 first:pt-1 last:pb-1"
               >
-                <span className="font-mono text-xs text-slate-400">
-                  {item.productId.slice(0, 8)}…
+                <span className="truncate text-sm text-slate-700">
+                  {"name" in item && item.name
+                    ? item.name
+                    : `${item.productId.slice(0, 8)}…`}
                 </span>
-                <span className="font-medium text-slate-800">
+                <span className="shrink-0 font-medium text-slate-800">
                   {viewsCountTemplate
                     ? viewsCountTemplate.replace(
                         "__COUNT__",

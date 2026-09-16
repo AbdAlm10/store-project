@@ -100,6 +100,7 @@ export function createServices(): AppServices {
     members,
     analytics,
     entitlements,
+    products,
   );
   const media = new MediaService(auth, stores, members, storage, entitlements);
 

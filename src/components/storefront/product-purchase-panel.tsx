@@ -11,6 +11,7 @@ import type {
   Store,
 } from "@/domain/types/entities";
 import { useI18n } from "@/i18n/provider";
+import { trackAnalyticsEvent } from "@/lib/analytics/client-track";
 import {
   findHexInSchema,
   isColorOptionName,
@@ -150,6 +151,13 @@ export function ProductPurchasePanel({
 
   async function handleShare() {
     try {
+      trackAnalyticsEvent({
+        storeId: store.id,
+        productId,
+        eventType: "share",
+        path: shareUrl,
+        source: "product",
+      });
       if (typeof navigator !== "undefined" && navigator.share) {
         await navigator.share({ title: productName, text: shareText, url: shareUrl });
         return;
@@ -160,6 +168,16 @@ export function ProductPurchasePanel({
     } catch {
       /* user cancelled share */
     }
+  }
+
+  function handleWhatsAppClick() {
+    trackAnalyticsEvent({
+      storeId: store.id,
+      productId,
+      eventType: "whatsapp_click",
+      path: `/${store.slug}`,
+      source: "product_order",
+    });
   }
 
   return (
@@ -306,6 +324,7 @@ export function ProductPurchasePanel({
               href={waHref}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={handleWhatsAppClick}
               className="inline-flex rounded-2xl h-14 min-h-14 flex-1 items-center justify-center px-6 text-sm font-bold tracking-[0.08em] uppercase transition active:scale-[0.99]"
               style={{
                 backgroundColor:
