@@ -1,5 +1,6 @@
 "use client";
 
+import { FavoriteButton } from "@/components/storefront/favorite-button";
 import { SafeImage } from "@/components/ui/safe-image";
 import type { ProductImage } from "@/domain/types/entities";
 import { cn } from "@/lib/utils/cn";
@@ -8,6 +9,8 @@ import { useState } from "react";
 export function ProductGallery({
   images,
   productName,
+  storeSlug,
+  productId,
   featured = false,
   discount = null,
   featuredLabel,
@@ -15,6 +18,8 @@ export function ProductGallery({
 }: {
   images: ProductImage[];
   productName: string;
+  storeSlug: string;
+  productId: string;
   featured?: boolean;
   discount?: number | null;
   featuredLabel?: string;
@@ -26,10 +31,17 @@ export function ProductGallery({
   if (!active) {
     return (
       <div
-        className="flex aspect-4/5 items-center justify-center rounded-xl text-4xl lg:min-h-[70vh]"
+        className="relative flex aspect-4/5 items-center justify-center rounded-xl text-4xl lg:min-h-[70vh]"
         style={{ color: "var(--store-muted)" }}
       >
         —
+        <div className="absolute end-3 top-3 z-2">
+          <FavoriteButton
+            storeSlug={storeSlug}
+            productId={productId}
+            size="md"
+          />
+        </div>
       </div>
     );
   }
@@ -96,8 +108,8 @@ export function ProductGallery({
           }}
         />
 
-        {featured || discount ? (
-          <div className="absolute start-3 top-3 z-2 flex flex-col items-start gap-1.5 sm:hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-2 flex items-start justify-between gap-2 p-3">
+          <div className="flex flex-col items-start gap-1.5 sm:hidden">
             {featured && featuredLabel ? (
               <span
                 className="rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide text-white sm:text-[11px]"
@@ -121,7 +133,14 @@ export function ProductGallery({
               </span>
             ) : null}
           </div>
-        ) : null}
+          <div className="pointer-events-auto ms-auto">
+            <FavoriteButton
+              storeSlug={storeSlug}
+              productId={productId}
+              size="md"
+            />
+          </div>
+        </div>
 
         {images.length > 1 ? (
           <div className="absolute right-3 bottom-3 z-2 flex gap-2 sm:hidden">

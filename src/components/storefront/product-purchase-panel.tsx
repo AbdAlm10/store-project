@@ -1,5 +1,6 @@
 "use client";
 
+import { FavoriteButton } from "@/components/storefront/favorite-button";
 import {
   ColorSwatchButton,
   TextOptionChip,
@@ -22,6 +23,7 @@ import { useMemo, useState } from "react";
 
 export function ProductPurchasePanel({
   store,
+  productId,
   productName,
   basePrice,
   compareAtPrice,
@@ -35,6 +37,7 @@ export function ProductPurchasePanel({
   shareText,
 }: {
   store: Store;
+  productId: string;
   productName: string;
   basePrice: number;
   compareAtPrice: number | null;
@@ -327,6 +330,12 @@ export function ProductPurchasePanel({
               {t("orderWhatsApp")}
             </div>
           )}
+
+          <FavoriteButton
+            storeSlug={store.slug}
+            productId={productId}
+            className="h-14 w-14 rounded-2xl"
+          />
 
           <button
             type="button"

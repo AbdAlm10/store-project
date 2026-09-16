@@ -1,6 +1,7 @@
 import { PoweredByBrand } from "@/components/brand/powered-by-brand";
 import { ProductGallery } from "@/components/storefront/product-gallery";
 import { ProductPurchasePanel } from "@/components/storefront/product-purchase-panel";
+import { RelatedProductsSection } from "@/components/storefront/related-products";
 import { StoreNav } from "@/components/storefront/store-header";
 import {
   DEFAULT_THEME_TOKENS,
@@ -11,6 +12,7 @@ import { discountPercent } from "@/domain/rules/store-rules";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
 import { getServices } from "@/infrastructure/container";
+import { getRelatedProducts } from "@/lib/recommendations/related";
 import {
   buildWhatsAppOrderMessage,
   formatMoney,
@@ -95,6 +97,7 @@ export default async function ProductPage({ params }: Props) {
   const url = productUrl(store.slug, product.slug);
   const shareText = productShareText(store, product);
   const subtitle = product.category?.name ?? null;
+  const related = await getRelatedProducts(store, product, 8);
 
   return (
     <div
@@ -114,13 +117,14 @@ export default async function ProductPage({ params }: Props) {
             <ProductGallery
               images={product.images}
               productName={product.name}
+              storeSlug={store.slug}
+              productId={product.id}
               featured={product.featured}
               discount={discount}
               featuredLabel={t("featured")}
               accent={store.primaryColor}
             />
           </div>
-
 
           <Suspense
             fallback={
@@ -156,9 +160,9 @@ export default async function ProductPage({ params }: Props) {
                       style={{
                         background:
                           "color-mix(in srgb, var(--store-border) 50%, transparent)",
-                      }}
-                    />
-                  ))}
+                    }}
+                  />
+                ))}
                 </div>
                 <div className="mt-auto flex gap-3 pt-4">
                   <div
@@ -227,19 +231,11 @@ export default async function ProductPage({ params }: Props) {
                     {product.description}
                   </p>
                 ) : null}
-
-                  {/* <Link
-          href={`/${store.slug}`}
-          prefetch
-          className="mb-6 inline-flex text-sm font-medium transition hover:opacity-80 lg:mb-8"
-          style={{ color: "var(--store-accent)" }}
-        >
-          ← {t("backToStore")}
-        </Link> */}
               </header>
 
               <ProductPurchasePanel
                 store={store}
+                productId={product.id}
                 productName={product.name}
                 basePrice={product.price}
                 compareAtPrice={product.compareAtPrice}
@@ -257,6 +253,14 @@ export default async function ProductPage({ params }: Props) {
             </div>
           </Suspense>
         </div>
+
+        <RelatedProductsSection
+          storeSlug={store.slug}
+          products={related}
+          locale={locale}
+          accent={store.primaryColor}
+          title={t("relatedProducts")}
+        />
       </div>
     </div>
   );

@@ -103,6 +103,7 @@ export default async function CategoryPage({ params }: Props) {
                 key={product.id}
                 product={product}
                 href={`/${store.slug}/products/${product.slug}`}
+                storeSlug={store.slug}
                 accent={store.primaryColor}
                 locale={locale}
               />

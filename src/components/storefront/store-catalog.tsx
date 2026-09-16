@@ -1,6 +1,7 @@
 "use client";
 
 import { CategoryIcon } from "@/components/categories/category-icon-picker";
+import { FavoritesMenu } from "@/components/storefront/favorites-menu";
 import { ProductCard } from "@/components/storefront/product-card";
 import { StoreOpenStatus } from "@/components/storefront/store-open-status";
 import { SafeImage } from "@/components/ui/safe-image";
@@ -353,7 +354,10 @@ export function StoreCatalog({
                   </div>
                 </form>
 
-                <StoreOpenStatus openingHours={store.openingHours} />
+                <div className="flex shrink-0 items-center gap-2" dir="ltr">
+                  <FavoritesMenu storeSlug={store.slug} products={products} />
+                  <StoreOpenStatus openingHours={store.openingHours} />
+                </div>
               </div>
 
               {categories.length > 0 ? (
@@ -466,6 +470,7 @@ export function StoreCatalog({
                     <ProductCard
                       product={product}
                       href={`/${store.slug}/products/${product.slug}`}
+                      storeSlug={store.slug}
                       accent={store.primaryColor}
                       locale={locale}
                       priority={index < 6}

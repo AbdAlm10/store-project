@@ -39,6 +39,17 @@ export class AnalyticsService {
     });
   }
 
+  /** Public popularity signal for storefront recommendations (no auth). */
+  async getPublicProductPopularity(
+    storeId: string,
+    days = 30,
+    limit = 40,
+  ): Promise<Array<{ productId: string; views: number }>> {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    return this.analytics.topProducts(storeId, since.toISOString(), limit);
+  }
+
   async getDashboardStats(
     storeId: string,
     rangeDays: 1 | 7 | 30 | 90,

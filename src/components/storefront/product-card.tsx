@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, type MouseEvent } from "react";
-import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { SafeImage } from "@/components/ui/safe-image";
+import { FavoriteButton } from "@/components/storefront/favorite-button";
 import { discountPercent } from "@/domain/rules/store-rules";
 import type { ProductWithMedia } from "@/domain/types/entities";
 import type { Locale } from "@/i18n/config";
@@ -15,6 +13,9 @@ import {
 } from "@/lib/option-colors";
 import { formatMoney } from "@/lib/social/sharing";
 import { cn } from "@/lib/utils/cn";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { useState, type MouseEvent } from "react";
 
 /** Truncate on a word boundary and append ellipsis when there is more text. */
 function truncateWithEllipsis(text: string, maxChars: number): string {
@@ -123,6 +124,7 @@ export function ProductCardSkeleton({ className }: { className?: string }) {
 export function ProductCard({
   product,
   href,
+  storeSlug,
   accent,
   className,
   locale = "ar",
@@ -130,6 +132,7 @@ export function ProductCard({
 }: {
   product: ProductWithMedia;
   href: string;
+  storeSlug: string;
   accent?: string;
   className?: string;
   locale?: Locale;
@@ -257,8 +260,8 @@ export function ProductCard({
           />
         </div>
 
-        {product.featured || discount ? (
-          <div className="absolute start-0 top-0 z-2 flex flex-col items-start gap-1 p-2.5">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-2 flex items-start justify-between gap-2 p-2.5">
+          <div className="flex flex-col items-start gap-1">
             {product.featured ? (
               <span
                 className="rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide text-white sm:text-[11px]"
@@ -282,7 +285,14 @@ export function ProductCard({
               </span>
             ) : null}
           </div>
-        ) : null}
+          <div className="pointer-events-auto">
+            <FavoriteButton
+              storeSlug={storeSlug}
+              productId={product.id}
+              size="sm"
+            />
+          </div>
+        </div>
 
         {canFlip ? (
           <>
