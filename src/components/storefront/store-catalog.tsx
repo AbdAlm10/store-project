@@ -2,6 +2,7 @@
 
 import { CategoryIcon } from "@/components/categories/category-icon-picker";
 import { ProductCard } from "@/components/storefront/product-card";
+import { StoreOpenStatus } from "@/components/storefront/store-open-status";
 import { SafeImage } from "@/components/ui/safe-image";
 import type { Category, ProductWithMedia, Store } from "@/domain/types/entities";
 import { useI18n } from "@/i18n/provider";
@@ -318,38 +319,42 @@ export function StoreCatalog({
         {/* Filters start at the top (beside search) to use the full vertical strip */}
         <div className="flex items-start gap-3 lg:gap-4" dir="ltr">
           <div className="min-w-0 flex-1" dir="rtl">
-            {/* Search + genres stacked, flush to the right, above products title */}
-            <div className="mb-2.5 flex flex-col items-start gap-3">
-              <form
-                className="w-full max-w-md"
-                onSubmit={(event) => event.preventDefault()}
-              >
-                <div
-                  className="flex items-center gap-1 p-0.5 mt-1"
-                  style={{
-                    background:
-                      "color-mix(in srgb, var(--store-surface) 88%, transparent)",
-                    borderRadius: "999px",
-                    boxShadow:
-                      "inset 0 0 0 1px color-mix(in srgb, var(--store-border) 55%, transparent)",
-                  }}
+            {/* Search (start/right) + open status (end/left), then genres */}
+            <div className="mb-2.5 flex flex-col items-stretch gap-3">
+              <div className="flex w-full items-center justify-between gap-3">
+                <form
+                  className="min-w-0 flex-1 max-w-md"
+                  onSubmit={(event) => event.preventDefault()}
                 >
-                  <div className="relative min-w-0 flex-1">
-                    <Search
-                      className="pointer-events-none absolute start-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 opacity-40"
-                      aria-hidden
-                    />
-                    <input
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      placeholder={t("searchPlaceholder")}
-                      aria-label={t("searchProductsAria")}
-                      className="h-8 w-full border-0 bg-transparent pe-3 ps-9 text-sm outline-none sm:h-9"
-                      style={{ color: "var(--store-text)" }}
-                    />
+                  <div
+                    className="mt-1 flex items-center gap-1 p-0.5"
+                    style={{
+                      background:
+                        "color-mix(in srgb, var(--store-surface) 88%, transparent)",
+                      borderRadius: "999px",
+                      boxShadow:
+                        "inset 0 0 0 1px color-mix(in srgb, var(--store-border) 55%, transparent)",
+                    }}
+                  >
+                    <div className="relative min-w-0 flex-1">
+                      <Search
+                        className="pointer-events-none absolute start-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 opacity-40"
+                        aria-hidden
+                      />
+                      <input
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        placeholder={t("searchPlaceholder")}
+                        aria-label={t("searchProductsAria")}
+                        className="h-8 w-full border-0 bg-transparent pe-3 ps-9 text-sm outline-none sm:h-9"
+                        style={{ color: "var(--store-text)" }}
+                      />
+                    </div>
                   </div>
-                </div>
-              </form>
+                </form>
+
+                <StoreOpenStatus openingHours={store.openingHours} />
+              </div>
 
               {categories.length > 0 ? (
                 <section aria-label={t("categories")}>

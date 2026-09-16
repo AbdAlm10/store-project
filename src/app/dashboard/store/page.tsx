@@ -1,14 +1,10 @@
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { getServices } from "@/infrastructure/container";
-import { PageHeader, StatusBadge } from "@/components/dashboard/page-header";
+import { PageHeader } from "@/components/dashboard/page-header";
 import { DashboardCard } from "@/components/dashboard/ui";
 import { StoreSettingsForm } from "@/features/stores/store-settings-form";
-import { CopyStoreUrl } from "@/features/dashboard/copy-store-url";
-import { storeUrl } from "@/lib/social/sharing";
-import { Button } from "@/components/ui/button";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
+import { getServices } from "@/infrastructure/container";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Storefront",
@@ -24,33 +20,13 @@ export default async function StorePage() {
   const t = createTranslator(locale);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title={t("storefront")}
         description={t("storefrontPageDesc")}
-        actions={
-          <>
-            <Link href={`/${store.slug}`} target="_blank">
-              <Button variant="outline">{t("previewStore")}</Button>
-            </Link>
-            <Link href="/dashboard/store-design">
-              <Button variant="secondary">{t("design")}</Button>
-            </Link>
-          </>
-        }
       />
 
       <DashboardCard padding="sm">
-        <div className="flex flex-wrap items-center gap-3">
-          <StatusBadge status={store.status} />
-          <code className="break-all text-sm text-slate-600">
-            {storeUrl(store.slug)}
-          </code>
-          <CopyStoreUrl url={storeUrl(store.slug)} />
-        </div>
-      </DashboardCard>
-
-      <DashboardCard>
         <StoreSettingsForm store={store} />
       </DashboardCard>
     </div>

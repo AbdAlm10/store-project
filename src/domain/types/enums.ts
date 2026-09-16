@@ -1,11 +1,6 @@
-export type CurrencyCode =
-  | "USD"
-  | "EUR"
-  | "TRY"
-  | "SYP"
-  | "SAR"
-  | "AED"
-  | "GBP";
+export const STORE_CURRENCIES = ["USD", "EUR", "SYP", "TRY"] as const;
+
+export type CurrencyCode = (typeof STORE_CURRENCIES)[number];
 
 export type StoreStatus = "draft" | "published" | "suspended" | "restricted";
 

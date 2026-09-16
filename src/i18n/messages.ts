@@ -264,7 +264,13 @@ const ar = {
   variantsSection: "المتغيرات",
   variantsHint: "اختر تصنيفًا أولًا لتحميل خيارات مثل اللون والقياس.",
   storefrontPageDesc:
-    "تحكّم بما يراه العملاء: الهوية، التواصل، واتساب، وحالة النشر.",
+    "الظهور، التواصل، وساعات العمل — الشعار والألوان من تاب التصميم.",
+  storePreviewMode: "معاينة",
+  storeVisibilityPublishedHint:
+    "متجرك ظاهر للزوار عبر الرابط. أي شخص يملك الرابط يمكنه التصفح.",
+  storeVisibilityDraftHint:
+    "المتجر للمعاينة فقط — الزوار لا يرونه حتى تنشره.",
+  storeContactLinks: "الرقم والروابط",
   previewStore: "معاينة المتجر",
   draftStorePreview:
     "وضع المعاينة — أنت فقط ترى هذا المتجر حتى يتم نشره.",
@@ -310,6 +316,8 @@ const ar = {
   phone: "الهاتف",
   location: "الموقع",
   openingHours: "ساعات العمل",
+  storeOpenNow: "مفتوح",
+  storeClosedNow: "مغلق",
   theme: "الثيم",
   visibility: "الظهور",
   saveSettings: "حفظ الإعدادات",

@@ -67,6 +67,16 @@ export function serializeOpeningHours(schedule: OpeningHoursSchedule): string {
   return JSON.stringify(schedule);
 }
 
+/** Display "09:00" / "18:00" as 12-hour Arabic (e.g. 9:00 ص، 6:00 م). */
+export function formatTime12h(value: string): string {
+  const [hRaw, mRaw] = value.split(":").map(Number);
+  const hours24 = Number.isFinite(hRaw) ? hRaw : 0;
+  const minutes = Number.isFinite(mRaw) ? mRaw : 0;
+  const period = hours24 >= 12 ? "م" : "ص";
+  const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
+  return `${hours12}:${String(minutes).padStart(2, "0")} ${period}`;
+}
+
 export function formatOpeningHoursSummary(
   schedule: OpeningHoursSchedule,
   labels: Record<Weekday, string>,
@@ -75,8 +85,50 @@ export function formatOpeningHoursSummary(
   return schedule.days.map((day) => {
     const name = labels[day.day];
     if (day.closed) return `${name}: ${closedLabel}`;
-    return `${name}: ${day.open} – ${day.close}`;
+    return `${name}: ${formatTime12h(day.open)} – ${formatTime12h(day.close)}`;
   });
+}
+
+export function weekdayFromDate(date: Date = new Date()): Weekday {
+  const order: Weekday[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+  return order[(date.getDay() + 6) % 7];
+}
+
+export function getDayHours(
+  schedule: OpeningHoursSchedule,
+  date: Date = new Date(),
+): DayHours {
+  const today = weekdayFromDate(date);
+  return (
+    schedule.days.find((day) => day.day === today) ?? {
+      day: today,
+      closed: true,
+      open: "09:00",
+      close: "18:00",
+    }
+  );
+}
+
+function timeToMinutes(value: string): number {
+  const [hours, minutes] = value.split(":").map(Number);
+  return (hours || 0) * 60 + (minutes || 0);
+}
+
+/** Whether the store is open at `date` (local browser time). */
+export function isOpenNow(
+  schedule: OpeningHoursSchedule,
+  date: Date = new Date(),
+): boolean {
+  const today = getDayHours(schedule, date);
+  if (today.closed) return false;
+  const now = date.getHours() * 60 + date.getMinutes();
+  const open = timeToMinutes(today.open);
+  const close = timeToMinutes(today.close);
+  if (close <= open) {
+    // Overnight window (e.g. 22:00–02:00)
+    return now >= open || now < close;
+  }
+  return now >= open && now < close;
 }
 
 export function isLegacyOpeningHoursText(raw: string | null | undefined): boolean {

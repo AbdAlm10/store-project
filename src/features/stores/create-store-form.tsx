@@ -4,8 +4,16 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/forms";
+import { STORE_CURRENCIES } from "@/domain/types/enums";
 import { createStoreAction } from "@/features/stores/actions";
 import { useI18n } from "@/i18n/provider";
+
+const CURRENCY_LABEL: Record<(typeof STORE_CURRENCIES)[number], string> = {
+  USD: "دولار",
+  EUR: "يورو",
+  SYP: "ليرة سورية",
+  TRY: "ليرة تركية",
+};
 
 function toStoreSlug(value: string): string {
   return value
@@ -116,9 +124,9 @@ export function CreateStoreForm({
       <div>
         <Label htmlFor="currency">{t("currency")}</Label>
         <Select id="currency" name="currency" defaultValue="USD">
-          {["USD", "EUR", "TRY", "SYP", "SAR", "AED", "GBP"].map((code) => (
+          {STORE_CURRENCIES.map((code) => (
             <option key={code} value={code}>
-              {code}
+              {CURRENCY_LABEL[code]}
             </option>
           ))}
         </Select>

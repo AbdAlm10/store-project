@@ -1,13 +1,14 @@
 "use client";
 
-import { useI18n } from "@/i18n/provider";
 import type { MessageKey } from "@/i18n/messages";
+import { useI18n } from "@/i18n/provider";
 import {
   type DayHours,
   type OpeningHoursSchedule,
   type Weekday,
   WEEKDAYS,
   defaultOpeningHours,
+  formatTime12h,
   parseOpeningHours,
 } from "@/lib/opening-hours";
 import { cn } from "@/lib/utils/cn";
@@ -70,7 +71,7 @@ export function OpeningHoursEditor({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="text-sm font-semibold text-slate-900">
@@ -78,18 +79,18 @@ export function OpeningHoursEditor({
           </p>
           <p className="text-xs text-slate-500">{t("openingHoursHint")}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           <button
             type="button"
             onClick={applyWeekdays}
-            className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
+            className="rounded-lg px-2 py-1 text-xs font-medium text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
           >
             {t("hoursCopyMonFri")}
           </button>
           <button
             type="button"
             onClick={resetDefaults}
-            className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
+            className="rounded-lg px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
           >
             {t("hoursReset")}
           </button>
@@ -102,13 +103,13 @@ export function OpeningHoursEditor({
         </p>
       ) : null}
 
-      <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200">
+      <div className="overflow-hidden rounded-xl ring-1 ring-slate-200">
         <ul className="divide-y divide-slate-100">
           {schedule.days.map((day) => (
             <li
               key={day.day}
               className={cn(
-                "grid gap-3 px-3 py-3 sm:grid-cols-[7rem_1fr_auto] sm:items-center",
+                "grid gap-2 px-2.5 py-2 sm:grid-cols-[6.5rem_1fr_auto] sm:items-center",
                 day.closed && "bg-slate-50/80",
               )}
             >
@@ -134,7 +135,7 @@ export function OpeningHoursEditor({
                     onChange={(event) =>
                       updateDay(day.day, { open: event.target.value })
                     }
-                    className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm disabled:opacity-40"
+                    className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-sm disabled:opacity-40"
                   />
                 </div>
                 <span className="text-slate-300">→</span>
@@ -147,13 +148,15 @@ export function OpeningHoursEditor({
                     onChange={(event) =>
                       updateDay(day.day, { close: event.target.value })
                     }
-                    className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-sm disabled:opacity-40"
+                    className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-sm disabled:opacity-40"
                   />
                 </div>
               </div>
 
               <span className="text-xs font-medium text-slate-500 sm:text-end">
-                {day.closed ? t("hoursClosed") : `${day.open}–${day.close}`}
+                {day.closed
+                  ? t("hoursClosed")
+                  : `${formatTime12h(day.open)}–${formatTime12h(day.close)}`}
               </span>
             </li>
           ))}

@@ -56,7 +56,7 @@ export const createStoreSchema = z.object({
     "This store URL is reserved. Choose another.",
   ),
   description: z.string().trim().max(1000).optional(),
-  currency: z.enum(["USD", "EUR", "TRY", "SYP", "SAR", "AED", "GBP"]),
+  currency: z.enum(["USD", "EUR", "SYP", "TRY"]),
   whatsapp: z.string().trim().max(32).optional(),
   defaultLocale: z.enum(["ar"]).optional(),
 });
@@ -108,7 +108,7 @@ export const updateStoreSchema = z.object({
         Object.entries(value).filter(([key]) => allowed.has(key)),
       );
     }),
-  currency: z.enum(["USD", "EUR", "TRY", "SYP", "SAR", "AED", "GBP"]).optional(),
+  currency: z.enum(["USD", "EUR", "SYP", "TRY"]).optional(),
   defaultLocale: z.enum(["ar"]).optional(),
   status: z.enum(["draft", "published"]).optional(),
 });
