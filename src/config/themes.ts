@@ -18,6 +18,12 @@ export type ThemeTokens = {
   fontBody: string;
 };
 
+/** Theme colors/fonts plus non-visual storefront prefs stored in the same JSON column. */
+export type ThemeOverrides = Partial<ThemeTokens> & {
+  /** Comma-separated navbar action ids (whatsapp,phone,…). */
+  navbarActions?: string;
+};
+
 export const THEME_TOKEN_KEYS = [
   "background",
   "surface",
@@ -96,13 +102,15 @@ export function getTheme(_id?: ThemeId | null): ThemeDefinition {
 
 export function resolveThemeTokens(
   theme: ThemeDefinition | ThemeTokens = DEFAULT_THEME_TOKENS,
-  overrides?: Partial<ThemeTokens> | null,
+  overrides?: ThemeOverrides | null,
   primaryColor?: string | null,
 ): ThemeTokens {
   const base = "tokens" in theme ? theme.tokens : theme;
+  const { navbarActions: _navbarActions, ...tokenOverrides } = overrides ?? {};
+  void _navbarActions;
   const merged: ThemeTokens = {
     ...base,
-    ...(overrides ?? {}),
+    ...tokenOverrides,
     fontDisplay: DEFAULT_THEME_TOKENS.fontDisplay,
     fontBody: DEFAULT_THEME_TOKENS.fontBody,
   };

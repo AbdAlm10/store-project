@@ -83,7 +83,7 @@ export const updateStoreSchema = z.object({
     .enum(["clean", "bold", "warm", "minimal", "classic", "ocean", "night", "rose"])
     .optional(),
   themeOverrides: z
-    .record(z.string(), z.string().min(1).max(64))
+    .record(z.string(), z.string().min(1).max(120))
     .nullable()
     .optional()
     .transform((value) => {
@@ -103,6 +103,7 @@ export const updateStoreSchema = z.object({
         "radius",
         "fontDisplay",
         "fontBody",
+        "navbarActions",
       ]);
       return Object.fromEntries(
         Object.entries(value).filter(([key]) => allowed.has(key)),

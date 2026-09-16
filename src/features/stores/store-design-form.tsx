@@ -75,7 +75,9 @@ export function StoreDesignForm({ store }: { store: Store }) {
             Object.entries(overrides).filter(
               ([, value]) => typeof value === "string" && value.length > 0,
             ),
-          ) as Partial<ThemeTokens>;
+          ) as import("@/config/themes").ThemeOverrides;
+          const navbarActions = store.themeOverrides?.navbarActions;
+          if (navbarActions) cleaned.navbarActions = navbarActions;
           const result = await updateStoreAction(store.id, {
             themeId: "clean",
             primaryColor,

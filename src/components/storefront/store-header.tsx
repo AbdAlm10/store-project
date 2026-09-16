@@ -1,9 +1,36 @@
 import Link from "next/link";
-import { MapPin } from "lucide-react";
+import {
+  Facebook,
+  Instagram,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Send,
+  type LucideIcon,
+} from "lucide-react";
 import type { Store } from "@/domain/types/entities";
 import { SafeImage } from "@/components/ui/safe-image";
+import {
+  NAVBAR_ACTION_LABEL_KEY,
+  hrefForNavbarAction,
+  resolveNavbarActions,
+  type NavbarActionId,
+} from "@/lib/navbar-actions";
+import { createTranslator } from "@/i18n/messages";
+
+const NAV_ICONS: Record<NavbarActionId, LucideIcon> = {
+  whatsapp: MessageCircle,
+  phone: Phone,
+  instagram: Instagram,
+  facebook: Facebook,
+  telegram: Send,
+  location: MapPin,
+};
 
 export function StoreNav({ store }: { store: Store }) {
+  const t = createTranslator(store.defaultLocale);
+  const actions = resolveNavbarActions(store);
+
   return (
     <nav
       className="sticky top-0 z-30 border-b"
@@ -62,7 +89,7 @@ export function StoreNav({ store }: { store: Store }) {
             >
               {store.name}
             </span>
-            {store.location ? (
+            {store.location && !actions.includes("location") ? (
               <span className="mt-0.5 flex min-w-0 items-center text-xs opacity-75 sm:text-sm">
                 <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 <span className="truncate">{store.location}</span>
@@ -70,21 +97,36 @@ export function StoreNav({ store }: { store: Store }) {
             ) : null}
           </div>
         </Link>
-        {store.whatsapp ? (
-          <a
-            href={`https://wa.me/${store.whatsapp.replace(/[^\d]/g, "")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.98] sm:px-3 sm:text-base"
-            style={{
-              backgroundColor: "var(--store-accent)",
-              color: "var(--store-button-text)",
-              boxShadow:
-                "0 8px 22px -12px color-mix(in srgb, var(--store-accent) 75%, transparent)",
-            }}
-          >
-            واتساب
-          </a>
+
+        {actions.length > 0 ? (
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            {actions.map((id) => {
+              const href = hrefForNavbarAction(store, id);
+              if (!href) return null;
+              const Icon = NAV_ICONS[id];
+              const label = t(NAVBAR_ACTION_LABEL_KEY[id]);
+              const external = id !== "phone";
+              return (
+                <a
+                  key={id}
+                  href={href}
+                  target={external ? "_blank" : undefined}
+                  rel={external ? "noopener noreferrer" : undefined}
+                  aria-label={label}
+                  title={label}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:scale-105 active:scale-95 sm:h-10 sm:w-10"
+                  style={{
+                    backgroundColor: "var(--store-accent)",
+                    color: "var(--store-button-text)",
+                    boxShadow:
+                      "0 8px 22px -12px color-mix(in srgb, var(--store-accent) 75%, transparent)",
+                  }}
+                >
+                  <Icon className="h-4 w-4 sm:h-[1.125rem] sm:w-[1.125rem]" strokeWidth={2} />
+                </a>
+              );
+            })}
+          </div>
         ) : null}
       </div>
     </nav>

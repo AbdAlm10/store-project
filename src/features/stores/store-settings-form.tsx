@@ -13,12 +13,28 @@ import {
   parseOpeningHours,
   serializeOpeningHours,
 } from "@/lib/opening-hours";
+import {
+  NAVBAR_ACTION_IDS,
+  NAVBAR_ACTION_LABEL_KEY,
+  parseNavbarActions,
+  serializeNavbarActions,
+  type NavbarActionId,
+} from "@/lib/navbar-actions";
 import { storeUrl } from "@/lib/social/sharing";
 import { cn } from "@/lib/utils/cn";
-import { Eye, Globe } from "lucide-react";
+import {
+  Eye,
+  Facebook,
+  Globe,
+  Instagram,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Send,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition, type ComponentType } from "react";
 
 const CURRENCY_LABEL: Record<(typeof STORE_CURRENCIES)[number], string> = {
   USD: "دولار",
@@ -27,6 +43,24 @@ const CURRENCY_LABEL: Record<(typeof STORE_CURRENCIES)[number], string> = {
   TRY: "ليرة تركية",
 };
 
+const NAV_ICONS: Record<
+  NavbarActionId,
+  ComponentType<{ className?: string; strokeWidth?: number }>
+> = {
+  whatsapp: MessageCircle,
+  phone: Phone,
+  instagram: Instagram,
+  facebook: Facebook,
+  telegram: Send,
+  location: MapPin,
+};
+
+function defaultNavbarSelection(store: Store): NavbarActionId[] {
+  const raw = store.themeOverrides?.navbarActions;
+  if (typeof raw === "string") return parseNavbarActions(raw);
+  return store.whatsapp?.trim() ? ["whatsapp"] : [];
+}
+
 export function StoreSettingsForm({ store }: { store: Store }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -34,6 +68,9 @@ export function StoreSettingsForm({ store }: { store: Store }) {
   const [pending, startTransition] = useTransition();
   const [status, setStatus] = useState<"draft" | "published">(
     store.status === "published" ? "published" : "draft",
+  );
+  const [navActions, setNavActions] = useState<NavbarActionId[]>(() =>
+    defaultNavbarSelection(store),
   );
   const [openingHours, setOpeningHours] = useState(() =>
     isLegacyOpeningHoursText(store.openingHours)
@@ -46,6 +83,26 @@ export function StoreSettingsForm({ store }: { store: Store }) {
     : null;
   const url = storeUrl(store.slug);
   const isPublished = status === "published";
+
+  const fieldDefaults = useMemo(
+    () => ({
+      phone: store.phone ?? "",
+      whatsapp: store.whatsapp ?? "",
+      instagram: store.instagram ?? "",
+      facebook: store.facebook ?? "",
+      telegram: store.telegram ?? "",
+      location: store.location ?? "",
+    }),
+    [store],
+  );
+
+  function toggleNavAction(id: NavbarActionId) {
+    setNavActions((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id],
+    );
+  }
 
   return (
     <form
@@ -68,6 +125,10 @@ export function StoreSettingsForm({ store }: { store: Store }) {
             status,
             currency: String(formData.get("currency") ?? store.currency),
             defaultLocale: "ar",
+            themeOverrides: {
+              ...(store.themeOverrides ?? {}),
+              navbarActions: serializeNavbarActions(navActions),
+            },
           });
           if (!result.ok) {
             setError(result.error);
@@ -77,7 +138,6 @@ export function StoreSettingsForm({ store }: { store: Store }) {
         });
       }}
     >
-      {/* Visibility first — explains publish vs preview */}
       <section
         className={cn(
           "rounded-2xl border p-3.5 sm:p-4",
@@ -196,59 +256,58 @@ export function StoreSettingsForm({ store }: { store: Store }) {
           />
         </div>
 
-        <div>
-          <Label htmlFor="location">{t("location")}</Label>
-          <Input
-            id="location"
-            name="location"
-            defaultValue={store.location ?? ""}
-          />
-        </div>
-
-        {/* Phone + social links together */}
         <fieldset className="space-y-2">
-        
+          <div>
+            <legend className="text-sm font-medium text-slate-800">
+              {t("storeContactLinks")}
+            </legend>
+            <p className="mt-0.5 text-xs text-slate-500">
+              {t("storeNavIconsHint")}
+            </p>
+          </div>
+
           <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <Label htmlFor="phone">{t("phone")}</Label>
-              <Input
-                id="phone"
-                name="phone"
-                defaultValue={store.phone ?? ""}
-              />
-            </div>
-            <div>
-              <Label htmlFor="whatsapp">{t("whatsapp")}</Label>
-              <Input
-                id="whatsapp"
-                name="whatsapp"
-                defaultValue={store.whatsapp ?? ""}
-              />
-            </div>
-            <div>
-              <Label htmlFor="instagram">{t("instagram")}</Label>
-              <Input
-                id="instagram"
-                name="instagram"
-                defaultValue={store.instagram ?? ""}
-              />
-            </div>
-            <div>
-              <Label htmlFor="facebook">{t("facebook")}</Label>
-              <Input
-                id="facebook"
-                name="facebook"
-                defaultValue={store.facebook ?? ""}
-              />
-            </div>
-            <div>
-              <Label htmlFor="telegram">{t("telegram")}</Label>
-              <Input
-                id="telegram"
-                name="telegram"
-                defaultValue={store.telegram ?? ""}
-              />
-            </div>
+            {NAVBAR_ACTION_IDS.map((id) => {
+              const Icon = NAV_ICONS[id];
+              const active = navActions.includes(id);
+              const inputName = id;
+              return (
+                <div key={id} className="min-w-0">
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <Label htmlFor={inputName} className="mb-0">
+                      {t(NAVBAR_ACTION_LABEL_KEY[id])}
+                    </Label>
+                    <button
+                      type="button"
+                      onClick={() => toggleNavAction(id)}
+                      title={t("storeNavIconToggle")}
+                      aria-pressed={active}
+                      aria-label={`${t("storeNavIconToggle")}: ${t(NAVBAR_ACTION_LABEL_KEY[id])}`}
+                      className={cn(
+                        "inline-flex h-7 w-7 items-center justify-center rounded-full transition",
+                        active
+                          ? "bg-brand-700 text-white"
+                          : "bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600",
+                      )}
+                    >
+                      <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+                    </button>
+                  </div>
+                  <Input
+                    id={inputName}
+                    name={inputName}
+                    defaultValue={fieldDefaults[id]}
+                    placeholder={
+                      id === "whatsapp" || id === "phone"
+                        ? "+963..."
+                        : id === "location"
+                          ? undefined
+                          : "https://..."
+                    }
+                  />
+                </div>
+              );
+            })}
           </div>
         </fieldset>
 

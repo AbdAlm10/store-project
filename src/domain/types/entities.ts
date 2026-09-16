@@ -47,10 +47,8 @@ export type Store = {
   tiktok: string | null;
   primaryColor: string;
   themeId: ThemeId;
-  /** Partial overrides for theme tokens (any surface color). */
-  themeOverrides: Partial<
-    import("@/config/themes").ThemeTokens
-  > | null;
+  /** Theme colors plus optional navbarActions preference. */
+  themeOverrides: import("@/config/themes").ThemeOverrides | null;
   defaultLocale: "ar";
   createdAt: string;
   updatedAt: string;

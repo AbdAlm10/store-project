@@ -271,6 +271,9 @@ const ar = {
   storeVisibilityDraftHint:
     "المتجر للمعاينة فقط — الزوار لا يرونه حتى تنشره.",
   storeContactLinks: "الرقم والروابط",
+  storeNavIconsHint:
+    "فعّل الأيقونة بجانب الحقل لتظهر كزر مباشر في شريط متجرك.",
+  storeNavIconToggle: "إظهار في الشريط",
   previewStore: "معاينة المتجر",
   draftStorePreview:
     "وضع المعاينة — أنت فقط ترى هذا المتجر حتى يتم نشره.",
