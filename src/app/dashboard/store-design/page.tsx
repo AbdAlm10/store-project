@@ -1,11 +1,11 @@
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { getServices } from "@/infrastructure/container";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { StoreDesignForm } from "@/features/stores/store-design-form";
 import { Button } from "@/components/ui/button";
+import { StoreDesignForm } from "@/features/stores/store-design-form";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
+import { getServices } from "@/infrastructure/container";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Store design",
@@ -21,7 +21,7 @@ export default async function StoreDesignPage() {
   const t = createTranslator(locale);
 
   return (
-    <div className="min-w-0 max-w-full space-y-6">
+    <div className="min-w-0 max-w-full space-y-4">
       <PageHeader
         title={t("storeDesignTitle")}
         description={t("storeDesignDesc")}

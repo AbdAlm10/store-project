@@ -1,25 +1,25 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
-import type { Store } from "@/domain/types/entities";
+import { ImageUploadField } from "@/components/media/image-upload-field";
+import { Button } from "@/components/ui/button";
+import { Input, Label } from "@/components/ui/forms";
+import { SafeImage } from "@/components/ui/safe-image";
 import {
   DEFAULT_THEME_TOKENS,
   LOGO_SIZE_OPTIONS,
   THEME_TOKEN_KEYS,
   logoSizeIdFromValue,
+  resolveThemeTokens,
   type ThemeColorKey,
   type ThemeTokens,
-  resolveThemeTokens,
 } from "@/config/themes";
-import { Button } from "@/components/ui/button";
-import { Input, Label } from "@/components/ui/forms";
-import { ImageUploadField } from "@/components/media/image-upload-field";
-import { SafeImage } from "@/components/ui/safe-image";
+import type { Store } from "@/domain/types/entities";
 import { updateStoreAction } from "@/features/stores/update-actions";
-import { useI18n } from "@/i18n/provider";
 import type { MessageKey } from "@/i18n/messages";
+import { useI18n } from "@/i18n/provider";
 import { cn } from "@/lib/utils/cn";
+import { useRouter } from "next/navigation";
+import { useMemo, useState, useTransition } from "react";
 
 const TOKEN_LABEL_KEYS: Record<ThemeColorKey, MessageKey> = {
   background: "tokenBackground",
@@ -65,7 +65,7 @@ export function StoreDesignForm({ store }: { store: Store }) {
 
   return (
     <form
-      className="min-w-0 max-w-full space-y-8"
+      className="min-w-0 max-w-full space-y-4"
       onSubmit={(event) => {
         event.preventDefault();
         setError(null);
@@ -92,7 +92,7 @@ export function StoreDesignForm({ store }: { store: Store }) {
       }}
     >
       <section
-        className="min-w-0 max-w-full overflow-hidden rounded-3xl p-6"
+        className="min-w-0 max-w-full overflow-hidden rounded-2xl p-4"
         style={
           {
             background: preview.surface,
@@ -102,17 +102,17 @@ export function StoreDesignForm({ store }: { store: Store }) {
           } as React.CSSProperties
         }
       >
-        <h2 className="text-lg font-semibold">{t("livePreview")}</h2>
-        <p className="mt-1 text-sm opacity-70">{t("livePreviewHint")}</p>
+        <h2 className="text-base font-semibold">{t("livePreview")}</h2>
+        <p className="mt-0.5 text-xs opacity-70">{t("livePreviewHint")}</p>
         <div
-          className="mt-4 overflow-hidden"
+          className="mt-3 overflow-hidden"
           style={{
             background: preview.background,
             borderRadius: preview.radius,
           }}
         >
           <div
-            className="flex items-center gap-3 px-4 py-3"
+            className="flex items-center gap-3 px-3 py-2.5"
             style={{
               background: preview.navBg,
               color: preview.navText,
@@ -147,7 +147,7 @@ export function StoreDesignForm({ store }: { store: Store }) {
             )}
             <span style={{ fontFamily: preview.fontDisplay }}>{store.name}</span>
           </div>
-          <div className="grid grid-cols-3 gap-2 p-4">
+          <div className="grid grid-cols-3 gap-2 p-3">
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
@@ -175,13 +175,13 @@ export function StoreDesignForm({ store }: { store: Store }) {
         </div>
       </section>
 
-      <section className="rounded-[1.35rem] border border-slate-100/80 bg-white p-6 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)]">
-        <div className="flex flex-wrap items-end justify-between gap-3">
+      <section className="rounded-[1.35rem] border border-slate-100/80 bg-white p-4 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)] sm:p-5">
+        <div className="flex flex-wrap items-end justify-between gap-2">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className="text-base font-semibold text-slate-900">
               {t("colorCustomization")}
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-0.5 text-xs text-slate-500">
               {t("colorCustomizationHint")}
             </p>
           </div>
@@ -189,7 +189,7 @@ export function StoreDesignForm({ store }: { store: Store }) {
             {t("resetColors")}
           </Button>
         </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {THEME_TOKEN_KEYS.map((key) => {
             const value = preview[key];
             return (
@@ -201,7 +201,7 @@ export function StoreDesignForm({ store }: { store: Store }) {
                     type="color"
                     value={normalizeHex(value)}
                     onChange={(event) => setToken(key, event.target.value)}
-                    className="h-11 w-14 shrink-0 p-1"
+                    className="h-10 w-12 shrink-0 p-1"
                   />
                   <Input
                     value={value}
@@ -215,78 +215,52 @@ export function StoreDesignForm({ store }: { store: Store }) {
         </div>
       </section>
 
-      <section className="rounded-[1.35rem] border border-slate-100/80 bg-white p-6 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)]">
-        <h2 className="text-lg font-semibold text-slate-900">{t("branding")}</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div>
-            <Label htmlFor="primaryColor">{t("primaryColor")}</Label>
-            <div className="flex items-center gap-3">
-              <Input
-                id="primaryColor"
-                type="color"
-                value={normalizeHex(primaryColor)}
-                onChange={(event) => {
-                  setPrimaryColor(event.target.value);
-                  setOverrides((prev) => ({
-                    ...prev,
-                    accent: event.target.value,
-                  }));
-                }}
-                className="h-11 w-16 p-1"
-              />
-              <Input
-                value={primaryColor}
-                onChange={(event) => {
-                  setPrimaryColor(event.target.value);
-                  setOverrides((prev) => ({
-                    ...prev,
-                    accent: event.target.value,
-                  }));
-                }}
-                pattern="^#[0-9A-Fa-f]{6}$"
-              />
-            </div>
+      <section className="rounded-[1.35rem] border border-slate-100/80 bg-white p-4 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)] sm:p-5">
+        <h2 className="text-base font-semibold text-slate-900">{t("branding")}</h2>
+
+        <div className="mt-3">
+          <Label>{t("logoSize")}</Label>
+          <p className="mb-1.5 text-xs text-slate-500">{t("logoSizeHint")}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {LOGO_SIZE_OPTIONS.map((option) => {
+              const active = logoSizeId === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() =>
+                    setOverrides((prev) => ({
+                      ...prev,
+                      logoSize: option.value,
+                    }))
+                  }
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-xs font-semibold transition active:scale-[0.98]",
+                    active
+                      ? "bg-brand-700 text-white"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200",
+                  )}
+                >
+                  {t(option.labelKey)}
+                </button>
+              );
+            })}
           </div>
-          <div>
-            <Label>{t("logoUrl")}</Label>
+        </div>
+
+        <div className="mt-3 border-t border-slate-100 pt-3">
+          <Label>{t("logoUrl")}</Label>
+          <div className="mt-1.5">
             <ImageUploadField
               storeId={store.id}
               kind="logo"
               name="logoUrl"
               value={logoUrl}
               onChange={setLogoUrl}
+              compact
             />
-            <p className="mt-1 text-xs text-slate-500">{t("logoNavHint")}</p>
           </div>
-          <div className="sm:col-span-2">
-            <Label>{t("logoSize")}</Label>
-            <p className="mb-2 text-xs text-slate-500">{t("logoSizeHint")}</p>
-            <div className="flex flex-wrap gap-2">
-              {LOGO_SIZE_OPTIONS.map((option) => {
-                const active = logoSizeId === option.id;
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() =>
-                      setOverrides((prev) => ({
-                        ...prev,
-                        logoSize: option.value,
-                      }))
-                    }
-                    className={cn(
-                      "rounded-full px-3.5 py-2 text-sm font-semibold transition active:scale-[0.98]",
-                      active
-                        ? "bg-brand-700 text-white"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200",
-                    )}
-                  >
-                    {t(option.labelKey)}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <p className="mt-1 text-xs text-slate-500">{t("logoNavHint")}</p>
         </div>
       </section>
 

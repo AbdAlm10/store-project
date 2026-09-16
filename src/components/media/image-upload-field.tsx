@@ -1,12 +1,13 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/forms";
 import { SafeImage } from "@/components/ui/safe-image";
-import { uploadImageAction, deleteOwnedImageAction, type UploadImageKind } from "@/features/media/actions";
-import { compressImageForUpload } from "@/lib/compress-image";
+import { deleteOwnedImageAction, uploadImageAction, type UploadImageKind } from "@/features/media/actions";
 import { useI18n } from "@/i18n/provider";
+import { compressImageForUpload } from "@/lib/compress-image";
+import { cn } from "@/lib/utils/cn";
+import { useId, useRef, useState } from "react";
 
 type ImageUploadFieldProps = {
   storeId: string;
@@ -92,71 +93,93 @@ export function ImageUploadField({
   }
 
   return (
-    <div className="space-y-3">
+    <div className={cn("space-y-2", compact && "space-y-1.5")}>
       {name ? <input type="hidden" name={name} value={url} /> : null}
 
-      {url ? (
-        <div className="relative aspect-square max-w-[12rem] overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-          <SafeImage
-            src={url}
-            alt=""
-            fill
-            className="object-cover"
-            sizes="192px"
-          />
-        </div>
-      ) : null}
-
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          ref={fileRef}
-          id={inputId}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/avif"
-          className="sr-only"
-          disabled={busy}
-          onChange={(event) => void handleFile(event.target.files?.[0])}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={busy}
-          onClick={() => fileRef.current?.click()}
-        >
-          {status === "compressing"
-            ? `${t("compressingImage")} ${progress}%`
-            : status === "uploading"
-              ? t("uploadingImage")
-              : t("chooseImage")}
-        </Button>
+      <div
+        className={cn(
+          "flex gap-3",
+          compact ? "items-center" : "flex-col",
+        )}
+      >
         {url ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={busy}
-            onClick={() => void handleClear()}
+          <div
+            className={cn(
+              "relative shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100",
+              compact
+                ? "h-14 w-14"
+                : "aspect-square max-w-[12rem] w-full",
+            )}
           >
-            {t("clearImage")}
-          </Button>
+            <SafeImage
+              src={url}
+              alt=""
+              fill
+              className={compact ? "object-contain p-1" : "object-cover"}
+              sizes={compact ? "56px" : "192px"}
+            />
+          </div>
+        ) : compact ? (
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-[10px] font-medium text-slate-400">
+            {t("logoUrl")}
+          </div>
         ) : null}
-      </div>
 
-      {!compact ? (
-        <p className="text-xs text-slate-500">{t("imageCompressHint")}</p>
-      ) : null}
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={fileRef}
+              id={inputId}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/avif"
+              className="sr-only"
+              disabled={busy}
+              onChange={(event) => void handleFile(event.target.files?.[0])}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={busy}
+              onClick={() => fileRef.current?.click()}
+            >
+              {status === "compressing"
+                ? `${t("compressingImage")} ${progress}%`
+                : status === "uploading"
+                  ? t("uploadingImage")
+                  : t("chooseImage")}
+            </Button>
+            {url ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={busy}
+                onClick={() => void handleClear()}
+              >
+                {t("clearImage")}
+              </Button>
+            ) : null}
+          </div>
 
-      <div>
-        <Label htmlFor={`${inputId}-url`}>{t("orPasteImageUrl")}</Label>
-        <Input
-          id={`${inputId}-url`}
-          type="url"
-          value={url}
-          disabled={busy}
-          placeholder="https://..."
-          onChange={(event) => setUrl(event.target.value)}
-        />
+          {!compact ? (
+            <p className="text-xs text-slate-500">{t("imageCompressHint")}</p>
+          ) : null}
+
+          <div>
+            {!compact ? (
+              <Label htmlFor={`${inputId}-url`}>{t("orPasteImageUrl")}</Label>
+            ) : null}
+            <Input
+              id={`${inputId}-url`}
+              type="url"
+              value={url}
+              disabled={busy}
+              placeholder={compact ? t("orPasteImageUrl") : "https://..."}
+              onChange={(event) => setUrl(event.target.value)}
+            />
+          </div>
+        </div>
       </div>
 
       {error ? (
