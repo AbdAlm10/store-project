@@ -2,6 +2,7 @@ import { BrandLogo } from "@/components/brand/brand-logo";
 import { DashboardPrefetch } from "@/components/dashboard/dashboard-prefetch";
 import { MerchantNav } from "@/components/dashboard/merchant-nav";
 import { logoutAction } from "@/features/auth/actions";
+import { StoreQrButton } from "@/features/dashboard/store-qr-button";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
 import {
@@ -77,17 +78,37 @@ export default async function DashboardLayout({
       </aside>
 
       <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-white">
-        <header className="relative z-50 shrink-0 border-b border-slate-100/80 bg-white px-4 py-2 sm:px-6 lg:hidden">
-          <div className="flex items-center justify-between gap-3">
-            <Link href="/dashboard" aria-label="دكّان" className="relative z-[60] min-w-0">
+        <header className="relative z-50 shrink-0 border-b border-slate-100/80 bg-white px-4 py-2 sm:px-6 lg:px-8">
+          <div className="flex h-10 items-center gap-3">
+            <Link
+              href="/dashboard"
+              aria-label="دكّان"
+              className="relative z-[60] min-w-0 lg:hidden"
+            >
               <BrandLogo
                 variant="horizontal"
                 className="h-10 w-auto max-w-[9.5rem]"
                 priority
               />
             </Link>
-            <MerchantNav locale={locale} compact />
+
+            <div className="relative z-[60] ms-auto flex items-center gap-1.5 pe-11 lg:pe-0">
+              <div className="lg:hidden">
+                <MerchantNav locale={locale} compact />
+              </div>
+            </div>
           </div>
+
+          {activeStore ? (
+            <div className="absolute left-3 top-1/2 z-[70] -translate-y-1/2 sm:left-4 lg:left-6">
+              <StoreQrButton
+                storeName={activeStore.name}
+                storeSlug={activeStore.slug}
+                logoUrl={activeStore.logoUrl}
+                variant="icon"
+              />
+            </div>
+          ) : null}
         </header>
 
         <main className="dashboard-main min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
