@@ -3,7 +3,12 @@ import { AppError } from "@/domain/errors";
 import type { Profile } from "@/domain/types/entities";
 import type { AuthProvider, AuthSession } from "@/application/ports/providers";
 import type { UserRepository } from "@/application/ports/repositories";
-import { signInSchema, signUpSchema } from "@/validations/schemas";
+import {
+  signInSchema,
+  signUpSchema,
+  updatePasswordSchema,
+  updateProfileSchema,
+} from "@/validations/schemas";
 
 /**
  * Request-scoped dedupe: layout + page + service methods often call these
@@ -18,14 +23,14 @@ const cachedProfile = cache(
   ): Promise<{ session: AuthSession; profile: Profile }> => {
     const session = await cachedSession(auth);
     if (!session) {
-      throw new AppError("UNAUTHORIZED", "Please sign in to continue.");
+      throw new AppError("UNAUTHORIZED", "يجب تسجيل الدخول للمتابعة.");
     }
     const profile = await users.findProfileById(session.user.id);
     if (!profile) {
-      throw new AppError("UNAUTHORIZED", "Profile not found.");
+      throw new AppError("UNAUTHORIZED", "تعذّر العثور على الملف الشخصي.");
     }
     if (profile.suspendedAt) {
-      throw new AppError("FORBIDDEN", "This account has been suspended.");
+      throw new AppError("FORBIDDEN", "تم إيقاف هذا الحساب.");
     }
     return { session, profile };
   },
@@ -64,7 +69,7 @@ export class AuthService {
   async requireSession(): Promise<AuthSession> {
     const session = await cachedSession(this.auth);
     if (!session) {
-      throw new AppError("UNAUTHORIZED", "Please sign in to continue.");
+      throw new AppError("UNAUTHORIZED", "يجب تسجيل الدخول للمتابعة.");
     }
     return session;
   }
@@ -83,5 +88,34 @@ export class AuthService {
 
   async requestPasswordReset(email: string): Promise<void> {
     await this.auth.requestPasswordReset(email);
+  }
+
+  async updateProfile(input: unknown): Promise<Profile> {
+    const parsed = updateProfileSchema.safeParse(input);
+    if (!parsed.success) {
+      const first = parsed.error.issues[0];
+      throw new AppError(
+        "VALIDATION",
+        first?.message ?? "تحقق من الحقول وحاول مرة أخرى.",
+      );
+    }
+    const { profile } = await this.requireProfile();
+    return this.users.upsertProfile({
+      ...profile,
+      fullName: parsed.data.fullName,
+    });
+  }
+
+  async updatePassword(input: unknown): Promise<void> {
+    const parsed = updatePasswordSchema.safeParse(input);
+    if (!parsed.success) {
+      const first = parsed.error.issues[0];
+      throw new AppError(
+        "VALIDATION",
+        first?.message ?? "تحقق من الحقول وحاول مرة أخرى.",
+      );
+    }
+    await this.requireProfile();
+    await this.auth.updatePassword(parsed.data.password);
   }
 }

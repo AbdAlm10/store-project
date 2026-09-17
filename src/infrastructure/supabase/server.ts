@@ -1,11 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { AppError } from "@/domain/errors";
 
 export async function createSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !anonKey) {
-    throw new Error("Supabase server env vars are not configured.");
+    throw new AppError(
+      "INTERNAL",
+      "إعدادات المصادقة غير مكتملة. حاول لاحقًا.",
+    );
   }
 
   const cookieStore = await cookies();

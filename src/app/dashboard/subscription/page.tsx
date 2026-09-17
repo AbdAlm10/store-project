@@ -1,15 +1,21 @@
 import { redirect } from "next/navigation";
 import { getServices } from "@/infrastructure/container";
-import { PLANS } from "@/config/plans";
+import { PLANS, type PlanId } from "@/config/plans";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { DashboardCard } from "@/components/dashboard/ui";
 import { getRequestLocale } from "@/i18n/get-locale";
-import { createTranslator } from "@/i18n/messages";
+import { createTranslator, type MessageKey } from "@/i18n/messages";
 
 export const metadata = {
   title: "Subscription",
   robots: { index: false, follow: false },
+};
+
+const PLAN_LABEL_KEY: Record<PlanId, MessageKey> = {
+  trial: "planTrial",
+  basic: "planBasic",
+  pro: "planPro",
 };
 
 export default async function SubscriptionPage() {
@@ -21,6 +27,7 @@ export default async function SubscriptionPage() {
   const t = createTranslator(locale);
   const subscription = await services.entitlements.getSubscription(store.id);
   const plan = PLANS[subscription.planId];
+  const planLabel = t(PLAN_LABEL_KEY[subscription.planId]);
   const productCount = await services.products
     .listForMerchant(store.id, { pageSize: 1 })
     .then((result) => result.total);
@@ -31,7 +38,7 @@ export default async function SubscriptionPage() {
       <DashboardCard>
         <p className="text-sm text-slate-400">{t("currentPlan")}</p>
         <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
-          {plan.name}
+          {planLabel}
         </p>
         <p className="mt-2 text-sm capitalize text-slate-500">
           {t("statusLabel", { status: subscription.status })}

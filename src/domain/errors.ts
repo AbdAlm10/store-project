@@ -1,4 +1,5 @@
 import { ZodError } from "zod";
+import { AUTH_AR, localizeAuthMessage } from "@/lib/auth-messages";
 
 export type ErrorCode =
   | "UNAUTHORIZED"
@@ -52,13 +53,29 @@ function defaultStatus(code: ErrorCode): number {
   }
 }
 
+function isZodLike(
+  error: unknown,
+): error is { issues: Array<{ message: string; path: PropertyKey[] }> } {
+  if (error instanceof ZodError) return true;
+  if (!error || typeof error !== "object") return false;
+  const issues = (error as { issues?: unknown }).issues;
+  return Array.isArray(issues);
+}
+
 export function toUserMessage(error: unknown): string {
-  if (error instanceof AppError) return error.message;
-  if (error instanceof ZodError) {
-    const first = error.issues[0];
-    if (!first) return "Please check the form and try again.";
-    const path = first.path.filter(Boolean).join(".");
-    return path ? `${path}: ${first.message}` : first.message;
+  if (error instanceof AppError) {
+    return localizeAuthMessage(error.message);
   }
-  return "Something went wrong. Please try again.";
+
+  if (isZodLike(error)) {
+    const first = error.issues[0];
+    if (!first) return AUTH_AR.formCheck;
+    return localizeAuthMessage(first.message);
+  }
+
+  if (error instanceof Error && error.message) {
+    return localizeAuthMessage(error.message);
+  }
+
+  return AUTH_AR.generic;
 }

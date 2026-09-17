@@ -5,6 +5,7 @@ import type {
   SignUpInput,
 } from "@/application/ports/providers";
 import { AppError } from "@/domain/errors";
+import { AUTH_AR, localizeAuthMessage } from "@/lib/auth-messages";
 import { createSupabaseServerClient } from "@/infrastructure/supabase/server";
 
 function toSession(user: {
@@ -35,12 +36,14 @@ export class SupabaseAuthProvider implements AuthProvider {
       },
     });
     if (error) {
-      throw new AppError("VALIDATION", error.message);
+      throw new AppError("VALIDATION", localizeAuthMessage(error.message));
     }
     if (!data.user || !data.session) {
       throw new AppError(
         "VALIDATION",
-        "Check your email to confirm the account, then sign in.",
+        localizeAuthMessage(
+          "Check your email to confirm the account, then sign in.",
+        ),
       );
     }
     return toSession(data.user, data.session.access_token);
@@ -53,7 +56,10 @@ export class SupabaseAuthProvider implements AuthProvider {
       password: input.password,
     });
     if (error || !data.user || !data.session) {
-      throw new AppError("UNAUTHORIZED", "Invalid email or password.");
+      throw new AppError(
+        "UNAUTHORIZED",
+        localizeAuthMessage("Invalid email or password."),
+      );
     }
     return toSession(data.user, data.session.access_token);
   }
@@ -72,13 +78,27 @@ export class SupabaseAuthProvider implements AuthProvider {
 
   async requestPasswordReset(email: string): Promise<void> {
     const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    if (error) throw new AppError("VALIDATION", error.message);
+    const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/reset-password`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo,
+    });
+    if (error) {
+      throw new AppError("VALIDATION", localizeAuthMessage(error.message));
+    }
   }
 
   async updatePassword(password: string): Promise<void> {
     const supabase = await createSupabaseServerClient();
+
+    // Prefer getUser() so the JWT is validated/refreshed before updateUser.
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData.user) {
+      throw new AppError("UNAUTHORIZED", AUTH_AR.signInRequired);
+    }
+
     const { error } = await supabase.auth.updateUser({ password });
-    if (error) throw new AppError("VALIDATION", error.message);
+    if (error) {
+      throw new AppError("VALIDATION", localizeAuthMessage(error.message));
+    }
   }
 }

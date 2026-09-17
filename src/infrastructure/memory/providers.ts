@@ -75,7 +75,10 @@ export class MemoryAuthProvider implements AuthProvider {
     fullName?: string;
   }): Promise<AuthSession> {
     if (input.password.length < 8) {
-      throw new AppError("VALIDATION", "Password must be at least 8 characters.");
+      throw new AppError(
+        "VALIDATION",
+        "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
+      );
     }
     this.session = {
       user: {
@@ -91,7 +94,10 @@ export class MemoryAuthProvider implements AuthProvider {
 
   async signIn(input: { email: string; password: string }): Promise<AuthSession> {
     if (!input.password) {
-      throw new AppError("UNAUTHORIZED", "Invalid email or password.");
+      throw new AppError(
+        "UNAUTHORIZED",
+        "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+      );
     }
     const email = input.email.toLowerCase();
     const demoIds: Record<string, string> = {
@@ -134,8 +140,16 @@ export class MemoryAuthProvider implements AuthProvider {
     return;
   }
 
-  async updatePassword(): Promise<void> {
-    return;
+  async updatePassword(password: string): Promise<void> {
+    if (password.length < 8) {
+      throw new AppError(
+        "VALIDATION",
+        "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
+      );
+    }
+    if (password.length > 72) {
+      throw new AppError("VALIDATION", "كلمة المرور طويلة جدًا.");
+    }
   }
 }
 

@@ -1,16 +1,23 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { getServices } from "@/infrastructure/container";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { DashboardCard } from "@/components/dashboard/ui";
 import { Button } from "@/components/ui/button";
+import type { PlanId } from "@/config/plans";
+import { AccountSettingsForm } from "@/features/auth/account-settings-form";
 import { getRequestLocale } from "@/i18n/get-locale";
-import { createTranslator } from "@/i18n/messages";
-import { isSupabaseConfigured } from "@/infrastructure/supabase/config";
+import { createTranslator, type MessageKey } from "@/i18n/messages";
+import { getServices } from "@/infrastructure/container";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Settings",
   robots: { index: false, follow: false },
+};
+
+const PLAN_LABEL_KEY: Record<PlanId, MessageKey> = {
+  trial: "planTrial",
+  basic: "planBasic",
+  pro: "planPro",
 };
 
 export default async function SettingsPage() {
@@ -21,48 +28,21 @@ export default async function SettingsPage() {
   const store = stores[0];
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
-  const supabaseOn = isSupabaseConfigured();
+  const subscription = await services.entitlements.getSubscription(store.id);
+  const planLabel = t(PLAN_LABEL_KEY[subscription.planId]);
 
   return (
     <div className="space-y-6">
       <PageHeader title={t("settings")} description={t("settingsDesc")} />
 
-      <DashboardCard padding="sm" className="bg-[#f3f5f8] border-transparent shadow-none">
-        <p className="text-sm text-slate-500">
-          Data mode:{" "}
-          <span className="font-semibold text-slate-900">
-            {supabaseOn ? "Supabase" : "Memory (local demo)"}
-          </span>
-          {supabaseOn
-            ? " — users / stores / products write to your Supabase project."
-            : " — set a valid NEXT_PUBLIC_SUPABASE_URL and apply SQL migrations to persist."}
-        </p>
-      </DashboardCard>
-
       <DashboardCard>
         <h2 className="text-base font-semibold text-slate-900">{t("account")}</h2>
-        <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-slate-400">{t("name")}</dt>
-            <dd className="mt-1 font-medium text-slate-900">
-              {profile.fullName ?? "—"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-slate-400">{t("email")}</dt>
-            <dd className="mt-1 font-medium text-slate-900">{profile.email}</dd>
-          </div>
-          <div>
-            <dt className="text-slate-400">{t("role")}</dt>
-            <dd className="mt-1 font-medium capitalize text-slate-900">
-              {profile.platformRole}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-slate-400">{t("activeStore")}</dt>
-            <dd className="mt-1 font-medium text-slate-900">{store.name}</dd>
-          </div>
-        </dl>
+        <AccountSettingsForm
+          fullName={profile.fullName ?? ""}
+          email={profile.email}
+          storeId={store.id}
+          storeName={store.name}
+        />
       </DashboardCard>
 
       <section className="grid gap-3 sm:grid-cols-2">
@@ -87,6 +67,9 @@ export default async function SettingsPage() {
           className="rounded-[1.25rem] border border-slate-100/80 bg-white p-5 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)] transition hover:-translate-y-0.5 hover:border-brand-200/60"
         >
           <p className="font-semibold text-slate-900">{t("subscription")}</p>
+          <p className="mt-1 text-sm text-slate-900">
+            {t("subscriptionPlanType", { plan: planLabel })}
+          </p>
           <p className="mt-1 text-sm text-slate-400">
             {t("subscriptionCardDesc")}
           </p>
@@ -94,9 +77,9 @@ export default async function SettingsPage() {
         <div className="rounded-[1.25rem] border border-slate-100/80 bg-white p-5 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)]">
           <p className="font-semibold text-slate-900">{t("passwordReset")}</p>
           <p className="mt-1 text-sm text-slate-400">{t("passwordResetDesc")}</p>
-          <Link href="/login" className="mt-3 inline-block">
+          <Link href="/reset-password" className="mt-3 inline-block">
             <Button variant="outline" size="sm">
-              {t("signInPage")}
+              {t("setNewPassword")}
             </Button>
           </Link>
         </div>

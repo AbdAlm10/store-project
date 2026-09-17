@@ -6,12 +6,12 @@ import {
 
 export const emailSchema = z
   .string()
-  .email("Enter a valid email address.");
+  .email("أدخل بريدًا إلكترونيًا صالحًا.");
 
 export const passwordSchema = z
   .string()
-  .min(8, "Password must be at least 8 characters.")
-  .max(72, "Password is too long.");
+  .min(8, "يجب أن تكون كلمة المرور 8 أحرف على الأقل.")
+  .max(72, "كلمة المرور طويلة جدًا.");
 
 export const slugSchema = z
   .string()
@@ -25,13 +25,27 @@ export const slugSchema = z
 export const signUpSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
-  fullName: z.string().trim().min(1).max(120).optional(),
+  fullName: z.string().trim().min(1, "الاسم مطلوب.").max(120).optional(),
 });
 
 export const signInSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1, "Password is required."),
+  password: z.string().min(1, "كلمة المرور مطلوبة."),
 });
+
+export const updateProfileSchema = z.object({
+  fullName: z.string().trim().min(1, "الاسم مطلوب.").max(120),
+});
+
+export const updatePasswordSchema = z
+  .object({
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, "أكّد كلمة المرور."),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "كلمتا المرور غير متطابقتين.",
+    path: ["confirmPassword"],
+  });
 
 const RESERVED_STORE_SLUGS = new Set([
   "admin",
@@ -39,6 +53,7 @@ const RESERVED_STORE_SLUGS = new Set([
   "dashboard",
   "login",
   "register",
+  "reset-password",
   "onboarding",
   "settings",
   "subscription",
