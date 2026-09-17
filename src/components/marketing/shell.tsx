@@ -12,27 +12,23 @@ export async function MarketingHeader() {
 
   const nav = [
     { href: "/#features", label: t("navFeatures") },
-    { href: "/#how", label: t("navHow") },
+    { href: "/#product", label: t("navProduct") },
     { href: "/#pricing", label: t("navPricing") },
     { href: "/#faq", label: t("navFaq") },
   ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#163024]/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link href="/" className="flex items-center" aria-label={t("brand")}>
-          <BrandLogo
-            variant="horizontal-white"
-            className="h-9 w-auto"
-            priority
-          />
+          <BrandLogo variant="horizontal" className="h-9 w-auto" priority />
         </Link>
-        <nav className="hidden items-center gap-6 text-sm text-sand-200 md:flex">
+        <nav className="hidden items-center gap-7 text-sm font-medium text-slate-500 md:flex">
           {nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="hover:text-white"
+              className="transition hover:text-slate-900"
             >
               {item.label}
             </Link>
@@ -41,12 +37,14 @@ export async function MarketingHeader() {
         <div className="flex items-center gap-2">
           <Link
             href="/login"
-            className="hidden text-sm font-medium text-sand-200 hover:text-white sm:inline"
+            className="hidden text-sm font-medium text-slate-600 transition hover:text-slate-900 sm:inline"
           >
             {t("navSignIn")}
           </Link>
           <Link href="/register">
-            <Button size="sm">{t("ctaCreate")}</Button>
+            <Button size="sm" className="rounded-full px-4">
+              {t("ctaCreate")}
+            </Button>
           </Link>
         </div>
       </div>
@@ -59,13 +57,15 @@ export async function MarketingFooter({ locale }: { locale?: Locale } = {}) {
   const t = createTranslator(resolved);
 
   return (
-    <footer className="border-t border-sand-200 bg-white">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <div className="flex items-center gap-3">
+    <footer className="border-t border-slate-200/70 bg-white">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-12 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="flex flex-col gap-3">
           <BrandLogo variant="horizontal" className="h-10 w-auto" />
-          <p className="text-sm text-slate-500">{t("tagline")}</p>
+          <p className="max-w-sm text-sm leading-relaxed text-slate-500">
+            {t("tagline")}
+          </p>
         </div>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-400">
           © {new Date().getFullYear()} {appConfig.name}. {t("footerRights")}
         </p>
       </div>

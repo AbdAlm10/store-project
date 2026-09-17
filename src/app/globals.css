@@ -223,3 +223,96 @@ html:has(.dashboard-shell) body {
 .store-range::-moz-range-track {
   background: transparent;
 }
+
+/* Marketing landing — white theme motion */
+.ys-landing {
+  --ys-landing-bg: #f4f5f4;
+  --ys-landing-ink: #121816;
+  --ys-landing-muted: #5f6b64;
+  --ys-landing-soft: #ffffff;
+  --ys-landing-shadow: 0 28px 70px -36px rgb(18 24 22 / 0.28);
+  background: var(--ys-landing-bg);
+  color: var(--ys-landing-ink);
+}
+
+.ys-landing-hero-glow {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% -10%, rgb(88 163 121 / 0.18), transparent 58%),
+    radial-gradient(ellipse 45% 40% at 100% 20%, rgb(227 210 173 / 0.16), transparent 50%),
+    radial-gradient(ellipse 40% 35% at 0% 40%, rgb(88 163 121 / 0.08), transparent 45%),
+    linear-gradient(180deg, #fbfcfb 0%, #f4f5f4 55%, #f4f5f4 100%);
+}
+
+.ys-reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.ys-reveal-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes ys-soft-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes ys-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ys-scale-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-ys-soft-float {
+  animation: ys-soft-float 7s ease-in-out infinite;
+}
+
+.animate-ys-hero-copy {
+  animation: ys-fade-up 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-ys-hero-visual {
+  animation: ys-scale-in 1000ms cubic-bezier(0.22, 1, 0.36, 1) 160ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ys-reveal,
+  .ys-reveal-in,
+  .animate-ys-soft-float,
+  .animate-ys-hero-copy,
+  .animate-ys-hero-visual,
+  .animate-ys-rise,
+  .animate-ys-rise-delay,
+  .animate-ys-float {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

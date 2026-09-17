@@ -1,7 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowRight,
+  ArrowLeft,
   BarChart3,
   Check,
   Link2,
@@ -17,12 +16,32 @@ import {
   MarketingHeader,
 } from "@/components/marketing/shell";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { Reveal } from "@/components/marketing/reveal";
+import { MarketingShot } from "@/components/marketing/product-frame";
+import {
+  MockAnalytics,
+  MockDashboard,
+  MockProduct,
+  MockStorefront,
+} from "@/components/marketing/product-mocks";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator, type MessageKey } from "@/i18n/messages";
+import { existsSync } from "node:fs";
+import path from "node:path";
+
+function marketingShot(file: string): string | null {
+  const abs = path.join(process.cwd(), "public", "marketing", file);
+  return existsSync(abs) ? `/marketing/${file}` : null;
+}
 
 export default async function HomePage() {
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
+
+  const storefrontShot = marketingShot("storefront.png");
+  const dashboardShot = marketingShot("dashboard.png");
+  const analyticsShot = marketingShot("analytics.png");
+  const productShot = marketingShot("product.png");
 
   const steps: Array<{ titleKey: MessageKey; bodyKey: MessageKey }> = [
     { titleKey: "step1Title", bodyKey: "step1Body" },
@@ -65,211 +84,222 @@ export default async function HomePage() {
   };
 
   return (
-    <div className="flex min-h-full flex-col bg-[var(--background)]">
+    <div className="ys-landing flex min-h-full flex-col">
       <MarketingHeader />
       <main className="flex-1">
-        <section className="ys-grid-bg relative overflow-hidden text-white">
-          <div className="ys-noise pointer-events-none absolute inset-0" />
-          <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pb-20 pt-16 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-end lg:pt-24">
-            <div className="animate-ys-rise">
+        {/* Hero — brand first, one composition, full-bleed visual */}
+        <section className="ys-landing-hero-glow relative overflow-hidden">
+          <div className="relative mx-auto flex max-w-4xl flex-col items-center px-4 pb-10 pt-16 text-center sm:px-6 sm:pt-20 lg:pt-24">
+            <div className="animate-ys-hero-copy flex flex-col items-center">
               <BrandLogo
-                variant="horizontal-white"
-                className="h-14 w-auto sm:h-16"
+                variant="vertical"
+                className="h-20 w-auto sm:h-24"
                 priority
               />
-              <h1 className="mt-6 max-w-xl text-2xl font-medium leading-snug text-sand-100 sm:text-3xl">
+              <h1 className="mt-8 max-w-2xl text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl lg:leading-[1.15]">
                 {t("heroHeadline")}
               </h1>
-              <p className="mt-4 max-w-lg text-base text-sand-200/80 sm:text-lg">
-                {t("tagline")} {t("heroSupport")}
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-500 sm:text-lg">
+                {t("heroSupport")}
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
                 <Link href="/register">
-                  <Button size="lg">
+                  <Button size="lg" className="rounded-full px-7">
                     {t("ctaCreate")}
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowLeft className="h-4 w-4" />
                   </Button>
                 </Link>
                 <Link href={`/${appConfig.demoStoreSlug}`}>
                   <Button
                     size="lg"
                     variant="outline"
-                    className="border-white/20 bg-white/5 text-white hover:bg-white/10"
+                    className="rounded-full border-slate-200 bg-white px-7 text-slate-800 hover:bg-slate-50"
                   >
                     {t("ctaDemo")}
                   </Button>
                 </Link>
               </div>
             </div>
-            <div className="animate-ys-rise-delay relative">
-              <div className="animate-ys-float overflow-hidden rounded-4xl border border-white/10 bg-slate-900/60 shadow-[var(--shadow)] backdrop-blur">
-                <Image
-                  src="https://placehold.co/1200x900/0f766e/ecfdf5/png?text=Your+storefront"
-                  alt={t("brand")}
-                  width={1200}
-                  height={900}
-                  className="h-auto w-full object-cover"
-                  priority
-                />
-              </div>
-            </div>
           </div>
-        </section>
 
-        <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6" id="value">
-          <div className="max-w-2xl">
-            <h2 className="font-[family-name:var(--font-display)] text-3xl tracking-tight text-slate-900 sm:text-4xl">
-              {t("valueTitle")}
-            </h2>
-            <p className="mt-4 text-lg text-slate-600">{t("valueBody")}</p>
-          </div>
-        </section>
-
-        <section className="bg-white py-20" id="how">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <h2 className="font-[family-name:var(--font-display)] text-3xl tracking-tight text-slate-900">
-              {t("howTitle")}
-            </h2>
-            <ol className="mt-10 grid gap-6 md:grid-cols-3">
-              {steps.map((step, index) => (
-                <li
-                  key={step.titleKey}
-                  className="rounded-2xl bg-[var(--background)] p-6"
-                >
-                  <span className="text-sm font-semibold text-brand-700">
-                    {t("stepLabel", { n: index + 1 })}
-                  </span>
-                  <h3 className="mt-3 text-xl font-semibold text-slate-900">
-                    {t(step.titleKey)}
-                  </h3>
-                  <p className="mt-2 text-slate-600">{t(step.bodyKey)}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6" id="demo">
-          <div className="grid items-center gap-10 lg:grid-cols-2">
-            <div>
-              <h2 className="font-[family-name:var(--font-display)] text-3xl tracking-tight text-slate-900">
-                {t("demoTitle")}
-              </h2>
-              <p className="mt-4 text-slate-600">{t("demoBody")}</p>
-              <Link
-                href={`/${appConfig.demoStoreSlug}`}
-                className="mt-6 inline-block"
-              >
-                <Button>
-                  {t("ctaOpenDemo")}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-            <div className="overflow-hidden rounded-4xl shadow-[var(--shadow)] ring-1 ring-slate-200">
-              <Image
-                src="https://placehold.co/1200x800/0f172a/e2e8f0/png?text=Al+Noor+demo"
-                alt={t("demoTitle")}
-                width={1200}
-                height={800}
-                className="h-auto w-full"
+          <div className="animate-ys-hero-visual relative mx-auto max-w-6xl px-3 pb-16 sm:px-6 lg:pb-20">
+            <div className="animate-ys-soft-float">
+              <MarketingShot
+                src={storefrontShot}
+                alt={t("showcaseStorefront")}
+                label={`dukkan.app/${appConfig.demoStoreSlug}`}
+                className="mx-auto"
+                fallback={<MockStorefront />}
               />
             </div>
           </div>
         </section>
 
-        <section className="bg-slate-950 py-20 text-white" id="features">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <h2 className="font-[family-name:var(--font-display)] text-3xl tracking-tight">
-              {t("featuresTitle")}
+        {/* Value */}
+        <section className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6" id="value">
+          <Reveal>
+            <h2 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+              {t("valueTitle")}
             </h2>
-            <p className="mt-3 max-w-2xl text-slate-400">{t("featuresBody")}</p>
-            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature) => (
-                <article
-                  key={feature.titleKey}
-                  className="rounded-2xl border border-white/10 bg-white/5 p-6"
+            <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-500">
+              {t("valueBody")}
+            </p>
+          </Reveal>
+        </section>
+
+        {/* How */}
+        <section className="px-4 py-6 sm:px-6" id="how">
+          <div className="mx-auto max-w-6xl rounded-[2rem] bg-white px-5 py-14 shadow-[var(--ys-landing-shadow)] sm:px-10 lg:px-14">
+            <Reveal>
+              <h2 className="text-center text-3xl font-semibold tracking-tight text-slate-900">
+                {t("howTitle")}
+              </h2>
+            </Reveal>
+            <ol className="mt-12 grid gap-8 md:grid-cols-3 md:gap-6">
+              {steps.map((step, index) => (
+                <Reveal key={step.titleKey} delayMs={index * 90}>
+                  <li className="text-center md:text-start">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-50 text-sm font-semibold text-brand-800">
+                      {index + 1}
+                    </span>
+                    <h3 className="mt-4 text-xl font-semibold text-slate-900">
+                      {t(step.titleKey)}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-500 sm:text-base">
+                      {t(step.bodyKey)}
+                    </p>
+                  </li>
+                </Reveal>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* Product showcase */}
+        <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6" id="product">
+          <Reveal>
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+                {t("showcaseTitle")}
+              </h2>
+              <p className="mt-4 text-lg text-slate-500">{t("showcaseBody")}</p>
+            </div>
+          </Reveal>
+
+          <div className="mt-14 grid gap-8 lg:grid-cols-2">
+            <Reveal>
+              <MarketingShot
+                src={dashboardShot}
+                alt={t("showcaseDashboard")}
+                label={t("showcaseDashboard")}
+                fallback={<MockDashboard />}
+              />
+            </Reveal>
+            <Reveal delayMs={100}>
+              <MarketingShot
+                src={analyticsShot}
+                alt={t("showcaseAnalytics")}
+                label={t("showcaseAnalytics")}
+                fallback={<MockAnalytics />}
+              />
+            </Reveal>
+          </div>
+
+          <Reveal delayMs={80}>
+            <div className="mt-8">
+              <MarketingShot
+                src={productShot}
+                alt={t("showcaseProduct")}
+                label={t("showcaseProduct")}
+                fallback={<MockProduct />}
+              />
+            </div>
+          </Reveal>
+
+          <Reveal>
+            <div className="mt-10 flex justify-center">
+              <Link href={`/${appConfig.demoStoreSlug}`}>
+                <Button
+                  variant="outline"
+                  className="rounded-full border-slate-200 bg-white px-6"
                 >
-                  <feature.icon className="h-5 w-5 text-brand-300" />
-                  <h3 className="mt-4 text-lg font-semibold">
-                    {t(feature.titleKey)}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-400">
-                    {t(feature.bodyKey)}
-                  </p>
-                </article>
+                  {t("ctaOpenDemo")}
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </Reveal>
+        </section>
+
+        {/* Features */}
+        <section className="px-4 py-10 sm:px-6" id="features">
+          <div className="mx-auto max-w-6xl rounded-[2rem] bg-white px-5 py-14 shadow-[var(--ys-landing-shadow)] sm:px-10 lg:px-14">
+            <Reveal>
+              <h2 className="text-3xl font-semibold tracking-tight text-slate-900">
+                {t("featuresTitle")}
+              </h2>
+              <p className="mt-3 max-w-2xl text-slate-500">{t("featuresBody")}</p>
+            </Reveal>
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {features.map((feature, index) => (
+                <Reveal key={feature.titleKey} delayMs={index * 70}>
+                  <article className="rounded-[1.35rem] bg-[#f7f8f7] p-6 transition duration-300 hover:-translate-y-1 hover:bg-brand-50/60">
+                    <feature.icon
+                      className="h-5 w-5 text-brand-700"
+                      strokeWidth={1.75}
+                    />
+                    <h3 className="mt-4 text-lg font-semibold text-slate-900">
+                      {t(feature.titleKey)}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                      {t(feature.bodyKey)}
+                    </p>
+                  </article>
+                </Reveal>
               ))}
             </div>
           </div>
         </section>
 
-        <section
-          className="mx-auto max-w-6xl px-4 py-20 sm:px-6"
-          id="analytics"
-        >
-          <h2 className="font-[family-name:var(--font-display)] text-3xl tracking-tight text-slate-900">
-            {t("analyticsPreviewTitle")}
-          </h2>
-          <p className="mt-3 max-w-2xl text-slate-600">
-            {t("analyticsPreviewBody")}
-          </p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-4">
-            {(
-              [
-                "storeViews",
-                "productViews",
-                "whatsappClicks",
-                "shares",
-              ] as MessageKey[]
-            ).map((label) => (
-              <div
-                key={label}
-                className="rounded-2xl bg-white p-5 ring-1 ring-slate-200"
-              >
-                <p className="text-sm text-slate-500">{t(label)}</p>
-                <p className="mt-2 font-[family-name:var(--font-display)] text-3xl text-slate-900">
-                  —
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="bg-white py-20" id="pricing">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <h2 className="font-[family-name:var(--font-display)] text-3xl tracking-tight text-slate-900">
-              {t("pricingTitle")}
-            </h2>
-            <p className="mt-3 text-slate-600">{t("pricingBody")}</p>
-            <div className="mt-10 grid gap-5 lg:grid-cols-3">
-              {Object.values(PLANS).map((plan) => (
+        {/* Pricing */}
+        <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6" id="pricing">
+          <Reveal>
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+                {t("pricingTitle")}
+              </h2>
+              <p className="mt-4 text-lg text-slate-500">{t("pricingBody")}</p>
+            </div>
+          </Reveal>
+          <div className="mt-12 grid gap-5 lg:grid-cols-3">
+            {Object.values(PLANS).map((plan, index) => (
+              <Reveal key={plan.id} delayMs={index * 90}>
                 <article
-                  key={plan.id}
-                  className={`rounded-2xl p-6 ring-1 ${
+                  className={`flex h-full flex-col rounded-[1.75rem] p-6 transition duration-300 hover:-translate-y-1 ${
                     plan.highlighted
-                      ? "bg-slate-950 text-white ring-slate-950"
-                      : "bg-[var(--background)] text-slate-900 ring-slate-200"
+                      ? "bg-slate-950 text-white shadow-[0_28px_70px_-36px_rgba(15,23,42,0.55)]"
+                      : "bg-white text-slate-900 shadow-[var(--ys-landing-shadow)] ring-1 ring-slate-100"
                   }`}
                 >
                   <h3 className="text-xl font-semibold">
                     {t(planNameKey[plan.id])}
                   </h3>
                   <p
-                    className={`mt-2 text-sm ${plan.highlighted ? "text-slate-300" : "text-slate-600"}`}
+                    className={`mt-2 text-sm ${plan.highlighted ? "text-slate-300" : "text-slate-500"}`}
                   >
                     {t(planDescKey[plan.id])}
                   </p>
-                  <p className="mt-6 font-[family-name:var(--font-display)] text-4xl">
+                  <p className="mt-6 text-4xl font-semibold tracking-tight">
                     {plan.priceMonthlyUsd === 0
                       ? t("free")
                       : `$${plan.priceMonthlyUsd}`}
                     {plan.priceMonthlyUsd ? (
-                      <span className="font-sans text-base font-medium opacity-70">
+                      <span className="text-base font-medium opacity-60">
                         {t("perMonth")}
                       </span>
                     ) : null}
                   </p>
-                  <ul className="mt-6 space-y-2 text-sm">
+                  <ul className="mt-6 flex-1 space-y-2.5 text-sm">
                     <li className="flex gap-2">
                       <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" />
                       {t("upToProducts", { count: plan.limits.maxProducts })}
@@ -289,72 +319,65 @@ export default async function HomePage() {
                   </ul>
                   <Link href="/register" className="mt-8 block">
                     <Button
-                      className="w-full"
+                      className="w-full rounded-full"
                       variant={plan.highlighted ? "primary" : "outline"}
                     >
                       {t("ctaGetStarted")}
                     </Button>
                   </Link>
                 </article>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="px-4 py-10 sm:px-6" id="faq">
+          <div className="mx-auto max-w-3xl rounded-[2rem] bg-white px-5 py-14 shadow-[var(--ys-landing-shadow)] sm:px-10">
+            <Reveal>
+              <h2 className="text-3xl font-semibold tracking-tight text-slate-900">
+                {t("faqTitle")}
+              </h2>
+            </Reveal>
+            <div className="mt-8 space-y-3">
+              {faqs.map((item, index) => (
+                <Reveal key={item.q} delayMs={index * 60}>
+                  <details className="group rounded-2xl bg-[#f7f8f7] px-5 py-4 open:bg-brand-50/50">
+                    <summary className="cursor-pointer list-none font-semibold text-slate-900">
+                      {t(item.q)}
+                    </summary>
+                    <p className="mt-3 text-sm leading-relaxed text-slate-500">
+                      {t(item.a)}
+                    </p>
+                  </details>
+                </Reveal>
               ))}
             </div>
           </div>
         </section>
 
-        <section
-          className="mx-auto max-w-6xl px-4 py-20 sm:px-6"
-          id="testimonials"
-        >
-          <h2 className="font-[family-name:var(--font-display)] text-3xl tracking-tight text-slate-900">
-            {t("testimonialsTitle")}
-          </h2>
-          <p className="mt-3 text-slate-600">{t("testimonialsBody")}</p>
-          <blockquote className="mt-8 max-w-2xl rounded-2xl bg-white p-6 text-lg text-slate-700 ring-1 ring-slate-200">
-            “{t("testimonialQuote")}”
-            <footer className="mt-4 text-sm text-slate-500">
-              {t("testimonialFooter")}
-            </footer>
-          </blockquote>
-        </section>
-
-        <section className="bg-white py-20" id="faq">
-          <div className="mx-auto max-w-3xl px-4 sm:px-6">
-            <h2 className="font-[family-name:var(--font-display)] text-3xl tracking-tight text-slate-900">
-              {t("faqTitle")}
-            </h2>
-            <div className="mt-8 space-y-4">
-              {faqs.map((item) => (
-                <details
-                  key={item.q}
-                  className="group rounded-2xl bg-[var(--background)] p-5 open:bg-slate-100"
-                >
-                  <summary className="cursor-pointer list-none font-semibold text-slate-900">
-                    {t(item.q)}
-                  </summary>
-                  <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                    {t(item.a)}
-                  </p>
-                </details>
-              ))}
+        {/* Final CTA */}
+        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+          <Reveal>
+            <div className="relative overflow-hidden rounded-[2rem] bg-white px-6 py-16 text-center shadow-[var(--ys-landing-shadow)] sm:px-12">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgb(88_163_121/0.12),transparent_55%)]" />
+              <div className="relative">
+                <BrandLogo variant="icon" className="mx-auto h-12 w-12" />
+                <h2 className="mt-6 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+                  {t("finalCtaTitle")}
+                </h2>
+                <p className="mx-auto mt-4 max-w-xl text-slate-500">
+                  {t("finalCtaBody")}
+                </p>
+                <Link href="/register" className="mt-8 inline-block">
+                  <Button size="lg" className="rounded-full px-8">
+                    {t("ctaCreate")}
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
             </div>
-          </div>
-        </section>
-
-        <section className="ys-grid-bg relative py-20 text-white">
-          <div className="relative mx-auto max-w-4xl px-4 text-center sm:px-6">
-            <h2 className="font-[family-name:var(--font-display)] text-4xl tracking-tight">
-              {t("finalCtaTitle")}
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-slate-300">
-              {t("finalCtaBody")}
-            </p>
-            <Link href="/register" className="mt-8 inline-block">
-              <Button size="lg">
-                {t("ctaCreate")}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
+          </Reveal>
         </section>
       </main>
       <MarketingFooter locale={locale} />
