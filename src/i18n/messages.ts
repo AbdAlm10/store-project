@@ -396,7 +396,6 @@ const ar = {
   backToSettings: "العودة للإعدادات",
   accountSaved: "تم حفظ التغييرات.",
   signInPage: "صفحة تسجيل الدخول",
-  subscriptionDesc: "الخطط والحدود تُدار مركزيًا عبر EntitlementService.",
   currentPlan: "الخطة الحالية",
   statusLabel: "الحالة: {status}",
   trialEnds: "ينتهي التجريب: {date}",
@@ -404,8 +403,10 @@ const ar = {
   included: "مشمول",
   basicOnly: "أساسي فقط",
   upgradeToPro: "الترقية إلى Pro",
+  subscribeBasicWhatsApp: "الاشتراك في الخطة الأساسية",
+  alreadyOnPro: "أنت على خطة Pro بالفعل.",
   stripeNotConfigured:
-    "الدفع عبر Stripe خلف PaymentProvider. اضبط متغيرات STRIPE_* لتفعيله — الزر يبقى معطّلًا حتى ذلك (بدون دفع وهمي).",
+    "سيتم التواصل عبر واتساب والدفع عن طريق خدمة شام كاش للدفع",
   valueTitle: "استبدل المنشورات المتفرقة برابط متجر واحد.",
   valueBody:
     "لا يجب أن يبحث عملاؤك في أشهر من القصص والمحادثات عن منتج. امنحهم كتالوجًا دائمًا ومنظمًا.",

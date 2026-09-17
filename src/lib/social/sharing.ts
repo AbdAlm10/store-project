@@ -1,6 +1,6 @@
 import { appConfig } from "@/config/app";
-import type { Product, Store } from "@/domain/types/entities";
 import { discountPercent } from "@/domain/rules/store-rules";
+import type { Product, Store } from "@/domain/types/entities";
 
 export function storeUrl(slug: string): string {
   return `${appConfig.url}/${slug}`;
@@ -73,4 +73,22 @@ export function socialShareLinks(url: string, text: string) {
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
     telegram: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,
   };
+}
+
+export type SubscriptionIntent = "basic" | "pro";
+
+/** WhatsApp chat with Dukkan sales for plan subscribe / Pro upgrade. */
+export function buildSubscriptionWhatsAppUrl(input: {
+  storeName: string;
+  storeSlug: string;
+  intent: SubscriptionIntent;
+}): string {
+  const identity = `${input.storeName} (${input.storeSlug})`;
+  const message =
+    input.intent === "pro"
+      ? `أنا المستخدم: ${identity}\nأريد الترقية لخطة Pro في دكّان.`
+      : `أنا المستخدم: ${identity}\nأريد الاشتراك في خدمة دكّان الأساسية.`;
+
+  const phone = appConfig.supportWhatsApp.replace(/[^\d]/g, "");
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }

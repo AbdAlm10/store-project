@@ -8,6 +8,8 @@ export const appConfig = {
     | "staging"
     | "production",
   supportEmail: "support@dukkan.app",
+  /** Sales / billing WhatsApp (digits with country code, no +). */
+  supportWhatsApp: "12363093269",
   demoStoreSlug: "alnoor",
   brand: {
     green: "#58A379",
