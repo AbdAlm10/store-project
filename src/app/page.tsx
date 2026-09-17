@@ -18,6 +18,8 @@ import {
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { Reveal } from "@/components/marketing/reveal";
 import { MarketingShot } from "@/components/marketing/product-frame";
+import { StoreModelsHero } from "@/components/marketing/store-models-hero";
+import { LandingAmbient } from "@/components/marketing/landing-ambient";
 import {
   MockAnalytics,
   MockDashboard,
@@ -38,10 +40,10 @@ export default async function HomePage() {
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
 
-  const storefrontShot = marketingShot("storefront.png");
-  const dashboardShot = marketingShot("dashboard.png");
-  const analyticsShot = marketingShot("analytics.png");
-  const productShot = marketingShot("product.png");
+  const dashboardShot =
+    marketingShot("shot-dashboard.png") ?? marketingShot("dashboard.png");
+  const analyticsShot =
+    marketingShot("shot-analytics.png") ?? marketingShot("analytics.png");
 
   const steps: Array<{ titleKey: MessageKey; bodyKey: MessageKey }> = [
     { titleKey: "step1Title", bodyKey: "step1Body" },
@@ -84,12 +86,13 @@ export default async function HomePage() {
   };
 
   return (
-    <div className="ys-landing flex min-h-full flex-col">
+    <div className="ys-landing relative flex min-h-full flex-col overflow-x-clip">
+      <LandingAmbient />
       <MarketingHeader />
-      <main className="flex-1">
+      <main className="relative flex-1">
         {/* Hero — brand first, one composition, full-bleed visual */}
-        <section className="ys-landing-hero-glow relative overflow-hidden">
-          <div className="relative mx-auto flex max-w-4xl flex-col items-center px-4 pb-10 pt-16 text-center sm:px-6 sm:pt-20 lg:pt-24">
+        <section className="ys-landing-hero-glow relative -mt-[4.25rem] overflow-hidden pt-[4.25rem] sm:-mt-[5rem] sm:pt-[5rem]">
+          <div className="relative mx-auto flex max-w-4xl flex-col items-center px-4 pb-10 pt-8 text-center sm:px-6 sm:pt-10 lg:pt-12">
             <div className="animate-ys-hero-copy flex flex-col items-center">
               <BrandLogo
                 variant="vertical"
@@ -123,15 +126,7 @@ export default async function HomePage() {
           </div>
 
           <div className="animate-ys-hero-visual relative mx-auto max-w-6xl px-3 pb-16 sm:px-6 lg:pb-20">
-            <div className="animate-ys-soft-float">
-              <MarketingShot
-                src={storefrontShot}
-                alt={t("showcaseStorefront")}
-                label={`dukkan.app/${appConfig.demoStoreSlug}`}
-                className="mx-auto"
-                fallback={<MockStorefront />}
-              />
-            </div>
+            <StoreModelsHero />
           </div>
         </section>
 
@@ -186,8 +181,8 @@ export default async function HomePage() {
             </div>
           </Reveal>
 
-          <div className="mt-14 grid gap-8 lg:grid-cols-2">
-            <Reveal>
+          <div className="mt-14 grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-2">
+            <Reveal className="min-w-0">
               <MarketingShot
                 src={dashboardShot}
                 alt={t("showcaseDashboard")}
@@ -195,7 +190,15 @@ export default async function HomePage() {
                 fallback={<MockDashboard />}
               />
             </Reveal>
-            <Reveal delayMs={100}>
+            <Reveal delayMs={90} className="min-w-0">
+              <MarketingShot
+                src={null}
+                alt={t("showcaseStorefront")}
+                label={t("showcaseStorefront")}
+                fallback={<MockStorefront />}
+              />
+            </Reveal>
+            <Reveal delayMs={120} className="min-w-0">
               <MarketingShot
                 src={analyticsShot}
                 alt={t("showcaseAnalytics")}
@@ -203,18 +206,15 @@ export default async function HomePage() {
                 fallback={<MockAnalytics />}
               />
             </Reveal>
-          </div>
-
-          <Reveal delayMs={80}>
-            <div className="mt-8">
+            <Reveal delayMs={150} className="min-w-0">
               <MarketingShot
-                src={productShot}
+                src={null}
                 alt={t("showcaseProduct")}
                 label={t("showcaseProduct")}
                 fallback={<MockProduct />}
               />
-            </div>
-          </Reveal>
+            </Reveal>
+          </div>
 
           <Reveal>
             <div className="mt-10 flex justify-center">

@@ -18,17 +18,17 @@ export async function MarketingHeader() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+    <header className="pointer-events-none sticky top-0 z-40 bg-transparent px-3 pt-3 sm:px-5 sm:pt-4">
+      <div className="pointer-events-auto mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 rounded-full border border-white/50 bg-white/45 px-4 shadow-[0_10px_36px_-16px_rgba(15,23,42,0.18)] ring-1 ring-white/40 backdrop-blur-2xl sm:h-16 sm:px-6 supports-[backdrop-filter]:bg-white/35">
         <Link href="/" className="flex items-center" aria-label={t("brand")}>
-          <BrandLogo variant="horizontal" className="h-9 w-auto" priority />
+          <BrandLogo variant="horizontal" className="h-8 w-auto sm:h-9" priority />
         </Link>
-        <nav className="hidden items-center gap-7 text-sm font-medium text-slate-500 md:flex">
+        <nav className="hidden items-center gap-6 text-sm font-medium text-slate-500 md:flex lg:gap-7">
           {nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="transition hover:text-slate-900"
+              className="rounded-full px-2.5 py-1.5 transition hover:bg-white/50 hover:text-slate-900"
             >
               {item.label}
             </Link>

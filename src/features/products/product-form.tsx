@@ -13,7 +13,10 @@ import {
   buildVariantMatrix,
   pruneVariantsToSchema,
 } from "@/lib/category-options";
-import { MIN_PRODUCT_DESCRIPTION_LENGTH } from "@/validations/schemas";
+import {
+  countWords,
+  MIN_PRODUCT_DESCRIPTION_WORDS,
+} from "@/validations/schemas";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
@@ -185,6 +188,7 @@ export function ProductForm({
   return (
     <form
       className="space-y-5"
+      noValidate
       onSubmit={(event) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
@@ -195,13 +199,17 @@ export function ProductForm({
               ? "published"
               : undefined;
         const payload = buildPayload(formData, statusOverride);
+        if (!payload.name.trim()) {
+          setError(t("productNameRequired"));
+          return;
+        }
         if (!payload.images.length) {
           setError(t("productImageRequired"));
           return;
         }
-        if (payload.description.length < MIN_PRODUCT_DESCRIPTION_LENGTH) {
+        if (countWords(payload.description) < MIN_PRODUCT_DESCRIPTION_WORDS) {
           setError(
-            t("descriptionTooShort", { min: MIN_PRODUCT_DESCRIPTION_LENGTH }),
+            t("descriptionTooShort", { min: MIN_PRODUCT_DESCRIPTION_WORDS }),
           );
           return;
         }
@@ -223,19 +231,17 @@ export function ProductForm({
       <Section title={t("sectionProductInfo")}>
         <div>
           <Label htmlFor="name">{t("name")}</Label>
-          <Input id="name" name="name" required defaultValue={initial?.name} />
+          <Input id="name" name="name" defaultValue={initial?.name} />
         </div>
         <div>
           <Label htmlFor="description">{t("description")}</Label>
           <Textarea
             id="description"
             name="description"
-            required
-            minLength={MIN_PRODUCT_DESCRIPTION_LENGTH}
             defaultValue={initial?.description}
           />
           <p className="mt-1.5 text-xs text-slate-400">
-            {t("descriptionMinHint", { min: MIN_PRODUCT_DESCRIPTION_LENGTH })}
+            {t("descriptionMinHint", { min: MIN_PRODUCT_DESCRIPTION_WORDS })}
           </p>
         </div>
       </Section>

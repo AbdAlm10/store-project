@@ -1,8 +1,8 @@
-import { z } from "zod";
 import {
   isColorOptionName,
   parseOptionValueInput,
 } from "@/lib/option-colors";
+import { z } from "zod";
 
 export const emailSchema = z
   .string()
@@ -204,12 +204,14 @@ export const categorySchema = z.object({
     .optional(),
 });
 
-/** Reference length merchants must meet for product descriptions. */
-export const PRODUCT_DESCRIPTION_MIN_EXAMPLE =
-  "ساعة أبل هي سلسلة من الساعات الذكية التي أنتجتها شركة أبل، وتعمل كجهاز مساعد لهاتفك الآيفون. مميزات ساعة أبلالصحة واللياقة:";
+/** Minimum word count merchants must meet for product descriptions. */
+export const MIN_PRODUCT_DESCRIPTION_WORDS = 10;
 
-export const MIN_PRODUCT_DESCRIPTION_LENGTH =
-  PRODUCT_DESCRIPTION_MIN_EXAMPLE.length;
+export function countWords(text: string): number {
+  const trimmed = text.trim();
+  if (!trimmed) return 0;
+  return trimmed.split(/\s+/).filter(Boolean).length;
+}
 
 export const productSchema = z.object({
   name: z.string().trim().min(1).max(160),
@@ -217,9 +219,9 @@ export const productSchema = z.object({
   description: z
     .string()
     .trim()
-    .min(
-      MIN_PRODUCT_DESCRIPTION_LENGTH,
-      `الوصف قصير جدًا. الحد الأدنى ${MIN_PRODUCT_DESCRIPTION_LENGTH} حرفًا.`,
+    .refine(
+      (value) => countWords(value) >= MIN_PRODUCT_DESCRIPTION_WORDS,
+      `الوصف قصير جدًا. اكتب على الأقل ${MIN_PRODUCT_DESCRIPTION_WORDS} كلمات.`,
     )
     .max(10000),
   price: z.number().nonnegative(),

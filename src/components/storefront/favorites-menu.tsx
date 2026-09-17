@@ -5,7 +5,7 @@ import { SafeImage } from "@/components/ui/safe-image";
 import { discountPercent } from "@/domain/rules/store-rules";
 import type { ProductWithMedia } from "@/domain/types/entities";
 import { useI18n } from "@/i18n/provider";
-import { readFavorites } from "@/lib/favorites";
+import { readFavorites, pruneFavorites } from "@/lib/favorites";
 import { formatMoney } from "@/lib/social/sharing";
 import { Heart } from "lucide-react";
 import Link from "next/link";
@@ -54,6 +54,14 @@ export function FavoritesMenu({
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
+    if (!mounted) return;
+    pruneFavorites(
+      storeSlug,
+      products.map((product) => product.id),
+    );
+  }, [mounted, storeSlug, products]);
+
+  useEffect(() => {
     if (!open) return;
     function onPointerDown(event: MouseEvent) {
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
@@ -82,7 +90,7 @@ export function FavoritesMenu({
       .filter((product): product is ProductWithMedia => Boolean(product));
   }, [favoriteIds, products]);
 
-  const count = mounted ? favoriteIds.length : 0;
+  const count = mounted ? favoriteProducts.length : 0;
 
   return (
     <div ref={rootRef} className="relative shrink-0">

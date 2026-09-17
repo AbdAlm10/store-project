@@ -10,7 +10,7 @@
 
 export function MockStorefront() {
   return (
-    <div className="bg-[#f7f8f7] p-4 sm:p-5">
+    <div className="flex h-full flex-col bg-[#f7f8f7] p-4 sm:p-5">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="h-11 w-11 rounded-2xl bg-brand-100 ring-1 ring-brand-200" />
@@ -31,14 +31,14 @@ export function MockStorefront() {
           </span>
         ))}
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 sm:grid-cols-3">
         {[0, 1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
             className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-100"
           >
             <div
-              className="aspect-4/5"
+              className="h-full min-h-[4.5rem] aspect-4/5"
               style={{
                 background: `linear-gradient(160deg, ${
                   [
@@ -65,7 +65,7 @@ export function MockStorefront() {
 
 export function MockDashboard() {
   return (
-    <div className="grid min-h-[280px] grid-cols-[72px_1fr] bg-white sm:min-h-[320px] sm:grid-cols-[120px_1fr]">
+    <div className="grid h-full grid-cols-[72px_1fr] bg-white sm:grid-cols-[120px_1fr]">
       <aside className="border-e border-slate-100 bg-slate-50/80 p-3">
         <div className="mb-6 h-7 w-14 rounded-lg bg-brand-200/80" />
         <div className="space-y-2">
@@ -77,7 +77,7 @@ export function MockDashboard() {
           ))}
         </div>
       </aside>
-      <div className="p-4 sm:p-5">
+      <div className="flex min-h-0 flex-col p-4 sm:p-5">
         <div className="mb-4 flex items-center justify-between">
           <div className="h-3.5 w-32 rounded-full bg-slate-800/80" />
           <div className="h-8 w-24 rounded-full bg-brand-600" />
@@ -93,7 +93,7 @@ export function MockDashboard() {
             </div>
           ))}
         </div>
-        <div className="mt-4 h-28 rounded-2xl bg-gradient-to-br from-brand-50 via-white to-slate-50 ring-1 ring-slate-100" />
+        <div className="mt-4 min-h-0 flex-1 rounded-2xl bg-gradient-to-br from-brand-50 via-white to-slate-50 ring-1 ring-slate-100" />
       </div>
     </div>
   );
@@ -101,7 +101,7 @@ export function MockDashboard() {
 
 export function MockAnalytics() {
   return (
-    <div className="bg-white p-4 sm:p-5">
+    <div className="flex h-full flex-col bg-white p-4 sm:p-5">
       <div className="mb-4 h-3.5 w-40 rounded-full bg-slate-800/85" />
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {["١٢٨", "٨٤", "٣٦", "١٩"].map((n) => (
@@ -114,7 +114,7 @@ export function MockAnalytics() {
           </div>
         ))}
       </div>
-      <div className="relative h-36 overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-100">
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-100">
         <svg
           viewBox="0 0 400 140"
           className="absolute inset-0 h-full w-full"
@@ -147,8 +147,8 @@ export function MockAnalytics() {
 
 export function MockProduct() {
   return (
-    <div className="grid bg-white sm:grid-cols-[1.05fr_0.95fr]">
-      <div className="aspect-4/5 bg-gradient-to-br from-[#e8efe9] via-[#f4f1ea] to-white sm:aspect-auto sm:min-h-[320px]" />
+    <div className="grid h-full bg-white sm:grid-cols-[1.05fr_0.95fr]">
+      <div className="min-h-[8rem] bg-gradient-to-br from-[#e8efe9] via-[#f4f1ea] to-white sm:min-h-0" />
       <div className="flex flex-col justify-center gap-3 p-5 sm:p-6">
         <div className="h-2.5 w-20 rounded-full bg-brand-200" />
         <div className="h-4 w-[85%] rounded-full bg-slate-800/90" />

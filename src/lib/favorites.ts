@@ -27,6 +27,20 @@ export function writeFavorites(storeSlug: string, ids: string[]): void {
   );
 }
 
+/** Drop favorite IDs that no longer exist in the catalog (deleted products). */
+export function pruneFavorites(
+  storeSlug: string,
+  validIds: Iterable<string>,
+): string[] {
+  const allowed = new Set(validIds);
+  const current = readFavorites(storeSlug);
+  const next = current.filter((id) => allowed.has(id));
+  if (next.length !== current.length) {
+    writeFavorites(storeSlug, next);
+  }
+  return next;
+}
+
 export function isFavorite(storeSlug: string, productId: string): boolean {
   return readFavorites(storeSlug).includes(productId);
 }

@@ -22,8 +22,18 @@ import {
   normalizeHex,
   normalizeOptionSchema,
 } from "@/lib/option-colors";
-import { Pencil, Trash2, X } from "lucide-react";
+import { cn } from "@/lib/utils/cn";
+import { Pencil, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
+
+function cleanOptionSchema(options: CategoryOptionDef[]): CategoryOptionDef[] {
+  return options
+    .filter((item) => item.name.trim())
+    .map((item) => ({
+      ...item,
+      values: item.values.filter((value) => value.label.trim()),
+    }));
+}
 
 export function CategoryManager({
   storeId,
@@ -37,197 +47,284 @@ export function CategoryManager({
   const [name, setName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [icon, setIcon] = useState<string | null>(null);
+  const [options, setOptions] = useState<CategoryOptionDef[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     setCategories(initial);
   }, [initial]);
 
+  const editing = categories.find((c) => c.id === editingId) ?? null;
+  const isEditing = Boolean(editing);
+
+  function resetCreateForm() {
+    setName("");
+    setImageUrl("");
+    setIcon(null);
+    setOptions([]);
+  }
+
+  function startEdit(category: Category) {
+    setError(null);
+    setEditingId(category.id);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setError(null);
+  }
+
   return (
-    <div className="space-y-4">
-      <form
-        className="space-y-3 rounded-[1.35rem] border border-slate-100/80 bg-white p-4 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)]"
-        onSubmit={(event) => {
-          event.preventDefault();
-          setError(null);
-          startTransition(async () => {
-            const result = await createCategoryAction(storeId, {
-              name,
-              imageUrl: imageUrl || null,
-              icon,
-              optionSchema: [],
-            });
-            if (!result.ok) {
-              setError(result.error);
-              return;
-            }
-            setName("");
-            setImageUrl("");
-            setIcon(null);
-            setCategories((list) => [...list, result.category]);
-          });
-        }}
+    <div className="space-y-10">
+      {/* —— Create zone —— */}
+      <section
+        className={cn(
+          "rounded-[1.5rem] bg-brand-50/50 p-5 sm:p-6",
+          isEditing && "pointer-events-none opacity-40",
+        )}
+        aria-hidden={isEditing || undefined}
       >
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder={t("newCategoryName")}
-            required
-          />
-          <Button type="submit" disabled={pending} className="sm:shrink-0">
-            {pending ? (
-              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-            ) : null}
-            {pending ? t("saving") : t("add")}
-          </Button>
+        <div className="mb-4">
+          <h2 className="text-base font-semibold text-slate-900">
+            {t("addCategoryTitle")}
+          </h2>
+          <p className="mt-0.5 text-sm text-slate-500">{t("addCategoryHint")}</p>
         </div>
 
-        <CategoryMediaActions
-          storeId={storeId}
-          imageUrl={imageUrl}
-          icon={icon}
-          onImageUrlChange={setImageUrl}
-          onIconChange={setIcon}
-        />
-      </form>
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        <form
+          className="space-y-5"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (isEditing) return;
+            setError(null);
+            startTransition(async () => {
+              const result = await createCategoryAction(storeId, {
+                name,
+                imageUrl: imageUrl || null,
+                icon,
+                optionSchema: cleanOptionSchema(options),
+              });
+              if (!result.ok) {
+                setError(result.error);
+                return;
+              }
+              resetCreateForm();
+              setCategories((list) => [...list, result.category]);
+            });
+          }}
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder={t("newCategoryName")}
+              required
+              disabled={isEditing}
+              className="bg-white"
+            />
+            <Button
+              type="submit"
+              disabled={pending || isEditing}
+              className="sm:shrink-0"
+            >
+              {pending && !isEditing ? (
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              ) : (
+                <Plus className="h-4 w-4" strokeWidth={2} />
+              )}
+              {pending && !isEditing ? t("saving") : t("add")}
+            </Button>
+          </div>
 
-      <ul className="space-y-3">
-        {categories.map((category) => (
-          <li
-            key={category.id}
-            className="overflow-hidden rounded-[1.35rem] border border-slate-100/80 bg-white shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)]"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-50 ring-1 ring-brand-100">
-                  {category.imageUrl ? (
-                    <SafeImage
-                      src={category.imageUrl}
-                      alt=""
-                      fill
-                      className="object-cover"
-                      sizes="44px"
-                    />
-                  ) : category.icon ? (
-                    <CategoryIcon icon={category.icon} className="h-5 w-5" />
-                  ) : (
-                    <span className="text-sm font-bold text-brand-800">
-                      {category.name.slice(0, 1)}
-                    </span>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-slate-900">
-                    {category.name}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {category.optionSchema.length} {t("optionAttributes")}
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <button
-                  type="button"
-                  className="inline-flex h-8 items-center gap-1.5 rounded-full bg-brand-50 px-2.5 text-xs font-semibold text-brand-800 transition hover:bg-brand-100"
-                  onClick={() =>
-                    setExpandedId((id) =>
-                      id === category.id ? null : category.id,
-                    )
-                  }
-                >
-                  {expandedId === category.id ? (
-                    <X className="h-3.5 w-3.5" strokeWidth={1.75} />
-                  ) : (
-                    <Pencil className="h-3.5 w-3.5" strokeWidth={1.75} />
-                  )}
-                  {expandedId === category.id ? t("close") : t("editOptions")}
-                </button>
-                <button
-                  type="button"
-                  className="inline-flex h-8 items-center gap-1.5 rounded-full bg-red-50 px-2.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
-                  disabled={pending}
-                  onClick={() =>
-                    startTransition(async () => {
-                      if (!confirm(t("deleteCategoryConfirm"))) return;
-                      const result = await deleteCategoryAction(
-                        storeId,
-                        category.id,
-                      );
-                      if (!result.ok) {
-                        setError(result.error);
-                        return;
-                      }
-                      setExpandedId((id) =>
-                        id === category.id ? null : id,
-                      );
-                      setCategories((list) =>
-                        list.filter((item) => item.id !== category.id),
-                      );
-                    })
-                  }
-                >
-                  <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
-                  {t("delete")}
-                </button>
-              </div>
-            </div>
-            {expandedId === category.id ? (
-              <CategoryOptionsEditor
-                key={`${category.id}-${category.updatedAt}`}
-                storeId={storeId}
-                category={category}
-                pending={pending}
-                startTransition={startTransition}
-                onSaved={(next) => {
-                  setCategories((list) =>
-                    list.map((item) => (item.id === next.id ? next : item)),
-                  );
-                }}
-                onError={setError}
-              />
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              {t("categoryVisualOptional")}
+            </p>
+            <CategoryMediaActions
+              storeId={storeId}
+              imageUrl={imageUrl}
+              icon={icon}
+              onImageUrlChange={setImageUrl}
+              onIconChange={setIcon}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              {t("categoryOptionsOptional")}
+            </p>
+            <CategoryOptionsFields options={options} onChange={setOptions} />
+          </div>
+        </form>
+      </section>
+
+      {error && !isEditing ? (
+        <p className="text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      {/* —— List zone —— */}
+      <section>
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <h2 className="text-base font-semibold text-slate-900">
+            {t("yourCategories")}
+            {categories.length > 0 ? (
+              <span className="ms-2 text-sm font-medium text-slate-400">
+                ({categories.length})
+              </span>
             ) : null}
-          </li>
-        ))}
+          </h2>
+        </div>
+
         {categories.length === 0 ? (
-          <li className="rounded-[1.35rem] border border-slate-100/80 bg-white px-4 py-8 text-center text-slate-400 shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)]">
+          <p className="rounded-2xl bg-slate-50 px-4 py-10 text-center text-sm text-slate-400">
             {t("noCategoriesYet")}
-          </li>
+          </p>
+        ) : (
+          <ul className="divide-y divide-slate-100 rounded-2xl bg-white">
+            {categories.map((category) => {
+              const isThisEditing = editingId === category.id;
+              return (
+                <li key={category.id}>
+                  <div
+                    className={cn(
+                      "flex flex-wrap items-center justify-between gap-3 px-1 py-3.5 sm:px-2",
+                      isThisEditing && "bg-slate-50/80",
+                    )}
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-50">
+                        {category.imageUrl ? (
+                          <SafeImage
+                            src={category.imageUrl}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="44px"
+                          />
+                        ) : category.icon ? (
+                          <CategoryIcon
+                            icon={category.icon}
+                            className="h-5 w-5"
+                          />
+                        ) : (
+                          <span className="text-sm font-bold text-brand-800">
+                            {category.name.slice(0, 1)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-slate-900">
+                          {category.name}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {category.optionSchema.length} {t("optionAttributes")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {isThisEditing ? (
+                        <button
+                          type="button"
+                          className="inline-flex h-8 items-center gap-1.5 rounded-full bg-slate-200/80 px-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
+                          onClick={cancelEdit}
+                        >
+                          <X className="h-3.5 w-3.5" strokeWidth={1.75} />
+                          {t("cancelEdit")}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="inline-flex h-8 items-center gap-1.5 rounded-full bg-brand-50 px-2.5 text-xs font-semibold text-brand-800 transition hover:bg-brand-100 disabled:opacity-50"
+                          disabled={isEditing}
+                          onClick={() => startEdit(category)}
+                        >
+                          <Pencil
+                            className="h-3.5 w-3.5"
+                            strokeWidth={1.75}
+                          />
+                          {t("editCategory")}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="inline-flex h-8 items-center gap-1.5 rounded-full bg-red-50 px-2.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                        disabled={pending || (isEditing && !isThisEditing)}
+                        onClick={() =>
+                          startTransition(async () => {
+                            if (!confirm(t("deleteCategoryConfirm"))) return;
+                            const result = await deleteCategoryAction(
+                              storeId,
+                              category.id,
+                            );
+                            if (!result.ok) {
+                              setError(result.error);
+                              return;
+                            }
+                            if (editingId === category.id) setEditingId(null);
+                            setCategories((list) =>
+                              list.filter((item) => item.id !== category.id),
+                            );
+                          })
+                        }
+                      >
+                        <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+                        {t("delete")}
+                      </button>
+                    </div>
+                  </div>
+
+                  {isThisEditing && editing ? (
+                    <CategoryEditPanel
+                      key={`${editing.id}-${editing.updatedAt}`}
+                      storeId={storeId}
+                      category={editing}
+                      pending={pending}
+                      startTransition={startTransition}
+                      onSaved={(next) => {
+                        setCategories((list) =>
+                          list.map((item) =>
+                            item.id === next.id ? next : item,
+                          ),
+                        );
+                        setEditingId(null);
+                      }}
+                      onCancel={cancelEdit}
+                      onError={setError}
+                    />
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {error && isEditing ? (
+          <p className="mt-3 text-sm text-red-600" role="alert">
+            {error}
+          </p>
         ) : null}
-      </ul>
+      </section>
     </div>
   );
 }
 
-function CategoryOptionsEditor({
-  storeId,
-  category,
-  pending,
-  startTransition,
-  onSaved,
-  onError,
+function CategoryOptionsFields({
+  options,
+  onChange,
 }: {
-  storeId: string;
-  category: Category;
-  pending: boolean;
-  startTransition: (fn: () => void) => void;
-  onSaved: (category: Category) => void;
-  onError: (message: string | null) => void;
+  options: CategoryOptionDef[];
+  onChange: (options: CategoryOptionDef[]) => void;
 }) {
   const { t } = useI18n();
-  const [options, setOptions] = useState<CategoryOptionDef[]>(() =>
-    normalizeOptionSchema(category.optionSchema),
-  );
-  const [name, setName] = useState(category.name ?? "");
-  const [imageUrl, setImageUrl] = useState(category.imageUrl ?? "");
-  const [icon, setIcon] = useState<string | null>(category.icon);
 
   function updateOption(id: string, patch: Partial<CategoryOptionDef>) {
-    setOptions((list) =>
-      list.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+    onChange(
+      options.map((item) => (item.id === id ? { ...item, ...patch } : item)),
     );
   }
 
@@ -236,8 +333,8 @@ function CategoryOptionsEditor({
     index: number,
     patch: Partial<CategoryOptionValue>,
   ) {
-    setOptions((list) =>
-      list.map((item) => {
+    onChange(
+      options.map((item) => {
         if (item.id !== optionId) return item;
         return {
           ...item,
@@ -250,33 +347,16 @@ function CategoryOptionsEditor({
   }
 
   return (
-    <div className="space-y-4 border-t border-slate-100 bg-slate-50/70 p-4">
-      <div>
-        <label className="text-xs font-medium text-slate-600">{t("name")}</label>
-        <Input
-          value={name ?? ""}
-          onChange={(event) => setName(event.target.value)}
-          className="mt-1"
-        />
-      </div>
-
-      <CategoryMediaActions
-        storeId={storeId}
-        imageUrl={imageUrl}
-        icon={icon}
-        onImageUrlChange={setImageUrl}
-        onIconChange={setIcon}
-      />
-
+    <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
         {OPTION_PRESETS.map((preset) => (
           <button
             key={preset.name}
             type="button"
-            className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100"
+            className="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm shadow-slate-900/5 transition hover:bg-slate-50"
             onClick={() =>
-              setOptions((list) => [
-                ...list,
+              onChange([
+                ...options,
                 newOptionDef(preset.name, preset.values, preset.kind),
               ])
             }
@@ -286,20 +366,18 @@ function CategoryOptionsEditor({
         ))}
         <button
           type="button"
-          className="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-800 ring-1 ring-brand-200"
-          onClick={() => setOptions((list) => [...list, newOptionDef("")])}
+          className="rounded-full bg-brand-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-brand-700"
+          onClick={() => onChange([...options, newOptionDef("")])}
         >
           + {t("customOption")}
         </button>
       </div>
 
       {options.map((option) => {
-        const isColor = option.kind === "color" || isColorOptionName(option.name);
+        const isColor =
+          option.kind === "color" || isColorOptionName(option.name);
         return (
-          <div
-            key={option.id}
-            className="rounded-xl bg-white p-3 ring-1 ring-slate-200"
-          >
+          <div key={option.id} className="space-y-2 rounded-xl bg-white/80 p-3">
             <div className="flex flex-wrap items-center gap-2">
               <Input
                 value={option.name ?? ""}
@@ -311,7 +389,7 @@ function CategoryOptionsEditor({
                     kind: isColorOptionName(nextName) ? "color" : option.kind,
                   });
                 }}
-                className="min-w-[10rem] flex-1"
+                className="min-w-[10rem] flex-1 bg-white"
               />
               <select
                 value={isColor ? "color" : "text"}
@@ -320,7 +398,7 @@ function CategoryOptionsEditor({
                     kind: event.target.value as "color" | "text",
                   })
                 }
-                className="h-10 rounded-xl border border-slate-200 bg-white px-2 text-sm"
+                className="h-10 rounded-xl border-0 bg-slate-100 px-2 text-sm outline-none focus:ring-2 focus:ring-brand-500"
               >
                 <option value="text">{t("optionKindText")}</option>
                 <option value="color">{t("optionKindColor")}</option>
@@ -329,9 +407,7 @@ function CategoryOptionsEditor({
                 type="button"
                 className="shrink-0 text-xs font-semibold text-red-600"
                 onClick={() =>
-                  setOptions((list) =>
-                    list.filter((item) => item.id !== option.id),
-                  )
+                  onChange(options.filter((item) => item.id !== option.id))
                 }
               >
                 {t("delete")}
@@ -339,7 +415,7 @@ function CategoryOptionsEditor({
             </div>
 
             {isColor ? (
-              <div className="mt-3 space-y-2">
+              <div className="space-y-2">
                 <p className="text-xs text-slate-500">{t("colorValuesHint")}</p>
                 {option.values.map((value, index) => {
                   const hex = normalizeHex(value.hex ?? "") ?? "#94A3B8";
@@ -349,7 +425,7 @@ function CategoryOptionsEditor({
                       className="flex flex-wrap items-center gap-2"
                     >
                       <span
-                        className="h-9 w-9 shrink-0 rounded-full ring-1 ring-slate-200"
+                        className="h-9 w-9 shrink-0 rounded-full"
                         style={{ background: hex }}
                         title={hex}
                       />
@@ -361,7 +437,7 @@ function CategoryOptionsEditor({
                             label: event.target.value,
                           })
                         }
-                        className="min-w-[8rem] flex-1"
+                        className="min-w-[8rem] flex-1 bg-white"
                       />
                       <Input
                         type="color"
@@ -371,7 +447,7 @@ function CategoryOptionsEditor({
                             hex: event.target.value.toUpperCase(),
                           })
                         }
-                        className="h-10 w-12 p-1"
+                        className="h-10 w-12 bg-transparent p-1"
                       />
                       <Input
                         value={value.hex ?? ""}
@@ -382,14 +458,14 @@ function CategoryOptionsEditor({
                             hex: raw ? raw.toUpperCase() : null,
                           });
                         }}
-                        className="w-28 font-mono text-sm"
+                        className="w-28 bg-white font-mono text-sm"
                       />
                       <button
                         type="button"
                         className="text-xs font-semibold text-red-600"
                         onClick={() =>
-                          setOptions((list) =>
-                            list.map((item) =>
+                          onChange(
+                            options.map((item) =>
                               item.id === option.id
                                 ? {
                                     ...item,
@@ -425,7 +501,6 @@ function CategoryOptionsEditor({
               </div>
             ) : (
               <Input
-                className="mt-2"
                 value={option.values
                   .map((value) => value.label ?? "")
                   .filter(Boolean)
@@ -440,43 +515,111 @@ function CategoryOptionsEditor({
                       .map((label) => ({ label, hex: null })),
                   })
                 }
+                className="bg-white"
               />
             )}
           </div>
         );
       })}
+    </div>
+  );
+}
 
-      <Button
-        type="button"
-        disabled={pending}
-        onClick={() => {
-          onError(null);
-          startTransition(async () => {
-            const cleaned = options
-              .filter((item) => item.name.trim())
-              .map((item) => ({
-                ...item,
-                values: item.values.filter((value) => value.label.trim()),
-              }));
-            const result = await updateCategoryAction(storeId, category.id, {
-              name,
-              imageUrl: imageUrl || null,
-              icon,
-              optionSchema: cleaned,
+function CategoryEditPanel({
+  storeId,
+  category,
+  pending,
+  startTransition,
+  onSaved,
+  onCancel,
+  onError,
+}: {
+  storeId: string;
+  category: Category;
+  pending: boolean;
+  startTransition: (fn: () => void) => void;
+  onSaved: (category: Category) => void;
+  onCancel: () => void;
+  onError: (message: string | null) => void;
+}) {
+  const { t } = useI18n();
+  const [options, setOptions] = useState<CategoryOptionDef[]>(() =>
+    normalizeOptionSchema(category.optionSchema),
+  );
+  const [name, setName] = useState(category.name ?? "");
+  const [imageUrl, setImageUrl] = useState(category.imageUrl ?? "");
+  const [icon, setIcon] = useState<string | null>(category.icon);
+
+  return (
+    <div className="mb-3 space-y-5 rounded-2xl bg-slate-50 px-4 py-5 sm:px-5">
+      <p className="text-sm font-semibold text-slate-800">
+        {t("editingCategory", { name: category.name })}
+      </p>
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-slate-500">{t("name")}</label>
+        <Input
+          value={name ?? ""}
+          onChange={(event) => setName(event.target.value)}
+          className="bg-white"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          {t("categoryVisualOptional")}
+        </p>
+        <CategoryMediaActions
+          storeId={storeId}
+          imageUrl={imageUrl}
+          icon={icon}
+          onImageUrlChange={setImageUrl}
+          onIconChange={setIcon}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          {t("categoryOptionsOptional")}
+        </p>
+        <CategoryOptionsFields options={options} onChange={setOptions} />
+      </div>
+
+      <div className="flex flex-wrap gap-2 pt-1">
+        <Button
+          type="button"
+          disabled={pending}
+          onClick={() => {
+            onError(null);
+            startTransition(async () => {
+              const result = await updateCategoryAction(storeId, category.id, {
+                name,
+                imageUrl: imageUrl || null,
+                icon,
+                optionSchema: cleanOptionSchema(options),
+              });
+              if (!result.ok) {
+                onError(result.error);
+                return;
+              }
+              onSaved(result.category);
             });
-            if (!result.ok) {
-              onError(result.error);
-              return;
-            }
-            onSaved(result.category);
-          });
-        }}
-      >
-        {pending ? (
-          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-        ) : null}
-        {pending ? t("saving") : t("saveOptions")}
-      </Button>
+          }}
+        >
+          {pending ? (
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          ) : null}
+          {pending ? t("saving") : t("saveCategory")}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={pending}
+          onClick={onCancel}
+        >
+          {t("cancelEdit")}
+        </Button>
+      </div>
     </div>
   );
 }
