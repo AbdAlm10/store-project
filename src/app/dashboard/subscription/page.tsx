@@ -69,7 +69,11 @@ export default async function SubscriptionPage() {
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <UsageCard
             label={t("products")}
-            value={`${productCount} / ${plan.limits.maxProducts}`}
+            value={
+              Number.isFinite(plan.limits.maxProducts)
+                ? `${productCount} / ${plan.limits.maxProducts}`
+                : `${productCount} / ∞`
+            }
           />
           <UsageCard
             label={t("imagesPerProduct")}
@@ -82,6 +86,14 @@ export default async function SubscriptionPage() {
             }
           />
         </div>
+        {plan.priceYearlyUsd > 0 ? (
+          <p className="mt-4 text-sm text-slate-500">
+            {t("subscriptionPricing", {
+              monthly: plan.priceMonthlyUsd,
+              yearly: plan.priceYearlyUsd,
+            })}
+          </p>
+        ) : null}
         <div className="mt-6 flex flex-wrap items-center gap-3">
           {showBasicCta ? (
             <Link

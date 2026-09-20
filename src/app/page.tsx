@@ -2,14 +2,12 @@ import Link from "next/link";
 import {
   ArrowLeft,
   BarChart3,
-  Check,
   Link2,
   MessageCircle,
   Smartphone,
   Store,
 } from "lucide-react";
 import { appConfig } from "@/config/app";
-import { PLANS } from "@/config/plans";
 import { Button } from "@/components/ui/button";
 import {
   MarketingFooter,
@@ -20,6 +18,7 @@ import { Reveal } from "@/components/marketing/reveal";
 import { MarketingShot } from "@/components/marketing/product-frame";
 import { StoreModelsHero } from "@/components/marketing/store-models-hero";
 import { LandingAmbient } from "@/components/marketing/landing-ambient";
+import { PricingSection } from "@/components/marketing/pricing-section";
 import {
   MockAnalytics,
   MockDashboard,
@@ -74,17 +73,6 @@ export default async function HomePage() {
     { q: "faq4Q", a: "faq4A" },
   ];
 
-  const planNameKey: Record<string, MessageKey> = {
-    trial: "planTrial",
-    basic: "planBasic",
-    pro: "planPro",
-  };
-  const planDescKey: Record<string, MessageKey> = {
-    trial: "planTrialDesc",
-    basic: "planBasicDesc",
-    pro: "planProDesc",
-  };
-
   return (
     <div className="ys-landing relative flex min-h-full flex-col overflow-x-clip">
       <LandingAmbient />
@@ -125,7 +113,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="animate-ys-hero-visual relative mx-auto max-w-6xl px-3 pb-16 sm:px-6 lg:pb-20">
+          <div className="animate-ys-hero-visual relative mx-auto mt-14 max-w-6xl px-3 pb-16 sm:mt-20 sm:px-6 lg:mt-24 lg:pb-20">
             <StoreModelsHero />
           </div>
         </section>
@@ -261,75 +249,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Pricing */}
-        <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6" id="pricing">
-          <Reveal>
-            <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-                {t("pricingTitle")}
-              </h2>
-              <p className="mt-4 text-lg text-slate-500">{t("pricingBody")}</p>
-            </div>
-          </Reveal>
-          <div className="mt-12 grid gap-5 lg:grid-cols-3">
-            {Object.values(PLANS).map((plan, index) => (
-              <Reveal key={plan.id} delayMs={index * 90}>
-                <article
-                  className={`flex h-full flex-col rounded-[1.75rem] p-6 transition duration-300 hover:-translate-y-1 ${
-                    plan.highlighted
-                      ? "bg-slate-950 text-white shadow-[0_28px_70px_-36px_rgba(15,23,42,0.55)]"
-                      : "bg-white text-slate-900 shadow-[var(--ys-landing-shadow)] ring-1 ring-slate-100"
-                  }`}
-                >
-                  <h3 className="text-xl font-semibold">
-                    {t(planNameKey[plan.id])}
-                  </h3>
-                  <p
-                    className={`mt-2 text-sm ${plan.highlighted ? "text-slate-300" : "text-slate-500"}`}
-                  >
-                    {t(planDescKey[plan.id])}
-                  </p>
-                  <p className="mt-6 text-4xl font-semibold tracking-tight">
-                    {plan.priceMonthlyUsd === 0
-                      ? t("free")
-                      : `$${plan.priceMonthlyUsd}`}
-                    {plan.priceMonthlyUsd ? (
-                      <span className="text-base font-medium opacity-60">
-                        {t("perMonth")}
-                      </span>
-                    ) : null}
-                  </p>
-                  <ul className="mt-6 flex-1 space-y-2.5 text-sm">
-                    <li className="flex gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" />
-                      {t("upToProducts", { count: plan.limits.maxProducts })}
-                    </li>
-                    <li className="flex gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" />
-                      {plan.limits.advancedAnalytics
-                        ? t("advancedAnalytics")
-                        : t("basicAnalytics")}
-                    </li>
-                    <li className="flex gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" />
-                      {plan.limits.customDomain
-                        ? t("customDomainReady")
-                        : t("platformUrl")}
-                    </li>
-                  </ul>
-                  <Link href="/register" className="mt-8 block">
-                    <Button
-                      className="w-full rounded-full"
-                      variant={plan.highlighted ? "primary" : "outline"}
-                    >
-                      {t("ctaGetStarted")}
-                    </Button>
-                  </Link>
-                </article>
-              </Reveal>
-            ))}
-          </div>
-        </section>
+        <PricingSection />
 
         {/* FAQ */}
         <section className="px-4 py-10 sm:px-6" id="faq">

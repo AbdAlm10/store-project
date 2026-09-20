@@ -15,9 +15,10 @@ export default async function ProductsPage() {
   const store = stores[0];
   const locale = await getRequestLocale();
 
-  const [products, categories] = await Promise.all([
+  const [products, categories, limits] = await Promise.all([
     services.products.listForMerchant(store.id, { pageSize: 100 }),
     services.categories.listForMerchant(store.id),
+    services.entitlements.getLimits(store.id),
   ]);
 
   return (
@@ -27,6 +28,8 @@ export default async function ProductsPage() {
       products={products.items}
       categories={categories}
       locale={locale}
+      maxProducts={limits.maxProducts}
+      productTotal={products.total}
     />
   );
 }

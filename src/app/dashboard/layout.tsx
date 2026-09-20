@@ -3,6 +3,7 @@ import { DashboardPrefetch } from "@/components/dashboard/dashboard-prefetch";
 import { MerchantNav } from "@/components/dashboard/merchant-nav";
 import { logoutAction } from "@/features/auth/actions";
 import { StoreQrButton } from "@/features/dashboard/store-qr-button";
+import { SupportWidget } from "@/features/support/support-widget";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
 import {
@@ -35,11 +36,11 @@ export default async function DashboardLayout({
     <div className="dashboard-shell grid h-dvh w-full overflow-hidden bg-white lg:grid-cols-[248px_minmax(0,1fr)]">
       <DashboardPrefetch />
 
-      <aside className="relative z-10 hidden h-full min-w-0 flex-col bg-white shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)] lg:flex">
-        <div className="flex h-full min-w-0 flex-col px-3 py-5">
+      <aside className="relative z-10 hidden h-full min-h-0 min-w-0 flex-col overflow-hidden bg-white shadow-[0_10px_40px_-24px_rgba(15,23,42,0.18)] lg:flex">
+        <div className="flex h-full min-h-0 min-w-0 flex-col px-3 py-5">
           <Link
             href="/dashboard"
-            className="mb-7 flex min-w-0 items-center px-2"
+            className="mb-7 flex shrink-0 min-w-0 items-center px-2"
             aria-label="دكّان"
           >
             <BrandLogo
@@ -49,11 +50,11 @@ export default async function DashboardLayout({
             />
           </Link>
 
-          <div className="ys-scrollbar-none min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="ys-scrollbar-none min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">
             <MerchantNav storeName={activeStore?.name} locale={locale} embedded />
           </div>
 
-          <div className="mt-4 space-y-1 border-t border-slate-100 px-1 pt-4">
+          <div className="mt-4 shrink-0 space-y-1 border-t border-slate-100 px-1 pt-4">
             {activeStore ? (
               <Link
                 href={`/${activeStore.slug}`}
@@ -111,9 +112,11 @@ export default async function DashboardLayout({
           ) : null}
         </header>
 
-        <main className="dashboard-main min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <main className="dashboard-main min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pt-6 pb-24 sm:px-6 sm:pb-28 lg:px-8 lg:pt-8 lg:pb-32">
           {children}
         </main>
+
+        <SupportWidget storeId={activeStore?.id ?? null} />
       </div>
     </div>
   );

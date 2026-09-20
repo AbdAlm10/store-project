@@ -18,11 +18,18 @@ export default async function NewProductPage() {
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
   const categories = await services.categories.listForMerchant(store.id);
+  const maxImagesPerProduct = await services.entitlements.maxImagesPerProduct(
+    store.id,
+  );
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader title={t("addProduct")} description={t("addProductDesc")} />
-      <ProductForm storeId={store.id} categories={categories} />
+      <ProductForm
+        storeId={store.id}
+        categories={categories}
+        maxImagesPerProduct={maxImagesPerProduct}
+      />
     </div>
   );
 }

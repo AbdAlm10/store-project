@@ -17,6 +17,7 @@ import {
   countWords,
   MIN_PRODUCT_DESCRIPTION_WORDS,
 } from "@/validations/schemas";
+import { cn } from "@/lib/utils/cn";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
@@ -31,6 +32,8 @@ type ProductFormProps = {
   storeId: string;
   categories: Category[];
   productId?: string;
+  /** Plan limit for product images (defaults fail-closed to Basic). */
+  maxImagesPerProduct?: number;
   initial?: {
     name: string;
     description: string;
@@ -52,8 +55,6 @@ type ProductFormProps = {
     }>;
   };
 };
-
-const PRODUCT_IMAGE_SLOTS = 3;
 
 function Section({
   title,
@@ -81,8 +82,10 @@ export function ProductForm({
   storeId,
   categories,
   productId,
+  maxImagesPerProduct = 2,
   initial,
 }: ProductFormProps) {
+  const imageSlots = Math.max(1, maxImagesPerProduct);
   const { t } = useI18n();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -101,14 +104,8 @@ export function ProductForm({
   const [imageUrls, setImageUrls] = useState<string[]>(() => {
     const fromList = initial?.imageUrls?.filter(Boolean) ?? [];
     const legacy = initial?.imageUrl?.trim() ? [initial.imageUrl.trim()] : [];
-    const seeds = (fromList.length ? fromList : legacy).slice(
-      0,
-      PRODUCT_IMAGE_SLOTS,
-    );
-    return Array.from(
-      { length: PRODUCT_IMAGE_SLOTS },
-      (_, index) => seeds[index] ?? "",
-    );
+    const seeds = (fromList.length ? fromList : legacy).slice(0, imageSlots);
+    return Array.from({ length: imageSlots }, (_, index) => seeds[index] ?? "");
   });
 
   const selectedCategory = useMemo(
@@ -152,7 +149,7 @@ export function ProductForm({
     const images = imageUrls
       .map((url) => url.trim())
       .filter(Boolean)
-      .slice(0, PRODUCT_IMAGE_SLOTS)
+      .slice(0, imageSlots)
       .map((url, index) => ({
         url,
         alt: name,
@@ -429,8 +426,16 @@ export function ProductForm({
         ) : null}
       </Section>
 
-      <Section title={t("sectionImages")} description={t("sectionImagesHint")}>
-        <div className="grid gap-4 sm:grid-cols-3">
+      <Section
+        title={t("sectionImages")}
+        description={t("sectionImagesHintLimited", { count: imageSlots })}
+      >
+        <div
+          className={cn(
+            "grid gap-4",
+            imageSlots <= 2 ? "sm:grid-cols-2" : "sm:grid-cols-3",
+          )}
+        >
           {imageUrls.map((url, index) => (
             <div key={index} className="space-y-2">
               <Label>

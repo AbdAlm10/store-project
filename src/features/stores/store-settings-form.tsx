@@ -61,7 +61,13 @@ function defaultNavbarSelection(store: Store): NavbarActionId[] {
   return store.whatsapp?.trim() ? ["whatsapp"] : [];
 }
 
-export function StoreSettingsForm({ store }: { store: Store }) {
+export function StoreSettingsForm({
+  store,
+  maxNavActions = 1,
+}: {
+  store: Store;
+  maxNavActions?: number;
+}) {
   const { t } = useI18n();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -97,11 +103,20 @@ export function StoreSettingsForm({ store }: { store: Store }) {
   );
 
   function toggleNavAction(id: NavbarActionId) {
-    setNavActions((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id],
-    );
+    setNavActions((current) => {
+      if (current.includes(id)) {
+        return current.filter((item) => item !== id);
+      }
+      if (
+        Number.isFinite(maxNavActions) &&
+        current.length >= maxNavActions
+      ) {
+        setError(t("navActionLimitReached", { count: maxNavActions }));
+        return current;
+      }
+      setError(null);
+      return [...current, id];
+    });
   }
 
   return (
@@ -262,7 +277,9 @@ export function StoreSettingsForm({ store }: { store: Store }) {
               {t("storeContactLinks")}
             </legend>
             <p className="mt-0.5 text-xs text-slate-500">
-              {t("storeNavIconsHint")}
+              {Number.isFinite(maxNavActions)
+                ? t("storeNavIconsHintLimited", { count: maxNavActions })
+                : t("storeNavIconsHint")}
             </p>
           </div>
 

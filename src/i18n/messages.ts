@@ -87,7 +87,34 @@ const ar = {
   analyticsPreviewBody:
     "زيارات المتجر، مشاهدات المنتجات، ونقرات واتساب — بأرقام واضحة.",
   pricingTitle: "أسعار بسيطة وواضحة",
-  pricingBody: "ابدأ مجانًا، ثم رقِّ عندما ينمو كتالوجك.",
+  pricingBody:
+    "ابدأ بتجربة 10 أيام بتحليلات وتخصيص ودعم Pro، ثم اختر شهريًا أو سنويًا.",
+  billingPeriod: "فترة الفوترة",
+  billingMonthly: "شهري",
+  billingYearly: "سنوي",
+  billingYearlySave: "وفّر",
+  earlyBirdBanner:
+    "اشترك قبل انتهاء التجربة المجانية ({trialDays} أيام) واحصل على خصم {proPercent}% على Pro و{basicPercent}% على الأساسية.",
+  earlyBirdPrice: "خلال التجربة: ${price}{period} (خصم {percent}%)",
+  perYear: "/سنة",
+  ctaStartTrial: "ابدأ التجربة المجانية",
+  planFeatProductsImages: "{products} منتج · {images} صور لكل منتج",
+  planFeatProducts: "{count} منتج",
+  planFeatNoAnalytics: "بدون تحليلات (الصفحة مموّهة بالكامل)",
+  planFeatFullAnalytics: "تحليلات كاملة ومتقدمة",
+  planFeatCategories: "{count} تصنيفات فقط",
+  planFeatUnlimitedCategories: "تصنيفات بلا حدود",
+  planFeatOptions: "{count} اختيارات لكل منتج (لون، حجم…)",
+  planFeatUnlimitedOptions: "اختيارات منتجات بلا حدود",
+  planFeatOneNavAction: "زر أكشن واحد فقط في شريط المتجر",
+  planFeatAllNavActions: "كل أزرار الأكشن في الشريط",
+  planFeatLimitedColors: "تلوين محدود (بعض الألوان مقفلة)",
+  planFeatFullCustomization: "تخصيص كامل للمتجر",
+  planFeatNoSupport: "لا يوجد دعم",
+  planFeatSupport24: "دعم مخصص على مدار الساعة",
+  planFeatTrialPro: "ميزات Pro المحددة خلال التجربة",
+  planFeatTrialDays: "{days} أيام تجربة مجانية",
+  planFeatEarlyBird: "خصم مبكر إذا اشتركت قبل انتهائها",
   finalCtaTitle: "أطلق متجرك اليوم",
   finalCtaBody:
     "أنشئ الرابط، أضف منتجاتك، وشاركه على واتساب وإنستغرام أو عبر رمز QR.",
@@ -231,6 +258,14 @@ const ar = {
   sectionImages: "الصور",
   sectionImagesHint:
     "أضف صورة واحدة إلزامية وحتى صورتين اختياريين. تُضغط الملفات على جهازك أولًا.",
+  sectionImagesHintLimited:
+    "خطتك تسمح حتى {count} صور لكل منتج. الصورة الأولى إلزامية وهي الرئيسية.",
+  categoryLimitReached:
+    "خطتك تسمح بـ {count} تصنيفات فقط. احذف تصنيفًا أو رقِّ إلى Pro.",
+  optionLimitReached:
+    "خطتك تسمح بـ {count} اختيارات لكل منتج فقط. رقِّ إلى Pro للمزيد.",
+  productLimitReached:
+    "خطتك تسمح بـ {count} منتج فقط. احذف منتجًا أو رقِّ إلى Pro.",
   sectionVisibility: "الظهور",
   name: "الاسم",
   description: "الوصف",
@@ -269,6 +304,8 @@ const ar = {
   noCategoriesHint: "أنشئ تصنيفات مثل أغطية أو شواحن أو ملابس — فريدة داخل متجرك.",
   addCategoryTitle: "إضافة تصنيف",
   addCategoryHint: "اسم التصنيف أولاً، ثم الأيقونة والخيارات اختياريًا.",
+  addCategoryHintLimited:
+    "خطتك تسمح بـ {count} تصنيفات ({used}/{count}). رقِّ إلى Pro للمزيد.",
   yourCategories: "تصنيفاتك",
   editingCategory: "تعديل: {name}",
   cancelEdit: "إلغاء التعديل",
@@ -334,7 +371,11 @@ const ar = {
   storeContactLinks: "الرقم والروابط",
   storeNavIconsHint:
     "فعّل الأيقونة بجانب الحقل لتظهر كزر مباشر في شريط متجرك.",
+  storeNavIconsHintLimited:
+    "خطتك تسمح بـ {count} زر أكشن فقط في الشريط. رقِّ إلى Pro لإضافة المزيد.",
   storeNavIconToggle: "إظهار في الشريط",
+  navActionLimitReached: "خطتك تسمح بـ {count} زر أكشن فقط. رقِّ إلى Pro.",
+  proOnlyLock: "Pro",
   previewStore: "معاينة المتجر",
   draftStorePreview:
     "وضع المعاينة — أنت فقط ترى هذا المتجر حتى يتم نشره.",
@@ -448,6 +489,7 @@ const ar = {
   accountSaved: "تم حفظ التغييرات.",
   signInPage: "صفحة تسجيل الدخول",
   currentPlan: "الخطة الحالية",
+  subscriptionPricing: "{monthly}$/شهر أو {yearly}$/سنة",
   statusLabel: "الحالة: {status}",
   trialEnds: "ينتهي التجريب: {date}",
   imagesPerProduct: "صور / منتج",
@@ -456,6 +498,13 @@ const ar = {
   upgradeToPro: "الترقية إلى Pro",
   subscribeBasicWhatsApp: "الاشتراك في الخطة الأساسية",
   alreadyOnPro: "أنت على خطة Pro بالفعل.",
+  supportChatOpen: "الدعم",
+  supportChatTitle: "الدعم",
+  supportChatSubtitle: "راسلنا وسنعود إليك قريبًا",
+  supportChatEmpty:
+    "كيف يمكننا مساعدتك؟ اكتب رسالتك وسنرد في أقرب وقت.",
+  supportChatPlaceholder: "اكتب رسالتك…",
+  supportChatSend: "إرسال",
   stripeNotConfigured:
     "سيتم التواصل عبر واتساب والدفع عن طريق خدمة شام كاش للدفع",
   stepLabel: "الخطوة {n}",
@@ -490,11 +539,12 @@ const ar = {
     "لا. دكّان كتالوج أبسط للبيع عبر التواصل الاجتماعي وواتساب.",
   faq2Q: "هل يحتاج العملاء حسابًا؟",
   faq2A: "لا. يتصفح الزوار بحرية ويمكنهم الطلب عبر واتساب دون تسجيل.",
-  faq3Q: "هل يمكنني استخدام نطاقي لاحقًا؟",
-  faq3A: "النطاقات المخصصة مخططة في Pro. اليوم كل متجر يحصل على رابط المنصة.",
+  faq3Q: "هل يمكنني الدفع شهريًا أو سنويًا؟",
+  faq3A:
+    "نعم. الأساسية 99$ سنويًا (أو 10$ شهريًا) وPro 299$ سنويًا (أو 30$ شهريًا). الاشتراك قبل انتهاء التجربة يمنح خصمًا إضافيًا.",
   faq4Q: "ماذا يحدث عند انتهاء التجربة؟",
   faq4A:
-    "بياناتك تبقى. يُقيَّد المتجر حتى تجدد الاشتراك — ولا يُحذف تلقائيًا.",
+    "التجربة 10 أيام بتحليلات Pro واختيارات بلا حدود وتخصيص كامل ودعم 24. بياناتك تبقى، ويُقيَّد المتجر حتى تشترك — ولا يُحذف تلقائيًا.",
   themeClean: "نظيف",
   themeCleanDesc: "أسطح فاتحة ومسافات هادئة مثالية للكتالوج.",
   themeBold: "جريء",
@@ -526,11 +576,12 @@ const ar = {
   hoursReset: "إعادة الافتراضي",
   hoursLegacyNote: "ساعات نصية سابقة",
   planTrial: "تجربة مجانية",
-  planTrialDesc: "ميزات Basic كاملة أثناء إطلاق واجهتك.",
+  planTrialDesc:
+    "10 أيام بتحليلات Pro واختيارات بلا حدود وتخصيص كامل ودعم 24 — بدون بطاقة عند البدء.",
   planBasic: "أساسي",
-  planBasicDesc: "مثالي لبائعي التواصل الذين يحتاجون رابط كتالوج واحد.",
+  planBasicDesc: "كتالوج نظيف للبائعين الاجتماعيين في البداية.",
   planPro: "Pro",
-  planProDesc: "حدود أعلى وتحليلات أغنى ومساحة للنمو.",
+  planProDesc: "حدود أعلى، تحليلات كاملة، وتخصيص بلا قيود.",
   whatsapp: "واتساب",
   facebook: "فيسبوك",
   telegram: "تيليغرام",

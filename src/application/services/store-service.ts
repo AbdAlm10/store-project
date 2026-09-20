@@ -1,4 +1,9 @@
-import { TRIAL_DAYS } from "@/config/plans";
+import {
+  BASIC_THEME_COLOR_KEYS,
+  TRIAL_DAYS,
+} from "@/config/plans";
+import type { ThemeColorKey, ThemeOverrides } from "@/config/themes";
+import { THEME_TOKEN_KEYS } from "@/config/themes";
 import { AppError } from "@/domain/errors";
 import {
   assertCanManageStore,
@@ -11,8 +16,10 @@ import type {
   StoreRepository,
   SubscriptionRepository,
 } from "@/application/ports/repositories";
+import { parseNavbarActions } from "@/lib/navbar-actions";
 import { createStoreSchema, updateStoreSchema } from "@/validations/schemas";
 import type { AuthService } from "./auth-service";
+import type { EntitlementService } from "./entitlement-service";
 
 function emptyToUndefined(value: unknown): string | undefined {
   if (value == null) return undefined;
@@ -20,12 +27,15 @@ function emptyToUndefined(value: unknown): string | undefined {
   return text.length > 0 ? text : undefined;
 }
 
+const BASIC_THEME_SET = new Set<string>(BASIC_THEME_COLOR_KEYS);
+
 export class StoreService {
   constructor(
     private readonly auth: AuthService,
     private readonly stores: StoreRepository,
     private readonly members: StoreMemberRepository,
     private readonly subscriptions: SubscriptionRepository,
+    private readonly entitlements: EntitlementService,
   ) {}
 
   async createStore(input: unknown): Promise<Store> {
@@ -134,6 +144,13 @@ export class StoreService {
     const data = updateStoreSchema.parse(input);
     const patch: Partial<Store> = { ...data };
 
+    if (data.themeOverrides !== undefined) {
+      patch.themeOverrides = await this.sanitizeThemeOverrides(
+        storeId,
+        data.themeOverrides,
+      );
+    }
+
     if (data.status === "published" && store.status !== "published") {
       patch.publishedAt = new Date().toISOString();
     }
@@ -175,5 +192,45 @@ export class StoreService {
     }
 
     throw new AppError("NOT_FOUND", "Store not found.");
+  }
+
+  private async sanitizeThemeOverrides(
+    storeId: string,
+    overrides: ThemeOverrides | null,
+  ): Promise<ThemeOverrides | null> {
+    if (!overrides) return null;
+
+    const navRaw = overrides.navbarActions;
+    if (typeof navRaw === "string") {
+      const actions = parseNavbarActions(navRaw);
+      await this.entitlements.assertNavActionsAllowed(storeId, actions.length);
+    }
+
+    const full = await this.entitlements.canCustomizeAllThemeColors(storeId);
+    if (full) return overrides;
+
+    const cleaned: ThemeOverrides = {};
+    if (typeof overrides.navbarActions === "string") {
+      cleaned.navbarActions = overrides.navbarActions;
+    }
+    for (const key of THEME_TOKEN_KEYS) {
+      const value = overrides[key as ThemeColorKey];
+      if (typeof value !== "string") continue;
+      if (BASIC_THEME_SET.has(key)) {
+        cleaned[key] = value;
+      }
+    }
+    if (typeof overrides.logoSize === "string") {
+      cleaned.logoSize = overrides.logoSize;
+    }
+    if (typeof overrides.radius === "string") cleaned.radius = overrides.radius;
+    if (typeof overrides.fontDisplay === "string") {
+      cleaned.fontDisplay = overrides.fontDisplay;
+    }
+    if (typeof overrides.fontBody === "string") {
+      cleaned.fontBody = overrides.fontBody;
+    }
+
+    return Object.keys(cleaned).length ? cleaned : null;
   }
 }

@@ -19,6 +19,8 @@ export default async function StoreDesignPage() {
   const store = stores[0];
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
+  const fullThemeCustomization =
+    await services.entitlements.canCustomizeAllThemeColors(store.id);
 
   return (
     <div className="min-w-0 max-w-full space-y-4">
@@ -31,7 +33,10 @@ export default async function StoreDesignPage() {
           </Link>
         }
       />
-      <StoreDesignForm store={store} />
+      <StoreDesignForm
+        store={store}
+        fullThemeCustomization={fullThemeCustomization}
+      />
     </div>
   );
 }

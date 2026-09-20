@@ -39,11 +39,19 @@ export function assertCanManageStore(
 }
 
 export function isSubscriptionUsable(subscription: Subscription): boolean {
-  return (
-    subscription.status === "trialing" ||
-    subscription.status === "active" ||
-    subscription.status === "past_due"
-  );
+  if (
+    subscription.status !== "trialing" &&
+    subscription.status !== "active" &&
+    subscription.status !== "past_due"
+  ) {
+    return false;
+  }
+  // Trial ends by date even if status was never flipped by a cron job.
+  if (subscription.status === "trialing" && subscription.trialEndsAt) {
+    const ends = Date.parse(subscription.trialEndsAt);
+    if (Number.isFinite(ends) && ends < Date.now()) return false;
+  }
+  return true;
 }
 
 export function assertSubscriptionAllowsWrites(

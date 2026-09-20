@@ -26,6 +26,9 @@ export default async function EditProductPage({ params }: Props) {
   const product = products.items.find((item) => item.id === productId);
   if (!product) notFound();
   const categories = await services.categories.listForMerchant(store.id);
+  const maxImagesPerProduct = await services.entitlements.maxImagesPerProduct(
+    store.id,
+  );
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -34,6 +37,7 @@ export default async function EditProductPage({ params }: Props) {
         storeId={store.id}
         productId={product.id}
         categories={categories}
+        maxImagesPerProduct={maxImagesPerProduct}
         initial={{
           name: product.name,
           description: product.description ?? "",
@@ -47,7 +51,7 @@ export default async function EditProductPage({ params }: Props) {
             .slice()
             .sort((a, b) => a.sortOrder - b.sortOrder)
             .map((image) => image.url)
-            .slice(0, 3),
+            .slice(0, maxImagesPerProduct),
           featured: product.featured,
           variants: product.variants.map((variant) => ({
             name: variant.name,

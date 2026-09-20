@@ -18,6 +18,7 @@ export default async function StorePage() {
   const store = stores[0];
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
+  const maxNavActions = await services.entitlements.maxNavActions(store.id);
 
   return (
     <div className="space-y-4">
@@ -27,7 +28,7 @@ export default async function StorePage() {
       />
 
       <DashboardCard padding="sm">
-        <StoreSettingsForm store={store} />
+        <StoreSettingsForm store={store} maxNavActions={maxNavActions} />
       </DashboardCard>
     </div>
   );

@@ -12,6 +12,7 @@ import type {
 } from "@/application/ports/repositories";
 import { categorySchema } from "@/validations/schemas";
 import type { AuthService } from "./auth-service";
+import type { EntitlementService } from "./entitlement-service";
 
 export class CategoryService {
   constructor(
@@ -19,6 +20,7 @@ export class CategoryService {
     private readonly stores: StoreRepository,
     private readonly members: StoreMemberRepository,
     private readonly categories: CategoryRepository,
+    private readonly entitlements: EntitlementService,
   ) {}
 
   async listPublic(storeId: string): Promise<Category[]> {
@@ -34,6 +36,9 @@ export class CategoryService {
     const store = await this.requireManager(storeId);
     assertStoreActive(store);
     const data = categorySchema.parse(input);
+    const optionCount = data.optionSchema?.length ?? 0;
+    await this.entitlements.assertOptionSchemaAllowed(storeId, optionCount);
+
     const baseSlug = data.slug ?? slugify(data.name);
     const slug =
       baseSlug ||
@@ -43,6 +48,7 @@ export class CategoryService {
       throw new AppError("CONFLICT", "A category with this slug already exists.");
     }
     const current = await this.categories.listByStore(storeId);
+    await this.entitlements.assertCanCreateCategory(storeId, current.length);
     return this.categories.create({
       storeId,
       name: data.name,
@@ -61,6 +67,8 @@ export class CategoryService {
   ): Promise<Category> {
     await this.requireManager(storeId);
     const data = categorySchema.parse(input);
+    const optionCount = data.optionSchema?.length ?? 0;
+    await this.entitlements.assertOptionSchemaAllowed(storeId, optionCount);
     const category = await this.categories.findById(categoryId);
     if (!category || category.storeId !== storeId) {
       throw new AppError("NOT_FOUND", "Category not found.");
@@ -77,6 +85,12 @@ export class CategoryService {
   async rename(storeId: string, categoryId: string, input: unknown): Promise<Category> {
     await this.requireManager(storeId);
     const data = categorySchema.parse(input);
+    if (data.optionSchema !== undefined) {
+      await this.entitlements.assertOptionSchemaAllowed(
+        storeId,
+        data.optionSchema.length,
+      );
+    }
     const category = await this.categories.findById(categoryId);
     if (!category || category.storeId !== storeId) {
       throw new AppError("NOT_FOUND", "Category not found.");

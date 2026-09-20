@@ -13,6 +13,7 @@ import {
   type ThemeColorKey,
   type ThemeTokens,
 } from "@/config/themes";
+import { BASIC_THEME_COLOR_KEYS } from "@/config/plans";
 import type { Store } from "@/domain/types/entities";
 import { updateStoreAction } from "@/features/stores/update-actions";
 import type { MessageKey } from "@/i18n/messages";
@@ -34,7 +35,13 @@ const TOKEN_LABEL_KEYS: Record<ThemeColorKey, MessageKey> = {
   buttonText: "tokenButtonText",
 };
 
-export function StoreDesignForm({ store }: { store: Store }) {
+export function StoreDesignForm({
+  store,
+  fullThemeCustomization = false,
+}: {
+  store: Store;
+  fullThemeCustomization?: boolean;
+}) {
   const { t } = useI18n();
   const router = useRouter();
   const [primaryColor, setPrimaryColor] = useState(store.primaryColor);
@@ -194,9 +201,22 @@ export function StoreDesignForm({ store }: { store: Store }) {
         <div className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3">
           {THEME_TOKEN_KEYS.map((key) => {
             const value = preview[key];
+            const locked =
+              !fullThemeCustomization &&
+              !(BASIC_THEME_COLOR_KEYS as readonly string[]).includes(key);
             return (
-              <div key={key} className="min-w-0">
-                <Label htmlFor={`token-${key}`}>{t(TOKEN_LABEL_KEYS[key])}</Label>
+              <div
+                key={key}
+                className={cn("min-w-0", locked && "relative opacity-60")}
+              >
+                <Label htmlFor={`token-${key}`}>
+                  {t(TOKEN_LABEL_KEYS[key])}
+                  {locked ? (
+                    <span className="ms-1 text-[10px] font-semibold text-slate-400">
+                      {t("proOnlyLock")}
+                    </span>
+                  ) : null}
+                </Label>
                 <div className="flex min-w-0 items-center gap-2">
                   <Input
                     id={`token-${key}`}
@@ -204,11 +224,13 @@ export function StoreDesignForm({ store }: { store: Store }) {
                     value={normalizeHex(value)}
                     onChange={(event) => setToken(key, event.target.value)}
                     className="h-10 w-12 shrink-0 p-1"
+                    disabled={locked}
                   />
                   <Input
                     value={value}
                     onChange={(event) => setToken(key, event.target.value)}
                     className="min-w-0"
+                    disabled={locked}
                   />
                 </div>
               </div>

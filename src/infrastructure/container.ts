@@ -85,7 +85,13 @@ export function createServices(): AppServices {
 
   const auth = new AuthService(authProvider, users);
   const entitlements = new EntitlementService(subscriptions);
-  const storeService = new StoreService(auth, stores, members, subscriptions);
+  const storeService = new StoreService(
+    auth,
+    stores,
+    members,
+    subscriptions,
+    entitlements,
+  );
   const productService = new ProductService(
     auth,
     stores,
@@ -93,7 +99,13 @@ export function createServices(): AppServices {
     products,
     entitlements,
   );
-  const categoryService = new CategoryService(auth, stores, members, categories);
+  const categoryService = new CategoryService(
+    auth,
+    stores,
+    members,
+    categories,
+    entitlements,
+  );
   const analyticsService = new AnalyticsService(
     auth,
     stores,
@@ -118,19 +130,41 @@ export function createServices(): AppServices {
   };
 }
 
+/** Changes every time this module is re-evaluated (HMR-safe). */
+const SERVICES_BOOT_ID =
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random()}`;
+
 const globalForServices = globalThis as unknown as {
   __yourstoreServices?: AppServices;
   __yourstoreMode?: string;
+  __yourstoreServicesBootId?: string;
 };
+
+function entitlementsApiReady(services: AppServices): boolean {
+  const e = services.entitlements as EntitlementService & Record<string, unknown>;
+  return (
+    typeof e.canCustomizeAllThemeColors === "function" &&
+    typeof e.getLimits === "function" &&
+    typeof e.maxNavActions === "function" &&
+    typeof e.assertCanCreateCategory === "function"
+  );
+}
 
 export function getServices(): AppServices {
   const mode = isSupabaseConfigured() ? "supabase" : "memory";
-  if (
-    !globalForServices.__yourstoreServices ||
-    globalForServices.__yourstoreMode !== mode
-  ) {
+  const existing = globalForServices.__yourstoreServices;
+  const stale =
+    !existing ||
+    globalForServices.__yourstoreMode !== mode ||
+    globalForServices.__yourstoreServicesBootId !== SERVICES_BOOT_ID ||
+    !entitlementsApiReady(existing);
+
+  if (stale) {
     globalForServices.__yourstoreServices = createServices();
     globalForServices.__yourstoreMode = mode;
+    globalForServices.__yourstoreServicesBootId = SERVICES_BOOT_ID;
   }
-  return globalForServices.__yourstoreServices;
+  return globalForServices.__yourstoreServices!;
 }

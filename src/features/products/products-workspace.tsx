@@ -56,12 +56,16 @@ export function ProductsWorkspace({
   products,
   categories,
   locale,
+  maxProducts = 50,
+  productTotal,
 }: {
   storeId: string;
   storeSlug: string;
   products: ProductWithMedia[];
   categories: Category[];
   locale: Locale;
+  maxProducts?: number;
+  productTotal?: number;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -73,6 +77,9 @@ export function ProductsWorkspace({
   const [bulkPending, startBulk] = useTransition();
   const [bulkBusy, setBulkBusy] = useState<BulkAction | null>(null);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const totalCount = productTotal ?? products.length;
+  const atProductLimit =
+    Number.isFinite(maxProducts) && totalCount >= maxProducts;
 
   const categoriesById = useMemo(
     () => new Map(categories.map((category) => [category.id, category])),
@@ -187,19 +194,25 @@ export function ProductsWorkspace({
         title={t("products")}
         description={t("productsPageDesc")}
         actions={
-          <Button
-            disabled={navigating}
-            onClick={() =>
-              startNavigate(() => {
-                router.push("/dashboard/products/new");
-              })
-            }
-          >
-            {navigating ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : null}
-            {navigating ? t("loading") : t("addProduct")}
-          </Button>
+          atProductLimit ? (
+            <p className="max-w-xs text-end text-xs text-slate-500">
+              {t("productLimitReached", { count: maxProducts })}
+            </p>
+          ) : (
+            <Button
+              disabled={navigating}
+              onClick={() =>
+                startNavigate(() => {
+                  router.push("/dashboard/products/new");
+                })
+              }
+            >
+              {navigating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : null}
+              {navigating ? t("loading") : t("addProduct")}
+            </Button>
+          )
         }
       />
 
@@ -327,17 +340,19 @@ export function ProductsWorkspace({
             hasFilters ? t("emptyMatchingHint") : t("emptyProductsHint")
           }
           action={
-            <Button
-              disabled={navigating}
-              onClick={() =>
-                startNavigate(() => {
-                  router.push("/dashboard/products/new");
-                })
-              }
-            >
-              {navigating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              {t("addProduct")}
-            </Button>
+            atProductLimit ? undefined : (
+              <Button
+                disabled={navigating}
+                onClick={() =>
+                  startNavigate(() => {
+                    router.push("/dashboard/products/new");
+                  })
+                }
+              >
+                {navigating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {t("addProduct")}
+              </Button>
+            )
           }
         />
       ) : (

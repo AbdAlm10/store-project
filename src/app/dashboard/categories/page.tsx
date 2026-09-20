@@ -18,11 +18,17 @@ export default async function CategoriesPage() {
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
   const categories = await services.categories.listForMerchant(store.id);
+  const limits = await services.entitlements.getLimits(store.id);
 
   return (
     <div className="space-y-6 pb-10">
       <PageHeader title={t("categories")} description={t("categoriesPageDesc")} />
-      <CategoryManager storeId={store.id} initial={categories} />
+      <CategoryManager
+        storeId={store.id}
+        initial={categories}
+        maxCategories={limits.maxCategories}
+        maxOptionsPerProduct={limits.maxOptionsPerProduct}
+      />
     </div>
   );
 }

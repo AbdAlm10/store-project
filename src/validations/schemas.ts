@@ -200,7 +200,7 @@ export const categorySchema = z.object({
         }),
       ),
     )
-    .max(8)
+    .max(32)
     .optional(),
 });
 
@@ -241,7 +241,7 @@ export const productSchema = z.object({
       }),
     )
     .min(1, "Add at least one product image.")
-    .max(3)
+    .max(10)
     .optional(),
   variants: z
     .array(
@@ -272,4 +272,9 @@ export const analyticsTrackSchema = z.object({
   path: z.string().max(500).nullable().optional(),
   visitorKey: z.string().max(80).nullable().optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const supportMessageSchema = z.object({
+  body: z.string().trim().min(2).max(2000),
+  storeId: z.string().uuid().nullable().optional(),
 });

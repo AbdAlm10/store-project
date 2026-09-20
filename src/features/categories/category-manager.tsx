@@ -38,9 +38,13 @@ function cleanOptionSchema(options: CategoryOptionDef[]): CategoryOptionDef[] {
 export function CategoryManager({
   storeId,
   initial,
+  maxCategories = 4,
+  maxOptionsPerProduct = 3,
 }: {
   storeId: string;
   initial: Category[];
+  maxCategories?: number;
+  maxOptionsPerProduct?: number;
 }) {
   const { t } = useI18n();
   const [categories, setCategories] = useState(initial);
@@ -58,6 +62,8 @@ export function CategoryManager({
 
   const editing = categories.find((c) => c.id === editingId) ?? null;
   const isEditing = Boolean(editing);
+  const atCategoryLimit =
+    Number.isFinite(maxCategories) && categories.length >= maxCategories;
 
   function resetCreateForm() {
     setName("");
@@ -90,14 +96,26 @@ export function CategoryManager({
           <h2 className="text-base font-semibold text-slate-900">
             {t("addCategoryTitle")}
           </h2>
-          <p className="mt-0.5 text-sm text-slate-500">{t("addCategoryHint")}</p>
+          <p className="mt-0.5 text-sm text-slate-500">
+            {Number.isFinite(maxCategories)
+              ? t("addCategoryHintLimited", {
+                  count: maxCategories,
+                  used: categories.length,
+                })
+              : t("addCategoryHint")}
+          </p>
         </div>
 
+        {atCategoryLimit ? (
+          <p className="rounded-xl bg-white/70 px-4 py-3 text-sm text-slate-600">
+            {t("categoryLimitReached", { count: maxCategories })}
+          </p>
+        ) : (
         <form
           className="space-y-5"
           onSubmit={(event) => {
             event.preventDefault();
-            if (isEditing) return;
+            if (isEditing || atCategoryLimit) return;
             setError(null);
             startTransition(async () => {
               const result = await createCategoryAction(storeId, {
@@ -126,7 +144,7 @@ export function CategoryManager({
             />
             <Button
               type="submit"
-              disabled={pending || isEditing}
+              disabled={pending || isEditing || atCategoryLimit}
               className="sm:shrink-0"
             >
               {pending && !isEditing ? (
@@ -155,9 +173,14 @@ export function CategoryManager({
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
               {t("categoryOptionsOptional")}
             </p>
-            <CategoryOptionsFields options={options} onChange={setOptions} />
+            <CategoryOptionsFields
+              options={options}
+              onChange={setOptions}
+              maxOptions={maxOptionsPerProduct}
+            />
           </div>
         </form>
+        )}
       </section>
 
       {error && !isEditing ? (
@@ -284,6 +307,7 @@ export function CategoryManager({
                       storeId={storeId}
                       category={editing}
                       pending={pending}
+                      maxOptionsPerProduct={maxOptionsPerProduct}
                       startTransition={startTransition}
                       onSaved={(next) => {
                         setCategories((list) =>
@@ -316,11 +340,20 @@ export function CategoryManager({
 function CategoryOptionsFields({
   options,
   onChange,
+  maxOptions = 3,
 }: {
   options: CategoryOptionDef[];
   onChange: (options: CategoryOptionDef[]) => void;
+  maxOptions?: number;
 }) {
   const { t } = useI18n();
+  const atLimit =
+    Number.isFinite(maxOptions) && options.length >= maxOptions;
+
+  function tryAdd(next: CategoryOptionDef) {
+    if (Number.isFinite(maxOptions) && options.length >= maxOptions) return;
+    onChange([...options, next]);
+  }
 
   function updateOption(id: string, patch: Partial<CategoryOptionDef>) {
     onChange(
@@ -353,12 +386,10 @@ function CategoryOptionsFields({
           <button
             key={preset.name}
             type="button"
-            className="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm shadow-slate-900/5 transition hover:bg-slate-50"
+            disabled={atLimit}
+            className="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm shadow-slate-900/5 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
             onClick={() =>
-              onChange([
-                ...options,
-                newOptionDef(preset.name, preset.values, preset.kind),
-              ])
+              tryAdd(newOptionDef(preset.name, preset.values, preset.kind))
             }
           >
             + {preset.name}
@@ -366,12 +397,18 @@ function CategoryOptionsFields({
         ))}
         <button
           type="button"
-          className="rounded-full bg-brand-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-brand-700"
-          onClick={() => onChange([...options, newOptionDef("")])}
+          disabled={atLimit}
+          className="rounded-full bg-brand-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
+          onClick={() => tryAdd(newOptionDef(""))}
         >
           + {t("customOption")}
         </button>
       </div>
+      {atLimit ? (
+        <p className="text-xs text-slate-500">
+          {t("optionLimitReached", { count: maxOptions })}
+        </p>
+      ) : null}
 
       {options.map((option) => {
         const isColor =
@@ -529,6 +566,7 @@ function CategoryEditPanel({
   storeId,
   category,
   pending,
+  maxOptionsPerProduct = 3,
   startTransition,
   onSaved,
   onCancel,
@@ -537,6 +575,7 @@ function CategoryEditPanel({
   storeId: string;
   category: Category;
   pending: boolean;
+  maxOptionsPerProduct?: number;
   startTransition: (fn: () => void) => void;
   onSaved: (category: Category) => void;
   onCancel: () => void;
@@ -582,7 +621,11 @@ function CategoryEditPanel({
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
           {t("categoryOptionsOptional")}
         </p>
-        <CategoryOptionsFields options={options} onChange={setOptions} />
+        <CategoryOptionsFields
+          options={options}
+          onChange={setOptions}
+          maxOptions={maxOptionsPerProduct}
+        />
       </div>
 
       <div className="flex flex-wrap gap-2 pt-1">
