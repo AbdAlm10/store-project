@@ -41,9 +41,7 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000)
 
 - Landing page: `/`
-- Demo store: `/alnoor`
-- Demo merchant login: `merchant@alnoor.demo` / any password (≥8 chars)
-- Dashboard: `/dashboard`
+- Dashboard: `/dashboard` (after register/login)
 
 ## Scripts
 

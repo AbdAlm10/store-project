@@ -98,7 +98,7 @@ const PLAN_DESC_KEY: Record<PlanId, MessageKey> = {
 
 export function PricingSection() {
   const { t } = useI18n();
-  const [period, setPeriod] = useState<BillingPeriod>("yearly");
+  const [period, setPeriod] = useState<BillingPeriod>("monthly");
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6" id="pricing">
@@ -280,15 +280,15 @@ function PeriodButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "relative rounded-full px-5 py-2 text-sm font-semibold transition",
+        "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold leading-none transition",
         active
           ? "bg-white text-slate-900 shadow-sm"
           : "text-slate-500 hover:text-slate-800",
       )}
     >
-      {label}
+      <span className="leading-none">{label}</span>
       {badge ? (
-        <span className="ms-2 rounded-full bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-800">
+        <span className="inline-flex shrink-0 items-center rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold leading-none text-brand-800">
           {badge}
         </span>
       ) : null}

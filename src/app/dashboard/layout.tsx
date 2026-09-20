@@ -103,9 +103,12 @@ export default async function DashboardLayout({
           {activeStore ? (
             <div className="absolute left-3 top-1/2 z-[70] -translate-y-1/2 sm:left-4 lg:left-6">
               <StoreQrButton
+                storeId={activeStore.id}
                 storeName={activeStore.name}
                 storeSlug={activeStore.slug}
                 logoUrl={activeStore.logoUrl}
+                primaryColor={activeStore.primaryColor}
+                themeOverrides={activeStore.themeOverrides}
                 variant="icon"
               />
             </div>

@@ -22,6 +22,10 @@ export type ThemeTokens = {
 export type ThemeOverrides = Partial<ThemeTokens> & {
   /** Comma-separated navbar action ids (whatsapp,phone,…). */
   navbarActions?: string;
+  /** QR stand gradient base color (#RRGGBB). */
+  qrStandColor?: string;
+  /** Background behind store logo on the QR stand (#RRGGBB). */
+  qrLogoBg?: string;
 };
 
 export const THEME_TOKEN_KEYS = [

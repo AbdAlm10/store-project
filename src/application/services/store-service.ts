@@ -230,6 +230,12 @@ export class StoreService {
     if (typeof overrides.fontBody === "string") {
       cleaned.fontBody = overrides.fontBody;
     }
+    if (typeof overrides.qrStandColor === "string") {
+      cleaned.qrStandColor = overrides.qrStandColor;
+    }
+    if (typeof overrides.qrLogoBg === "string") {
+      cleaned.qrLogoBg = overrides.qrLogoBg;
+    }
 
     return Object.keys(cleaned).length ? cleaned : null;
   }

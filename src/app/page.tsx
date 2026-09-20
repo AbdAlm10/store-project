@@ -7,7 +7,6 @@ import {
   Smartphone,
   Store,
 } from "lucide-react";
-import { appConfig } from "@/config/app";
 import { Button } from "@/components/ui/button";
 import {
   MarketingFooter,
@@ -100,13 +99,13 @@ export default async function HomePage() {
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                 </Link>
-                <Link href={`/${appConfig.demoStoreSlug}`}>
+                <Link href="/login">
                   <Button
                     size="lg"
                     variant="outline"
                     className="rounded-full border-slate-200 bg-white px-7 text-slate-800 hover:bg-slate-50"
                   >
-                    {t("ctaDemo")}
+                    {t("navSignIn")}
                   </Button>
                 </Link>
               </div>
@@ -203,20 +202,6 @@ export default async function HomePage() {
               />
             </Reveal>
           </div>
-
-          <Reveal>
-            <div className="mt-10 flex justify-center">
-              <Link href={`/${appConfig.demoStoreSlug}`}>
-                <Button
-                  variant="outline"
-                  className="rounded-full border-slate-200 bg-white px-6"
-                >
-                  {t("ctaOpenDemo")}
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </Reveal>
         </section>
 
         {/* Features */}

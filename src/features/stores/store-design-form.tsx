@@ -85,6 +85,12 @@ export function StoreDesignForm({
           ) as import("@/config/themes").ThemeOverrides;
           const navbarActions = store.themeOverrides?.navbarActions;
           if (navbarActions) cleaned.navbarActions = navbarActions;
+          if (store.themeOverrides?.qrStandColor) {
+            cleaned.qrStandColor = store.themeOverrides.qrStandColor;
+          }
+          if (store.themeOverrides?.qrLogoBg) {
+            cleaned.qrLogoBg = store.themeOverrides.qrLogoBg;
+          }
           const result = await updateStoreAction(store.id, {
             themeId: "clean",
             primaryColor,

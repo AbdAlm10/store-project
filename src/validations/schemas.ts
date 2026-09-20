@@ -119,6 +119,8 @@ export const updateStoreSchema = z.object({
         "fontDisplay",
         "fontBody",
         "navbarActions",
+        "qrStandColor",
+        "qrLogoBg",
       ]);
       return Object.fromEntries(
         Object.entries(value).filter(([key]) => allowed.has(key)),
