@@ -3,6 +3,7 @@ import type {
   AuthProvider,
   AuthSession,
   EmailProvider,
+  OAuthProviderId,
   PaymentProvider,
   StorageProvider,
   UploadedObject,
@@ -123,6 +124,13 @@ export class MemoryAuthProvider implements AuthProvider {
     };
     await writeSessionCookie(this.session);
     return this.session;
+  }
+
+  async signInWithOAuth(_provider: OAuthProviderId): Promise<{ url: string }> {
+    throw new AppError(
+      "VALIDATION",
+      "تسجيل الدخول عبر Google يتطلب إعداد Supabase.",
+    );
   }
 
   async signOut(): Promise<void> {

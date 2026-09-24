@@ -28,6 +28,8 @@ const AUTH_MESSAGE_MAP: Record<string, string> = {
     "إعدادات المصادقة غير مكتملة. حاول لاحقًا.",
   "Supabase is not configured.":
     "إعدادات المصادقة غير مكتملة. حاول لاحقًا.",
+  "Provider is not enabled":
+    "مزوّد Google غير مفعّل. فعِّله من إعدادات Supabase.",
 };
 
 export const AUTH_AR = {
@@ -68,6 +70,9 @@ export function localizeAuthMessage(message: string): string {
   }
   if (lower.includes("already registered")) {
     return AUTH_MESSAGE_MAP["User already registered"];
+  }
+  if (lower.includes("provider") && lower.includes("not enabled")) {
+    return AUTH_MESSAGE_MAP["Provider is not enabled"];
   }
   if (lower.includes("different from the old password")) {
     return AUTH_MESSAGE_MAP[

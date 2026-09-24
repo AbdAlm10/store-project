@@ -32,6 +32,18 @@ export async function registerAction(input: {
   }
 }
 
+export async function googleAuthAction(): Promise<
+  { ok: true; url: string } | { ok: false; error: string }
+> {
+  try {
+    const services = getServices();
+    const { url } = await services.auth.startGoogleSignIn();
+    return { ok: true, url };
+  } catch (error) {
+    return { ok: false, error: toUserMessage(error) };
+  }
+}
+
 export async function logoutAction(): Promise<void> {
   const services = getServices();
   await services.auth.logout();

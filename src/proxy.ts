@@ -49,5 +49,6 @@ export const config = {
     "/reset-password",
     "/onboarding",
     "/admin/:path*",
+    "/auth/callback",
   ],
 };

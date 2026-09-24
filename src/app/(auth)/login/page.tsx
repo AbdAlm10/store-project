@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { LoginForm } from "@/features/auth/login-form";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { getRequestLocale } from "@/i18n/get-locale";
@@ -19,21 +20,23 @@ export default async function LoginPage() {
         <Link href="/" className="mx-auto flex w-fit" aria-label={t("brand")}>
           <BrandLogo variant="horizontal" className="h-19 w-auto" priority />
         </Link>
-        
+
         <h1 className="mt-6 text-xl font-semibold text-slate-700 text-center">
           {("تسجيل الدخول")}
         </h1>
         <div className="mt-6">
-          <LoginForm />
+          <Suspense fallback={null}>
+            <LoginForm />
+          </Suspense>
         </div>
 
         <div className="flex items-center justify-center">
-        <p className="mt-6 text-sm text-slate-600">
-          {t("noAccount")}{" "}
-          <Link href="/register" className="font-semibold text-brand-700">
-            {t("ctaCreate")}
-          </Link>
-        </p>
+          <p className="mt-6 text-sm text-slate-600">
+            {t("noAccount")}{" "}
+            <Link href="/register" className="font-semibold text-brand-700">
+              {t("ctaCreate")}
+            </Link>
+          </p>
         </div>
       </div>
     </div>

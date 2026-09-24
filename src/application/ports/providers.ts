@@ -2,6 +2,8 @@ export type AuthUser = {
   id: string;
   email: string;
   emailConfirmed: boolean;
+  fullName?: string | null;
+  avatarUrl?: string | null;
 };
 
 export type AuthSession = {
@@ -20,9 +22,12 @@ export type SignInInput = {
   password: string;
 };
 
+export type OAuthProviderId = "google";
+
 export interface AuthProvider {
   signUp(input: SignUpInput): Promise<AuthSession>;
   signIn(input: SignInInput): Promise<AuthSession>;
+  signInWithOAuth(provider: OAuthProviderId): Promise<{ url: string }>;
   signOut(): Promise<void>;
   getSession(): Promise<AuthSession | null>;
   requestPasswordReset(email: string): Promise<void>;

@@ -62,6 +62,35 @@ export class AuthService {
     return this.auth.signIn(data);
   }
 
+  async startGoogleSignIn(): Promise<{ url: string }> {
+    return this.auth.signInWithOAuth("google");
+  }
+
+  /**
+   * After OAuth (or any authenticated session without a profiles row yet),
+   * create the merchant profile from auth metadata.
+   */
+  async ensureProfile(): Promise<{ session: AuthSession; profile: Profile }> {
+    const session = await this.requireSession();
+    const existing = await this.users.findProfileById(session.user.id);
+    if (existing) {
+      if (existing.suspendedAt) {
+        throw new AppError("FORBIDDEN", "تم إيقاف هذا الحساب.");
+      }
+      return { session, profile: existing };
+    }
+    const profile = await this.users.upsertProfile({
+      id: session.user.id,
+      email: session.user.email,
+      fullName: session.user.fullName ?? null,
+      avatarUrl: session.user.avatarUrl ?? null,
+      platformRole: "merchant",
+      locale: "ar",
+      suspendedAt: null,
+    });
+    return { session, profile };
+  }
+
   async logout(): Promise<void> {
     await this.auth.signOut();
   }

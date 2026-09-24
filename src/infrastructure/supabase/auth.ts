@@ -1,6 +1,7 @@
 import type {
   AuthProvider,
   AuthSession,
+  OAuthProviderId,
   SignInInput,
   SignUpInput,
 } from "@/application/ports/providers";
@@ -8,16 +9,43 @@ import { AppError } from "@/domain/errors";
 import { AUTH_AR, localizeAuthMessage } from "@/lib/auth-messages";
 import { createSupabaseServerClient } from "@/infrastructure/supabase/server";
 
+function appUrl() {
+  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+}
+
+function metadataString(
+  data: Record<string, unknown> | undefined,
+  ...keys: string[]
+): string | null {
+  if (!data) return null;
+  for (const key of keys) {
+    const value = data[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return null;
+}
+
 function toSession(user: {
   id: string;
   email?: string | null;
   email_confirmed_at?: string | null;
+  user_metadata?: Record<string, unknown>;
 }, accessToken: string): AuthSession {
   return {
     user: {
       id: user.id,
       email: user.email ?? "",
       emailConfirmed: Boolean(user.email_confirmed_at),
+      fullName: metadataString(
+        user.user_metadata,
+        "full_name",
+        "name",
+      ),
+      avatarUrl: metadataString(
+        user.user_metadata,
+        "avatar_url",
+        "picture",
+      ),
     },
     accessToken,
   };
@@ -64,6 +92,24 @@ export class SupabaseAuthProvider implements AuthProvider {
     return toSession(data.user, data.session.access_token);
   }
 
+  async signInWithOAuth(provider: OAuthProviderId): Promise<{ url: string }> {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${appUrl()}/auth/callback`,
+        skipBrowserRedirect: true,
+      },
+    });
+    if (error || !data.url) {
+      throw new AppError(
+        "VALIDATION",
+        localizeAuthMessage(error?.message ?? "Something went wrong. Please try again."),
+      );
+    }
+    return { url: data.url };
+  }
+
   async signOut(): Promise<void> {
     const supabase = await createSupabaseServerClient();
     await supabase.auth.signOut();
@@ -78,7 +124,7 @@ export class SupabaseAuthProvider implements AuthProvider {
 
   async requestPasswordReset(email: string): Promise<void> {
     const supabase = await createSupabaseServerClient();
-    const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/reset-password`;
+    const redirectTo = `${appUrl()}/reset-password`;
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo,
     });
