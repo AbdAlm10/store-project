@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Input, Label, Select, Textarea } from "@/components/ui/forms";
 import { STORE_CURRENCIES } from "@/domain/types/enums";
 import { createStoreAction } from "@/features/stores/actions";
@@ -114,11 +115,10 @@ export function CreateStoreForm({
       </div>
       <div>
         <Label htmlFor="whatsapp">{t("whatsappNumber")}</Label>
-        <Input
+        <PhoneInput
           id="whatsapp"
           name="whatsapp"
           placeholder="+15550100"
-          inputMode="tel"
         />
       </div>
       <div>

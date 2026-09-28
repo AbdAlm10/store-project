@@ -1,4 +1,19 @@
 /**
+ * Dashboard "REST URL" copies include `/rest/v1`. Auth and the JS client need
+ * the project origin only (`https://xxxx.supabase.co`).
+ */
+export function normalizeSupabaseUrl(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  try {
+    const parsed = new URL(trimmed);
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return trimmed.replace(/\/+$/, "");
+  }
+}
+
+/**
  * Supabase is used when URL looks like a real project URL.
  * Misconfigured values (publishable keys pasted as URL) fall back to memory mode.
  * Tests always use memory adapters.
@@ -7,7 +22,7 @@ export function isSupabaseConfigured(): boolean {
   if (process.env.VITEST === "true" || process.env.NODE_ENV === "test") {
     return false;
   }
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "";
+  const url = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "");
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ?? "";
   return (
     url.startsWith("https://") &&
@@ -21,7 +36,7 @@ export function getSupabaseEnv() {
     throw new Error("Supabase is not configured.");
   }
   return {
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!.trim(),
+    url: normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""),
     anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.trim(),
     serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || null,
   };

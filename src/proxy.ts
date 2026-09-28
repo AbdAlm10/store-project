@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isSupabaseConfigured } from "@/infrastructure/supabase/config";
+import { getSupabaseEnv, isSupabaseConfigured } from "@/infrastructure/supabase/config";
 
 /**
  * Only refresh auth on merchant/admin routes.
@@ -15,8 +15,7 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const { url, anonKey } = getSupabaseEnv();
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {

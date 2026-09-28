@@ -2,6 +2,7 @@ import {
   isColorOptionName,
   parseOptionValueInput,
 } from "@/lib/option-colors";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
 
 export const emailSchema = z
@@ -64,6 +65,14 @@ const RESERVED_STORE_SLUGS = new Set([
   "assets",
 ]);
 
+const internationalPhoneSchema = z
+  .string()
+  .trim()
+  .max(16, "رقم الهاتف طويل جدًا.")
+  .refine((value) => !value || isValidPhoneNumber(value), {
+    message: "أدخل رقم هاتف دوليًا صالحًا مع رمز الدولة.",
+  });
+
 export const createStoreSchema = z.object({
   name: z.string().trim().min(2).max(80),
   slug: slugSchema.refine(
@@ -72,7 +81,7 @@ export const createStoreSchema = z.object({
   ),
   description: z.string().trim().max(1000).optional(),
   currency: z.enum(["USD", "EUR", "SYP", "TRY"]),
-  whatsapp: z.string().trim().max(32).optional(),
+  whatsapp: internationalPhoneSchema.optional(),
   defaultLocale: z.enum(["ar"]).optional(),
 });
 
@@ -81,8 +90,8 @@ export const updateStoreSchema = z.object({
   description: z.string().trim().max(1000).nullable().optional(),
   logoUrl: z.string().url().nullable().optional(),
   coverUrl: z.string().url().nullable().optional(),
-  phone: z.string().trim().max(32).nullable().optional(),
-  whatsapp: z.string().trim().max(32).nullable().optional(),
+  phone: internationalPhoneSchema.nullable().optional(),
+  whatsapp: internationalPhoneSchema.nullable().optional(),
   email: z.string().email().nullable().optional(),
   location: z.string().trim().max(200).nullable().optional(),
   openingHours: z.string().trim().max(500).nullable().optional(),

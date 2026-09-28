@@ -4,6 +4,7 @@ import type {
   UploadObjectInput,
 } from "@/application/ports/providers";
 import { AppError } from "@/domain/errors";
+import { getSupabaseEnv } from "@/infrastructure/supabase/config";
 import { createSupabaseServerClient } from "@/infrastructure/supabase/server";
 
 const BUCKET = "store-media";
@@ -23,7 +24,7 @@ async function toBlob(
 
 export class SupabaseStorageProvider implements StorageProvider {
   getPublicUrl(path: string): string {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "";
+    const { url } = getSupabaseEnv();
     return `${url}/storage/v1/object/public/${BUCKET}/${path}`;
   }
 

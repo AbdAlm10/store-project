@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/forms";
+import { PhoneInput } from "@/components/ui/phone-input";
 import type { Store } from "@/domain/types/entities";
 import { STORE_CURRENCIES } from "@/domain/types/enums";
 import { CopyStoreUrl } from "@/features/dashboard/copy-store-url";
@@ -310,18 +311,23 @@ export function StoreSettingsForm({
                       <Icon className="h-3.5 w-3.5" strokeWidth={2} />
                     </button>
                   </div>
-                  <Input
-                    id={inputName}
-                    name={inputName}
-                    defaultValue={fieldDefaults[id]}
-                    placeholder={
-                      id === "whatsapp" || id === "phone"
-                        ? "+963..."
-                        : id === "location"
-                          ? undefined
-                          : "https://..."
-                    }
-                  />
+                  {id === "whatsapp" || id === "phone" ? (
+                    <PhoneInput
+                      id={inputName}
+                      name={inputName}
+                      defaultValue={fieldDefaults[id]}
+                      placeholder="+963..."
+                    />
+                  ) : (
+                    <Input
+                      id={inputName}
+                      name={inputName}
+                      defaultValue={fieldDefaults[id]}
+                      placeholder={
+                        id === "location" ? undefined : "https://..."
+                      }
+                    />
+                  )}
                 </div>
               );
             })}
