@@ -4,6 +4,7 @@ import { ProductPurchasePanel } from "@/components/storefront/product-purchase-p
 import { RelatedProductsSection } from "@/components/storefront/related-products";
 import { StoreNav } from "@/components/storefront/store-header";
 import { StorefrontViewTracker } from "@/components/storefront/storefront-view-tracker";
+import { SubscriptionLockedView } from "@/components/storefront/subscription-locked-view";
 import {
   DEFAULT_THEME_TOKENS,
   resolveThemeTokens,
@@ -79,6 +80,26 @@ export default async function ProductPage({ params }: Props) {
     store.primaryColor,
   );
   const cssVars = storefrontCssVars(themeTokens);
+
+  if (store.status === "restricted") {
+    return (
+      <div
+        className="min-h-dvh"
+        style={{
+          ...cssVars,
+          background: "var(--store-bg)",
+          color: "var(--store-text)",
+          fontFamily: "var(--store-font-body)",
+        }}
+      >
+        <SubscriptionLockedView
+          store={store}
+          title={t("subscriptionStoreLockedTitle")}
+          body={t("subscriptionStoreLockedBody")}
+        />
+      </div>
+    );
+  }
 
   const discount = discountPercent(product.price, product.compareAtPrice);
   const wa = buildWhatsAppOrderMessage({

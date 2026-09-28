@@ -319,7 +319,17 @@ export function ProductPurchasePanel({
         </div>
 
         <div className="flex items-stretch gap-3">
-          {waHref ? (
+          {store.status === "restricted" ? (
+            <div
+              className="inline-flex h-14 flex-1 items-center justify-center rounded-2xl px-6 text-center text-sm font-bold"
+              style={{
+                background: "color-mix(in srgb, var(--store-text) 12%, var(--store-bg))",
+                color: "var(--store-text)",
+              }}
+            >
+              {t("subscriptionPreviewOrderBlocked")}
+            </div>
+          ) : waHref ? (
             <a
               href={waHref}
               target="_blank"

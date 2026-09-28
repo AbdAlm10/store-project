@@ -8,6 +8,7 @@ import { AppError } from "@/domain/errors";
 import {
   assertCanManageStore,
   assertStoreActive,
+  isSubscriptionUsable,
   slugify,
 } from "@/domain/rules/store-rules";
 import type { Store } from "@/domain/types/entities";
@@ -160,10 +161,44 @@ export class StoreService {
 
   async getPublicStoreBySlug(slug: string): Promise<Store> {
     const store = await this.stores.findBySlug(slug);
-    if (!store || store.status !== "published") {
+    if (
+      !store ||
+      (store.status !== "published" && store.status !== "restricted")
+    ) {
       throw new AppError("NOT_FOUND", "Store not found.");
     }
+    if (store.status === "restricted") return store;
+
+    // Keep expired stores out of the public catalog when the subscription
+    // repository is available to the public data path.
+    try {
+      const subscription = await this.subscriptions.findByStoreId(store.id);
+      if (subscription && !isSubscriptionUsable(subscription)) {
+        throw new AppError("NOT_FOUND", "Store subscription has expired.");
+      }
+    } catch (error) {
+      if (error instanceof AppError && error.code === "NOT_FOUND") throw error;
+    }
+
     return store;
+  }
+
+  async restrictForExpiredSubscription(storeId: string): Promise<Store> {
+    const { session } = await this.auth.requireProfile();
+    const store = await this.stores.findById(storeId);
+    if (!store) throw new AppError("NOT_FOUND", "Store not found.");
+    const membership = await this.members.findMembership(storeId, session.user.id);
+    assertCanManageStore(membership, "owner");
+    return this.stores.update(storeId, { status: "restricted" });
+  }
+
+  async restoreAfterSubscriptionTest(storeId: string): Promise<Store> {
+    const { session } = await this.auth.requireProfile();
+    const store = await this.stores.findById(storeId);
+    if (!store) throw new AppError("NOT_FOUND", "Store not found.");
+    const membership = await this.members.findMembership(storeId, session.user.id);
+    assertCanManageStore(membership, "owner");
+    return this.stores.update(storeId, { status: "published" });
   }
 
   /**

@@ -9,6 +9,7 @@ import {
   CreditCard,
   Home,
   Layers,
+  LockKeyhole,
   Loader2,
   Menu,
   Palette,
@@ -74,11 +75,20 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function isAllowedWhenLocked(href: string): boolean {
+  return (
+    href === "/dashboard" ||
+    href === "/dashboard/subscription" ||
+    href === "/dashboard/settings"
+  );
+}
+
 export function MerchantNav({
   storeName,
   locale,
   embedded = false,
   compact = false,
+  locked = false,
 }: {
   storeName?: string;
   locale: Locale;
@@ -86,6 +96,7 @@ export function MerchantNav({
   embedded?: boolean;
   /** Mobile top bar: menu button only (no store name) */
   compact?: boolean;
+  locked?: boolean;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -131,40 +142,55 @@ export function MerchantNav({
               const active = isActive(pathname, item.href);
               const loading = pendingHref === item.href && !active;
               const Icon = item.icon;
+              const disabled = locked && !isAllowedWhenLocked(item.href);
 
               return (
                 <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    prefetch
-                    onClick={() => {
-                      if (active) return;
-                      setOpen(false);
-                      setPendingHref(item.href);
-                    }}
-                    className={cn(
-                      "group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors",
-                      active
-                        ? "bg-brand-50 text-brand-900"
-                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-800",
-                      loading && "bg-brand-50 text-brand-700 ring-1 ring-brand-200",
-                    )}
-                    aria-current={active ? "page" : undefined}
-                    aria-busy={loading || undefined}
-                  >
-                    <Icon
+                  {disabled ? (
+                    <button
+                      type="button"
+                      disabled
+                      aria-disabled="true"
+                      title={t("subscriptionExpiredMessage")}
+                      className="group relative flex w-full cursor-not-allowed items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-400 opacity-70"
+                    >
+                      <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
+                      <span className="min-w-0 flex-1 truncate text-start">{t(item.labelKey)}</span>
+                      <LockKeyhole className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                    </button>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      prefetch
+                      onClick={() => {
+                        if (active) return;
+                        setOpen(false);
+                        setPendingHref(item.href);
+                      }}
                       className={cn(
-                        "h-[18px] w-[18px] shrink-0",
-                        active ? "text-brand-700" : "text-slate-400",
-                        loading && "text-brand-600",
+                        "group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors",
+                        active
+                          ? "bg-brand-50 text-brand-900"
+                          : "text-slate-500 hover:bg-slate-50 hover:text-slate-800",
+                        loading && "bg-brand-50 text-brand-700 ring-1 ring-brand-200",
                       )}
-                      strokeWidth={1.75}
-                    />
-                    <span className="min-w-0 flex-1 truncate">{t(item.labelKey)}</span>
-                    {loading ? (
-                      <Loader2 className="pointer-events-none absolute end-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-brand-600" />
-                    ) : null}
-                  </Link>
+                      aria-current={active ? "page" : undefined}
+                      aria-busy={loading || undefined}
+                    >
+                      <Icon
+                        className={cn(
+                          "h-[18px] w-[18px] shrink-0",
+                          active ? "text-brand-700" : "text-slate-400",
+                          loading && "text-brand-600",
+                        )}
+                        strokeWidth={1.75}
+                      />
+                      <span className="min-w-0 flex-1 truncate">{t(item.labelKey)}</span>
+                      {loading ? (
+                        <Loader2 className="pointer-events-none absolute end-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin text-brand-600" />
+                      ) : null}
+                    </Link>
+                  )}
                 </li>
               );
             })}

@@ -51,6 +51,13 @@ export function isSubscriptionUsable(subscription: Subscription): boolean {
     const ends = Date.parse(subscription.trialEndsAt);
     if (Number.isFinite(ends) && ends < Date.now()) return false;
   }
+  if (
+    subscription.status !== "trialing" &&
+    subscription.currentPeriodEnd
+  ) {
+    const ends = Date.parse(subscription.currentPeriodEnd);
+    if (Number.isFinite(ends) && ends < Date.now()) return false;
+  }
   return true;
 }
 

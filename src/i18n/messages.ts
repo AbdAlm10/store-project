@@ -226,6 +226,18 @@ const ar = {
   currency: "العملة",
   dashboardDesc:
     "مركز قيادتك — أدِر الكتالوج، شارك الروابط، وتابع ما ينقره العملاء.",
+  subscriptionExpiredTitle: "انتهت خطتك الحالية",
+  subscriptionExpiredMessage:
+    "متجرك متاح الآن في وضع المعاينة فقط. فعّل خطة جديدة ليستمر العملاء بالوصول والطلب.",
+  subscriptionPreviewMessage:
+    "انتهت الخطة. المتجر في وضع المعاينة فقط حتى يتم تفعيل الاشتراك.",
+  subscriptionPreviewOrderBlocked: "فعّل الاشتراك لإتمام الطلب",
+  subscriptionStoreLockedTitle: "سيتم إعادة فتح هذا المتجر قريبا",
+  subscriptionStoreLockedBody:
+    "انتهت صلاحية الاشتراك، وتم إيقاف الوصول إلى المتجر حتى يتم تفعيل خطة جديدة.",
+  upgradeSubscription: "ترقية الخطة الآن",
+  offerBadge: "خصم {discount}% · {days} يوم",
+  offerBadgeExpired: "الخطة منتهية",
   productsCount: "المنتجات",
   storeViews7d: "زيارات المتجر (7 أيام)",
   productViews7d: "زيارات المنتجات (7 أيام)",
@@ -496,7 +508,15 @@ const ar = {
   currentPlan: "الخطة الحالية",
   subscriptionPricing: "{monthly}$/شهر أو {yearly}$/سنة",
   statusLabel: "الحالة: {status}",
+  expired: "منتهية",
   trialEnds: "ينتهي التجريب: {date}",
+  subscriptionTestTitle: "اختبار انتهاء الخطط",
+  subscriptionTestDesc:
+    "أزرار مؤقتة للتأكد من شكل المتجر بعد انتهاء كل خطة. تظهر في بيئة التطوير فقط.",
+  expireTrial: "إنهاء التجربة",
+  expireBasic: "إنهاء الأساسية",
+  expirePro: "إنهاء Pro",
+  disableSubscriptionTest: "إيقاف اختبار انتهاء الخطط",
   imagesPerProduct: "صور / منتج",
   included: "مشمول",
   basicOnly: "أساسي فقط",

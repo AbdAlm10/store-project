@@ -6,6 +6,7 @@ import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator, type MessageKey } from "@/i18n/messages";
 import { getServices } from "@/infrastructure/container";
 import { buildSubscriptionWhatsAppUrl } from "@/lib/social/sharing";
+import { isSubscriptionUsable } from "@/domain/rules/store-rules";
 import { cn } from "@/lib/utils/cn";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -47,6 +48,7 @@ export default async function SubscriptionPage() {
   });
   const isPro = subscription.planId === "pro";
   const showBasicCta = subscription.planId === "trial";
+  const subscriptionIsUsable = isSubscriptionUsable(subscription);
 
   return (
     <div className="space-y-6">
@@ -57,7 +59,9 @@ export default async function SubscriptionPage() {
           {planLabel}
         </p>
         <p className="mt-2 text-sm capitalize text-slate-500">
-          {t("statusLabel", { status: subscription.status })}
+          {t("statusLabel", {
+            status: subscriptionIsUsable ? subscription.status : t("expired"),
+          })}
         </p>
         {subscription.trialEndsAt ? (
           <p className="mt-1 text-sm text-slate-500">
@@ -82,7 +86,9 @@ export default async function SubscriptionPage() {
           <UsageCard
             label={t("advancedAnalytics")}
             value={
-              plan.limits.advancedAnalytics ? t("included") : t("basicOnly")
+              plan.limits.advancedAnalytics && subscription.planId !== "trial"
+                ? t("included")
+                : t("basicOnly")
             }
           />
         </div>

@@ -11,6 +11,7 @@ import {
 import {
   Facebook,
   Instagram,
+  LockKeyhole,
   MapPin,
   MessageCircle,
   Phone,
@@ -30,9 +31,11 @@ const NAV_ICONS: Record<NavbarActionId, LucideIcon> = {
 export function StoreNavActions({
   store,
   actions,
+  locked = false,
 }: {
   store: Store;
   actions: NavbarActionId[];
+  locked?: boolean;
 }) {
   const { t } = useI18n();
 
@@ -46,6 +49,28 @@ export function StoreNavActions({
         const Icon = NAV_ICONS[id];
         const label = t(NAVBAR_ACTION_LABEL_KEY[id]);
         const external = id !== "phone";
+
+        if (locked) {
+          return (
+            <button
+              key={id}
+              type="button"
+              disabled
+              aria-label={label}
+              title={label}
+              className="inline-flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-full opacity-45 sm:h-10 sm:w-10"
+              style={{
+                backgroundColor: "var(--store-accent)",
+                color: "var(--store-button-text)",
+              }}
+            >
+              <LockKeyhole
+                className="h-4 w-4 sm:h-[1.125rem] sm:w-[1.125rem]"
+                strokeWidth={2}
+              />
+            </button>
+          );
+        }
 
         return (
           <a

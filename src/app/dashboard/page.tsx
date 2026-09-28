@@ -4,6 +4,7 @@ import {
   Check,
   Circle,
   Eye,
+  LockKeyhole,
   Palette,
   Plus,
   Share2,
@@ -33,6 +34,8 @@ import { computeStoreHealth } from "@/domain/rules/store-health";
 import { EmptyState } from "@/components/ui/feedback";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
+import { isSubscriptionUsable } from "@/domain/rules/store-rules";
+import { buildSubscriptionWhatsAppUrl } from "@/lib/social/sharing";
 
 export const metadata = {
   title: "Dashboard",
@@ -50,13 +53,14 @@ export default async function DashboardHomePage() {
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
   const store = stores[0];
-  const [products, categories, stats] = await Promise.all([
+  const [products, categories, stats, subscription] = await Promise.all([
     services.products.listForMerchant(store.id, { pageSize: 5 }),
     services.categories.listForMerchant(store.id),
     // Home cards only — skip expensive topProducts scan.
     services.analytics.getDashboardStats(store.id, 7, {
       includeTopProducts: false,
     }),
+    services.entitlements.getSubscription(store.id),
   ]);
 
   const health = computeStoreHealth({
@@ -66,6 +70,12 @@ export default async function DashboardHomePage() {
   });
 
   const isNew = products.total === 0;
+  const subscriptionExpired = !isSubscriptionUsable(subscription);
+  const upgradeUrl = buildSubscriptionWhatsAppUrl({
+    storeName: store.name,
+    storeSlug: store.slug,
+    intent: subscription.planId === "basic" ? "pro" : "basic",
+  });
 
   return (
     <div className="space-y-8">
@@ -98,6 +108,29 @@ export default async function DashboardHomePage() {
         </code>
         <ShareStoreLinkButton url={storeUrl(store.slug)} />
       </div>
+
+      {subscriptionExpired ? (
+        <DashboardCard className="border-amber-200 bg-amber-50 shadow-none">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-base font-bold text-amber-950">
+                {t("subscriptionExpiredTitle")}
+              </h2>
+              <p className="mt-1 text-sm text-amber-900/80">
+                {t("subscriptionExpiredMessage")}
+              </p>
+            </div>
+            <Link
+              href={upgradeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-10 items-center justify-center rounded-full bg-amber-950 px-5 text-sm font-bold text-white transition hover:bg-amber-800"
+            >
+              {t("upgradeSubscription")}
+            </Link>
+          </div>
+        </DashboardCard>
+      ) : null}
 
       {health.percent < 100 ? (
         <DashboardCard className="bg-[#f7f2e8] border-transparent shadow-none">
@@ -229,12 +262,19 @@ export default async function DashboardHomePage() {
         <SectionTitle
           title={t("recentProducts")}
           action={
-            <Link
-              href="/dashboard/products"
-              className="text-sm font-medium text-brand-700 hover:underline"
-            >
-              {t("viewAll")}
-            </Link>
+            subscriptionExpired ? (
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400">
+                <LockKeyhole className="h-3.5 w-3.5" aria-hidden />
+                {t("viewAll")}
+              </span>
+            ) : (
+              <Link
+                href="/dashboard/products"
+                className="text-sm font-medium text-brand-700 hover:underline"
+              >
+                {t("viewAll")}
+              </Link>
+            )
           }
         />
         {products.items.length === 0 ? (
@@ -255,12 +295,19 @@ export default async function DashboardHomePage() {
                   key={product.id}
                   className="flex items-center justify-between gap-3 px-5 py-3.5 text-sm"
                 >
-                  <Link
-                    href={`/dashboard/products/${product.id}`}
-                    className="font-medium text-slate-900 hover:underline"
-                  >
-                    {product.name}
-                  </Link>
+                  {subscriptionExpired ? (
+                    <span className="inline-flex min-w-0 items-center gap-2 font-medium text-slate-400">
+                      <LockKeyhole className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                      <span className="truncate">{product.name}</span>
+                    </span>
+                  ) : (
+                    <Link
+                      href={`/dashboard/products/${product.id}`}
+                      className="font-medium text-slate-900 hover:underline"
+                    >
+                      {product.name}
+                    </Link>
+                  )}
                   <StatusBadge status={product.status} />
                 </li>
               ))}

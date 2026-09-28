@@ -102,6 +102,7 @@ export class EntitlementService {
   async canUseAdvancedAnalytics(storeId: string): Promise<boolean> {
     const sub = await this.getSubscription(storeId);
     if (!isSubscriptionUsable(sub)) return false;
+    if (sub.planId === "trial") return false;
     return getPlan(sub.planId).limits.advancedAnalytics;
   }
 
@@ -153,5 +154,30 @@ export class EntitlementService {
 
   effectivePlanId(sub: Subscription): PlanId {
     return sub.planId;
+  }
+
+  async simulateExpiredPlan(storeId: string, planId: PlanId): Promise<Subscription> {
+    const sub = await this.getSubscription(storeId);
+    const expiredAt = new Date(Date.now() - 60_000).toISOString();
+
+    return this.subscriptions.update(sub.id, {
+      planId,
+      status: planId === "trial" ? "trialing" : "active",
+      trialEndsAt: planId === "trial" ? expiredAt : null,
+      currentPeriodEnd: expiredAt,
+    });
+  }
+
+  async restoreSubscriptionForTest(
+    storeId: string,
+    endsAt: string,
+  ): Promise<Subscription> {
+    const sub = await this.getSubscription(storeId);
+    const trial = sub.planId === "trial";
+    return this.subscriptions.update(sub.id, {
+      status: trial ? "trialing" : "active",
+      trialEndsAt: trial ? endsAt : null,
+      currentPeriodEnd: endsAt,
+    });
   }
 }

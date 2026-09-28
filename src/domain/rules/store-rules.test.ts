@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { discountPercent, slugify } from "@/domain/rules/store-rules";
+import {
+  discountPercent,
+  isSubscriptionUsable,
+  slugify,
+} from "@/domain/rules/store-rules";
 import { EntitlementService } from "@/application/services/entitlement-service";
 import { MemorySubscriptionRepository } from "@/infrastructure/memory/repositories";
 import { AppError } from "@/domain/errors";
@@ -14,6 +18,34 @@ describe("domain rules", () => {
 
   it("slugifies store names", () => {
     expect(slugify("Al Noor Store!")).toBe("al-noor-store");
+  });
+
+  it("expires paid subscriptions after their current period", () => {
+    const baseSubscription = {
+      id: "sub-1",
+      storeId: "store-1",
+      planId: "basic" as const,
+      status: "active" as const,
+      trialEndsAt: null,
+      currentPeriodEnd: null,
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    expect(
+      isSubscriptionUsable({
+        ...baseSubscription,
+        currentPeriodEnd: new Date(Date.now() - 1_000).toISOString(),
+      }),
+    ).toBe(false);
+    expect(
+      isSubscriptionUsable({
+        ...baseSubscription,
+        currentPeriodEnd: new Date(Date.now() + 60_000).toISOString(),
+      }),
+    ).toBe(true);
   });
 });
 

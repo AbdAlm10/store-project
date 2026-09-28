@@ -37,12 +37,23 @@ async function loadPublishedStore(slug: string): Promise<Store> {
     .from("stores")
     .select("*")
     .eq("slug", slug)
-    .eq("status", "published")
+    .in("status", ["published", "restricted"])
     .maybeSingle();
 
   if (error) throw new AppError("INTERNAL", error.message);
   if (!data) throw new AppError("NOT_FOUND", "Store not found.");
-  return mapStore(data);
+  const store = mapStore(data);
+  if (store.status === "restricted") return store;
+
+  const { data: subscriptionUsable, error: subscriptionError } = await supabase.rpc(
+    "is_store_subscription_usable",
+    { target_store_id: data.id },
+  );
+  if (subscriptionError) {
+    throw new AppError("INTERNAL", subscriptionError.message);
+  }
+
+  return subscriptionUsable ? store : { ...store, status: "restricted" };
 }
 
 async function loadPublicCategories(storeId: string): Promise<Category[]> {

@@ -3,6 +3,8 @@ import { ProductCardSkeleton } from "@/components/storefront/product-card";
 import { StoreCatalog } from "@/components/storefront/store-catalog";
 import { StoreNav } from "@/components/storefront/store-header";
 import { StorefrontViewTracker } from "@/components/storefront/storefront-view-tracker";
+import { SubscriptionPreviewBanner } from "@/components/storefront/subscription-preview-banner";
+import { SubscriptionLockedView } from "@/components/storefront/subscription-locked-view";
 import { appConfig } from "@/config/app";
 import {
   DEFAULT_THEME_TOKENS,
@@ -66,12 +68,33 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
   const locale = await getRequestLocale(store.defaultLocale);
   const t = createTranslator(locale);
   const isPreview = store.status !== "published";
+  const isSubscriptionPreview = store.status === "restricted";
   const themeTokens = resolveThemeTokens(
     DEFAULT_THEME_TOKENS,
     store.themeOverrides,
     store.primaryColor,
   );
   const cssVars = storefrontCssVars(themeTokens);
+
+  if (isSubscriptionPreview) {
+    return (
+      <div
+        className="min-h-dvh"
+        style={{
+          ...cssVars,
+          background: "var(--store-bg)",
+          color: "var(--store-text)",
+          fontFamily: "var(--store-font-body)",
+        }}
+      >
+        <SubscriptionLockedView
+          store={store}
+          title={t("subscriptionStoreLockedTitle")}
+          body={t("subscriptionStoreLockedBody")}
+        />
+      </div>
+    );
+  }
 
   const utmSource =
     typeof query.utm_source === "string" ? query.utm_source : null;
@@ -93,12 +116,19 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
         source={utmSource}
       />
       {isPreview ? (
-        <div className="bg-amber-500 px-4 py-2 text-center text-sm font-medium text-amber-950">
-          {t("draftStorePreview")}{" "}
-          <Link href="/dashboard/store" className="underline" prefetch={false}>
-            {t("publishStoreNow")}
-          </Link>
-        </div>
+        isSubscriptionPreview ? (
+          <SubscriptionPreviewBanner
+            message={t("subscriptionPreviewMessage")}
+            action={t("upgradeSubscription")}
+          />
+        ) : (
+          <div className="bg-amber-500 px-4 py-2 text-center text-sm font-medium text-amber-950">
+            {t("draftStorePreview")} {" "}
+            <Link href="/dashboard/store" className="underline" prefetch={false}>
+              {t("publishStoreNow")}
+            </Link>
+          </div>
+        )
       ) : null}
       <StoreNav store={store} />
 

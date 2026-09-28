@@ -5,7 +5,13 @@ import { resolveNavbarActions } from "@/lib/navbar-actions";
 import { MapPin } from "lucide-react";
 import Link from "next/link";
 
-export function StoreNav({ store }: { store: Store }) {
+export function StoreNav({
+  store,
+  locked = false,
+}: {
+  store: Store;
+  locked?: boolean;
+}) {
   const actions = resolveNavbarActions(store);
 
   return (
@@ -75,7 +81,7 @@ export function StoreNav({ store }: { store: Store }) {
           </div>
         </Link>
 
-        <StoreNavActions store={store} actions={actions} />
+        <StoreNavActions store={store} actions={actions} locked={locked} />
       </div>
     </nav>
   );
