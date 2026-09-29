@@ -88,8 +88,6 @@ export function LiveMetrics({
   }, [initial]);
 
   useEffect(() => {
-    if (!initial.isPro) return;
-
     let cancelled = false;
 
     async function refresh() {
@@ -109,7 +107,7 @@ export function LiveMetrics({
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [initial.isPro, storeId, rangeDays, fetchTopProducts]);
+  }, [storeId, rangeDays, fetchTopProducts]);
 
   return (
     <>

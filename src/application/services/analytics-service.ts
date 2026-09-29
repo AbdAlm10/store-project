@@ -194,10 +194,6 @@ export class AnalyticsService {
     assertCanManageStore(membership, "staff");
 
     const isPro = await this.entitlements.canUseAdvancedAnalytics(storeId);
-    // Non‑Pro: serve static demo stats — skip analytics/events DB load.
-    if (!isPro) {
-      return buildDemoDashboardStats(rangeDays);
-    }
 
     const since = new Date();
     since.setDate(since.getDate() - rangeDays);
@@ -424,7 +420,7 @@ export class AnalyticsService {
       zeroViewProducts: [],
       visitsByDay,
       devices,
-      isPro: true,
+      isPro,
       pro: {
         locations,
         peakHours,
