@@ -4,6 +4,7 @@ import { ProductService } from "@/application/services/product-service";
 import { CategoryService } from "@/application/services/category-service";
 import { AnalyticsService } from "@/application/services/analytics-service";
 import { MediaService } from "@/application/services/media-service";
+import { AdminPlatformService } from "@/application/services/admin-platform-service";
 import { EntitlementService } from "@/application/services/entitlement-service";
 import {
   MemoryAnalyticsRepository,
@@ -11,6 +12,7 @@ import {
   MemoryProductRepository,
   MemoryStoreMemberRepository,
   MemoryStoreRepository,
+  MemoryPlatformAdminRepository,
   MemorySubscriptionRepository,
   MemoryUserRepository,
 } from "@/infrastructure/memory/repositories";
@@ -32,9 +34,11 @@ import {
   SupabaseSubscriptionRepository,
   SupabaseUserRepository,
 } from "@/infrastructure/supabase/repositories";
+import { SupabasePlatformAdminRepository } from "@/infrastructure/supabase/platform-admin-repository";
 
 export type AppServices = {
   auth: AuthService;
+  admin: AdminPlatformService;
   stores: StoreService;
   products: ProductService;
   categories: CategoryService;
@@ -73,6 +77,9 @@ export function createServices(): AppServices {
   const analytics = useSupabase
     ? new SupabaseAnalyticsRepository()
     : new MemoryAnalyticsRepository();
+  const platformAdmin = useSupabase
+    ? new SupabasePlatformAdminRepository()
+    : new MemoryPlatformAdminRepository();
 
   const authProvider = useSupabase
     ? new SupabaseAuthProvider()
@@ -84,6 +91,7 @@ export function createServices(): AppServices {
   const email = new NoopEmailProvider();
 
   const auth = new AuthService(authProvider, users);
+  const admin = new AdminPlatformService(auth, platformAdmin);
   const entitlements = new EntitlementService(subscriptions);
   const storeService = new StoreService(
     auth,
@@ -118,6 +126,7 @@ export function createServices(): AppServices {
 
   return {
     auth,
+    admin,
     stores: storeService,
     products: productService,
     categories: categoryService,

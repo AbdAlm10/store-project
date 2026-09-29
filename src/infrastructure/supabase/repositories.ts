@@ -592,6 +592,7 @@ export class SupabaseSubscriptionRepository implements SubscriptionRepository {
         id: input.id,
         store_id: input.storeId,
         plan_id: input.planId,
+        billing_period: input.billingPeriod,
         status: input.status,
         trial_ends_at: input.trialEndsAt,
         current_period_end: input.currentPeriodEnd,
@@ -608,6 +609,7 @@ export class SupabaseSubscriptionRepository implements SubscriptionRepository {
     const supabase = await db();
     const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (patch.planId !== undefined) row.plan_id = patch.planId;
+    if (patch.billingPeriod !== undefined) row.billing_period = patch.billingPeriod;
     if (patch.status !== undefined) row.status = patch.status;
     if (patch.trialEndsAt !== undefined) row.trial_ends_at = patch.trialEndsAt;
     if (patch.currentPeriodEnd !== undefined) {

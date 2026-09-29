@@ -110,6 +110,7 @@ export class StoreService {
     await this.subscriptions.create({
       storeId: store.id,
       planId: "trial",
+      billingPeriod: "monthly",
       status: "trialing",
       trialEndsAt: trialEndsAt.toISOString(),
       currentPeriodEnd: trialEndsAt.toISOString(),
@@ -167,20 +168,13 @@ export class StoreService {
     ) {
       throw new AppError("NOT_FOUND", "Store not found.");
     }
-    if (store.status === "restricted") return store;
-
-    // Keep expired stores out of the public catalog when the subscription
-    // repository is available to the public data path.
-    try {
-      const subscription = await this.subscriptions.findByStoreId(store.id);
-      if (subscription && !isSubscriptionUsable(subscription)) {
-        throw new AppError("NOT_FOUND", "Store subscription has expired.");
-      }
-    } catch (error) {
-      if (error instanceof AppError && error.code === "NOT_FOUND") throw error;
-    }
-
-    return store;
+    const subscription = await this.subscriptions
+      .findByStoreId(store.id)
+      .catch(() => null);
+    const { resolveStorefrontAccess } = await import(
+      "@/lib/store-storefront-access"
+    );
+    return resolveStorefrontAccess(store, subscription);
   }
 
   async restrictForExpiredSubscription(storeId: string): Promise<Store> {
@@ -209,6 +203,22 @@ export class StoreService {
     const store = await this.stores.findBySlug(slug);
     if (!store || store.status === "suspended") {
       throw new AppError("NOT_FOUND", "Store not found.");
+    }
+
+    const subscription = await this.subscriptions
+      .findByStoreId(store.id)
+      .catch(() => null);
+
+    const { resolveStorefrontAccess } = await import(
+      "@/lib/store-storefront-access"
+    );
+
+    if (
+      store.suspendedAt ||
+      store.status === "restricted" ||
+      (subscription && !isSubscriptionUsable(subscription))
+    ) {
+      return resolveStorefrontAccess(store, subscription);
     }
 
     if (store.status === "published") {

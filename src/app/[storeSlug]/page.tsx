@@ -21,6 +21,7 @@ import {
   getCachedPublicFeatured,
   getCachedStorefront,
 } from "@/lib/storefront-data";
+import { isStorefrontLocked, toLockedStore } from "@/lib/store-storefront-access";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -63,6 +64,10 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
     store = await getCachedStorefront(storeSlug);
   } catch {
     notFound();
+  }
+
+  if (isStorefrontLocked(store)) {
+    store = toLockedStore(store);
   }
 
   const locale = await getRequestLocale(store.defaultLocale);

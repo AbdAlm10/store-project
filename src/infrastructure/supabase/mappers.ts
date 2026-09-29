@@ -208,6 +208,7 @@ export function mapSubscription(row: Json): Subscription {
     id: String(row.id),
     storeId: String(row.store_id),
     planId: row.plan_id as PlanId,
+    billingPeriod: row.billing_period === "yearly" ? "yearly" : "monthly",
     status: row.status as Subscription["status"],
     trialEndsAt: (row.trial_ends_at as string | null) ?? null,
     currentPeriodEnd: (row.current_period_end as string | null) ?? null,

@@ -1,4 +1,10 @@
 import type {
+  AdminStorePatch,
+  AdminStoreRow,
+  AdminSubscriptionPatch,
+  PlatformAdminRepository,
+} from "@/application/ports/platform-admin";
+import type {
   AnalyticsRepository,
   CategoryRepository,
   ListProductsQuery,
@@ -432,7 +438,7 @@ export class MemorySubscriptionRepository implements SubscriptionRepository {
   async update(id: string, patch: Partial<Subscription>) {
     const current = db.subscriptions.get(id);
     if (!current) throw new Error("Subscription not found");
-    const next = { ...current, ...patch, id, updatedAt: now() };
+    const next: Subscription = { ...current, ...patch, id, updatedAt: now() };
     db.subscriptions.set(id, next);
     return next;
   }
@@ -495,5 +501,96 @@ export class MemoryAnalyticsRepository implements AnalyticsRepository {
         createdAt: event.createdAt,
         metadata: event.metadata,
       }));
+  }
+}
+
+export class MemoryPlatformAdminRepository implements PlatformAdminRepository {
+  async listUsers() {
+    return [...db.profiles.values()].sort(
+      (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
+    );
+  }
+
+  async listStoresWithSubscriptions(): Promise<AdminStoreRow[]> {
+    const stores = [...db.stores.values()].sort(
+      (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
+    );
+    return stores.map((store) => {
+      const subscription =
+        [...db.subscriptions.values()].find((sub) => sub.storeId === store.id) ??
+        null;
+      const owner = db.profiles.get(store.ownerId) ?? null;
+      return { store, subscription, owner };
+    });
+  }
+
+  async setUserSuspended(userId: string, suspended: boolean) {
+    const profile = db.profiles.get(userId);
+    if (!profile) return;
+    db.profiles.set(userId, {
+      ...profile,
+      suspendedAt: suspended ? now() : null,
+      updatedAt: now(),
+    });
+  }
+
+  async updateStore(storeId: string, patch: AdminStorePatch) {
+    const current = db.stores.get(storeId);
+    if (!current) throw new Error("Store not found");
+    const next: Store = { ...current, updatedAt: now() };
+    if (patch.status !== undefined) next.status = patch.status;
+    if (patch.suspended !== undefined) {
+      next.suspendedAt = patch.suspended ? now() : null;
+      if (patch.suspended && patch.status === undefined) {
+        next.status = "restricted";
+      } else if (
+        !patch.suspended &&
+        (next.status === "restricted" || next.status === "suspended")
+      ) {
+        next.status = "published";
+      }
+    }
+    db.stores.set(storeId, next);
+    return next;
+  }
+
+  async updateSubscription(
+    subscriptionId: string,
+    patch: AdminSubscriptionPatch,
+  ) {
+    const current = [...db.subscriptions.values()].find(
+      (sub) => sub.id === subscriptionId,
+    );
+    if (!current) throw new Error("Subscription not found");
+    const next: Subscription = {
+      ...current,
+      ...patch,
+      updatedAt: now(),
+    };
+    db.subscriptions.set(subscriptionId, next);
+    return next;
+  }
+
+  async createSubscription(
+    input: Omit<Subscription, "id" | "createdAt" | "updatedAt"> & {
+      id?: string;
+    },
+  ) {
+    const id = input.id ?? crypto.randomUUID();
+    const next: Subscription = {
+      id,
+      storeId: input.storeId,
+      planId: input.planId,
+      billingPeriod: input.billingPeriod,
+      status: input.status,
+      trialEndsAt: input.trialEndsAt,
+      currentPeriodEnd: input.currentPeriodEnd,
+      stripeCustomerId: input.stripeCustomerId,
+      stripeSubscriptionId: input.stripeSubscriptionId,
+      createdAt: now(),
+      updatedAt: now(),
+    };
+    db.subscriptions.set(id, next);
+    return next;
   }
 }

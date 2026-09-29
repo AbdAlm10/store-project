@@ -25,6 +25,7 @@ describe("domain rules", () => {
       id: "sub-1",
       storeId: "store-1",
       planId: "basic" as const,
+      billingPeriod: "monthly" as const,
       status: "active" as const,
       trialEndsAt: null,
       currentPeriodEnd: null,

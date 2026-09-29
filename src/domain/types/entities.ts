@@ -7,7 +7,7 @@ import type {
   SubscriptionStatus,
   ThemeId,
 } from "./enums";
-import type { PlanId } from "@/config/plans";
+import type { BillingPeriod, PlanId } from "@/config/plans";
 
 export type UserId = string;
 export type StoreId = string;
@@ -146,6 +146,7 @@ export type Subscription = {
   id: string;
   storeId: StoreId;
   planId: PlanId;
+  billingPeriod: BillingPeriod;
   status: SubscriptionStatus;
   trialEndsAt: string | null;
   currentPeriodEnd: string | null;

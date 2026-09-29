@@ -41,3 +41,8 @@ export function getSupabaseEnv() {
     serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || null,
   };
 }
+
+export function isSupabaseServiceRoleConfigured(): boolean {
+  if (!isSupabaseConfigured()) return true;
+  return Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY?.trim());
+}

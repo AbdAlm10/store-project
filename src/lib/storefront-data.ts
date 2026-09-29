@@ -13,6 +13,7 @@ import {
   mapImage,
   mapProduct,
   mapStore,
+  mapSubscription,
   mapVariant,
   withMedia,
 } from "@/infrastructure/supabase/mappers";
@@ -23,6 +24,7 @@ import {
   storeProductsTag,
   storeTag,
 } from "@/lib/cache-tags";
+import { resolveStorefrontAccess } from "@/lib/store-storefront-access";
 
 const REVALIDATE_SECONDS = 60;
 
@@ -43,17 +45,38 @@ async function loadPublishedStore(slug: string): Promise<Store> {
   if (error) throw new AppError("INTERNAL", error.message);
   if (!data) throw new AppError("NOT_FOUND", "Store not found.");
   const store = mapStore(data);
-  if (store.status === "restricted") return store;
 
-  const { data: subscriptionUsable, error: subscriptionError } = await supabase.rpc(
-    "is_store_subscription_usable",
-    { target_store_id: data.id },
-  );
-  if (subscriptionError) {
-    throw new AppError("INTERNAL", subscriptionError.message);
+  const { data: subRow } = await supabase
+    .from("subscriptions")
+    .select("*")
+    .eq("store_id", data.id)
+    .maybeSingle();
+
+  let subscription = subRow ? mapSubscription(subRow) : null;
+
+  if (!subscription) {
+    const { data: rpcUsable, error: subscriptionError } = await supabase.rpc(
+      "is_store_subscription_usable",
+      { target_store_id: data.id },
+    );
+    if (!subscriptionError && rpcUsable === false) {
+      subscription = {
+        id: "rpc",
+        storeId: store.id,
+        planId: "trial",
+        billingPeriod: "monthly",
+        status: "expired",
+        trialEndsAt: null,
+        currentPeriodEnd: null,
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        createdAt: "",
+        updatedAt: "",
+      };
+    }
   }
 
-  return subscriptionUsable ? store : { ...store, status: "restricted" };
+  return resolveStorefrontAccess(store, subscription);
 }
 
 async function loadPublicCategories(storeId: string): Promise<Category[]> {

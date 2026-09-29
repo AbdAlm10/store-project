@@ -117,9 +117,9 @@ export class SupabaseAuthProvider implements AuthProvider {
 
   async getSession(): Promise<AuthSession | null> {
     const supabase = await createSupabaseServerClient();
-    const { data } = await supabase.auth.getSession();
-    if (!data.session?.user) return null;
-    return toSession(data.session.user, data.session.access_token);
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) return null;
+    return toSession(data.user, "");
   }
 
   async requestPasswordReset(email: string): Promise<void> {
