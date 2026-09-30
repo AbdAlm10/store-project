@@ -62,7 +62,7 @@ The UI is **Arabic-only** (RTL). Message catalog: `src/i18n/messages.ts`.
 1. Create a Supabase project.
 2. Apply `supabase/migrations/20260908000000_init.sql` (schema + RLS).
 3. Set env vars from `.env.example`.
-4. Implement/wire `Supabase*Adapter` repositories in `src/infrastructure/supabase/` and select them from `createServices()` when `NEXT_PUBLIC_SUPABASE_URL` is present.
+4. Implement/wire `Supabase*Adapter` repositories in `src/infrastructure/supabase/` and select them from `createServices()` when `SUPABASE_URL` is present.
 
 Until those adapters are wired, the app runs fully on memory/demo adapters so the architecture stays testable without vendor lock-in in the UI layer.
 

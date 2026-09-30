@@ -22,8 +22,8 @@ export function isSupabaseConfigured(): boolean {
   if (process.env.VITEST === "true" || process.env.NODE_ENV === "test") {
     return false;
   }
-  const url = normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "");
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ?? "";
+  const url = normalizeSupabaseUrl(process.env.SUPABASE_URL ?? "");
+  const anon = process.env.SUPABASE_ANON_KEY?.trim() ?? "";
   return (
     url.startsWith("https://") &&
     url.includes(".supabase.co") &&
@@ -36,8 +36,8 @@ export function getSupabaseEnv() {
     throw new Error("Supabase is not configured.");
   }
   return {
-    url: normalizeSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""),
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.trim(),
+    url: normalizeSupabaseUrl(process.env.SUPABASE_URL ?? ""),
+    anonKey: process.env.SUPABASE_ANON_KEY!.trim(),
     serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || null,
   };
 }
