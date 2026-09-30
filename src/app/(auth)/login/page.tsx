@@ -30,12 +30,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
 
+  
   return (
     <div className="fixed inset-0 z-10 flex items-center justify-center bg-[var(--background)] px-4 py-16">
       <div className="w-full max-w-md rounded-4xl bg-white p-8 shadow-[var(--shadow)] ring-1 ring-sand-200">
         <Link href="/" className="mx-auto flex w-fit" aria-label={t("brand")}>
           <BrandLogo variant="horizontal" className="h-19 w-auto" priority />
         </Link>
+
 
         <h1 className="mt-6 text-xl font-semibold text-slate-700 text-center">
           {("تسجيل الدخول")}

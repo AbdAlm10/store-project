@@ -13,6 +13,7 @@
     "db:types": "echo \"Generate types from Supabase when connected\""
   },
   "dependencies": {
+    "@sentry/nextjs": "^11.1.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.98.0",
     "browser-image-compression": "^2.0.2",
