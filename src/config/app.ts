@@ -1,9 +1,10 @@
+import { normalizePublicAppOrigin } from "@/lib/app-origin";
+
 export const appConfig = {
   name: process.env.NEXT_PUBLIC_APP_NAME ?? "دكّان",
   nameLatin: "Dukkan",
   tagline: "كل منتجات متجرك في رابط واحد.",
-  url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-  env: (process.env.APP_ENV ?? "development") as
+  url: normalizePublicAppOrigin(process.env.NEXT_PUBLIC_APP_URL),  env: (process.env.APP_ENV ?? "development") as
     | "development"
     | "staging"
     | "production",

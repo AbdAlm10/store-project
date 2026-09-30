@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { LoginForm } from "@/features/auth/login-form";
 import { BrandLogo } from "@/components/brand/brand-logo";
@@ -10,7 +11,16 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function LoginPage() {
+type LoginPageProps = {
+  searchParams: Promise<{ code?: string; error?: string }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const query = await searchParams;
+  if (query.code && !query.error) {
+    redirect(`/auth/callback?${new URLSearchParams({ code: query.code }).toString()}`);
+  }
+
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
 

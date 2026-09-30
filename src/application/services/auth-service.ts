@@ -62,8 +62,10 @@ export class AuthService {
     return this.auth.signIn(data);
   }
 
-  async startGoogleSignIn(): Promise<{ url: string }> {
-    return this.auth.signInWithOAuth("google");
+  async startGoogleSignIn(options?: {
+    appOrigin?: string;
+  }): Promise<{ url: string }> {
+    return this.auth.signInWithOAuth("google", options);
   }
 
   /**

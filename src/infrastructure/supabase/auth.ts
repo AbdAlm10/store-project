@@ -8,9 +8,12 @@ import type {
 import { AppError } from "@/domain/errors";
 import { AUTH_AR, localizeAuthMessage } from "@/lib/auth-messages";
 import { createSupabaseServerClient } from "@/infrastructure/supabase/server";
+import { appConfig } from "@/config/app";
+import { normalizePublicAppOrigin } from "@/lib/app-origin";
 
-function appUrl() {
-  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+function appUrl(override?: string) {
+  if (override?.trim()) return normalizePublicAppOrigin(override);
+  return appConfig.url;
 }
 
 function metadataString(
@@ -92,12 +95,16 @@ export class SupabaseAuthProvider implements AuthProvider {
     return toSession(data.user, data.session.access_token);
   }
 
-  async signInWithOAuth(provider: OAuthProviderId): Promise<{ url: string }> {
+  async signInWithOAuth(
+    provider: OAuthProviderId,
+    options?: { appOrigin?: string },
+  ): Promise<{ url: string }> {
     const supabase = await createSupabaseServerClient();
+    const origin = appUrl(options?.appOrigin);
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${appUrl()}/auth/callback`,
+        redirectTo: `${origin}/auth/callback`,
         skipBrowserRedirect: true,
       },
     });

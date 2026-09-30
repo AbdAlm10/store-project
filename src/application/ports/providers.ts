@@ -27,7 +27,10 @@ export type OAuthProviderId = "google";
 export interface AuthProvider {
   signUp(input: SignUpInput): Promise<AuthSession>;
   signIn(input: SignInInput): Promise<AuthSession>;
-  signInWithOAuth(provider: OAuthProviderId): Promise<{ url: string }>;
+  signInWithOAuth(
+    provider: OAuthProviderId,
+    options?: { appOrigin?: string },
+  ): Promise<{ url: string }>;
   signOut(): Promise<void>;
   getSession(): Promise<AuthSession | null>;
   requestPasswordReset(email: string): Promise<void>;

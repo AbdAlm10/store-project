@@ -7,6 +7,19 @@ import { getSupabaseEnv, isSupabaseConfigured } from "@/infrastructure/supabase/
  * Public storefront skips this — major latency win.
  */
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  // Supabase misconfigured Site URL sometimes sends ?code= to /login instead of /auth/callback.
+  if (
+    pathname === "/login" &&
+    request.nextUrl.searchParams.has("code") &&
+    !request.nextUrl.searchParams.has("error")
+  ) {
+    const callbackUrl = request.nextUrl.clone();
+    callbackUrl.pathname = "/auth/callback";
+    return NextResponse.redirect(callbackUrl);
+  }
+
   let response = NextResponse.next({
     request: { headers: request.headers },
   });
@@ -40,7 +53,6 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
   const dashboardPath = pathname.startsWith("/dashboard");
   const allowedWhenExpired =
     pathname === "/dashboard" ||

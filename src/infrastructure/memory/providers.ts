@@ -126,7 +126,10 @@ export class MemoryAuthProvider implements AuthProvider {
     return this.session;
   }
 
-  async signInWithOAuth(_provider: OAuthProviderId): Promise<{ url: string }> {
+  async signInWithOAuth(
+    _provider: OAuthProviderId,
+    _options?: { appOrigin?: string },
+  ): Promise<{ url: string }> {
     throw new AppError(
       "VALIDATION",
       "تسجيل الدخول عبر Google يتطلب إعداد Supabase.",
