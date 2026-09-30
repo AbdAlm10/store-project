@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { Check, X } from "lucide-react";
-import { useState } from "react";
+import { Reveal } from "@/components/marketing/reveal";
+import { Button } from "@/components/ui/button";
 import {
   EARLY_BIRD_DISCOUNT,
   PLANS,
@@ -12,11 +11,12 @@ import {
   type BillingPeriod,
   type PlanId,
 } from "@/config/plans";
-import { Button } from "@/components/ui/button";
-import { Reveal } from "@/components/marketing/reveal";
-import { useI18n } from "@/i18n/provider";
 import type { MessageKey } from "@/i18n/messages";
+import { useI18n } from "@/i18n/provider";
 import { cn } from "@/lib/utils/cn";
+import { Check, X } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 type FeatureLine = {
   key: MessageKey;
@@ -31,16 +31,24 @@ function featuresFor(planId: PlanId): FeatureLine[] {
   switch (planId) {
     case "trial":
       return [
-        { key: "planFeatFullAnalytics", included: true },
-        { key: "planFeatUnlimitedOptions", included: true },
-        { key: "planFeatFullCustomization", included: true },
-        { key: "planFeatSupport24", included: true },
         {
-          key: "planFeatTrialDays",
-          vars: { days: TRIAL_DAYS },
+          key: "planFeatProductsImages",
+          vars: {
+            products: basic.maxProducts,
+            images: basic.maxImagesPerProduct,
+          },
           included: true,
         },
-        { key: "planFeatEarlyBird", included: true },
+        { key: "planFeatNoAnalytics", included: false },
+        {
+          key: "planFeatCategories",
+          vars: { count: basic.maxCategories },
+          included: true,
+        },
+        { key: "planFeatUnlimitedOptions", included: true },
+        { key: "planFeatOneNavAction", included: true },
+        { key: "planFeatFullCustomization", included: true },
+        { key: "planFeatSupport", included: true },
       ];
     case "basic":
       return [
@@ -65,13 +73,16 @@ function featuresFor(planId: PlanId): FeatureLine[] {
         },
         { key: "planFeatOneNavAction", included: true },
         { key: "planFeatLimitedColors", included: true },
-        { key: "planFeatNoSupport", included: false },
+        { key: "planFeatSupport", included: true },
       ];
     case "pro":
       return [
         {
-          key: "planFeatProducts",
-          vars: { count: pro.maxProducts },
+          key: "planFeatProductsImages",
+          vars: {
+            products: pro.maxProducts,
+            images: pro.maxImagesPerProduct,
+          },
           included: true,
         },
         { key: "planFeatFullAnalytics", included: true },
@@ -79,7 +90,7 @@ function featuresFor(planId: PlanId): FeatureLine[] {
         { key: "planFeatUnlimitedOptions", included: true },
         { key: "planFeatAllNavActions", included: true },
         { key: "planFeatFullCustomization", included: true },
-        { key: "planFeatSupport24", included: true },
+        { key: "planFeatSupport", included: true },
       ];
   }
 }
@@ -95,6 +106,8 @@ const PLAN_DESC_KEY: Record<PlanId, MessageKey> = {
   basic: "planBasicDesc",
   pro: "planProDesc",
 };
+
+const PLAN_ORDER: PlanId[] = ["trial", "pro", "basic"];
 
 export function PricingSection() {
   const { t } = useI18n();
@@ -144,7 +157,7 @@ export function PricingSection() {
       </Reveal>
 
       <div className="mt-10 grid gap-5 lg:grid-cols-3">
-        {(Object.keys(PLANS) as PlanId[]).map((planId, index) => {
+        {PLAN_ORDER.map((planId, index) => {
           const plan = PLANS[planId];
           const features = featuresFor(planId);
           const highlighted = Boolean(plan.highlighted);
