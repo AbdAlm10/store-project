@@ -94,5 +94,6 @@ export const config = {
     "/onboarding",
     "/admin/:path*",
     "/auth/callback",
+    "/auth/finish",
   ],
 };

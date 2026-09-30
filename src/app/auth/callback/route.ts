@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getServices } from "@/infrastructure/container";
 import { isSupabaseConfigured } from "@/infrastructure/supabase/config";
 import { createSupabaseRouteHandlerClient } from "@/infrastructure/supabase/route-handler";
 
@@ -12,13 +11,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=oauth`);
   }
 
-  let nextPath = "/dashboard";
-  let response = NextResponse.redirect(`${origin}${nextPath}`);
+  const finishPath = "/auth/finish";
+  let response = NextResponse.redirect(`${origin}${finishPath}`);
 
   try {
     const supabase = createSupabaseRouteHandlerClient(
       request,
-      () => `${origin}${nextPath}`,
+      () => `${origin}${finishPath}`,
       (nextResponse) => {
         response = nextResponse;
       },
@@ -27,21 +26,6 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
       return NextResponse.redirect(`${origin}/login?error=oauth`);
-    }
-
-    const services = getServices();
-    await services.auth.ensureProfile();
-    const stores = await services.stores.listMyStores();
-    nextPath = stores.length > 0 ? "/dashboard" : "/onboarding";
-    await supabase.auth.getUser();
-
-    const target = `${origin}${nextPath}`;
-    if (response.headers.get("location") !== target) {
-      const redirected = NextResponse.redirect(target);
-      for (const cookie of response.cookies.getAll()) {
-        redirected.cookies.set(cookie.name, cookie.value);
-      }
-      response = redirected;
     }
 
     return response;

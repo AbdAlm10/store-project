@@ -12,7 +12,7 @@ export const metadata = {
 export default async function OnboardingPage() {
   const services = getServices();
   try {
-    await services.auth.requireProfile();
+    await services.auth.ensureProfile();
   } catch {
     redirect("/login");
   }

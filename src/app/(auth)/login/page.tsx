@@ -12,13 +12,19 @@ export const metadata = {
 };
 
 type LoginPageProps = {
-  searchParams: Promise<{ code?: string; error?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const query = await searchParams;
-  if (query.code && !query.error) {
-    redirect(`/auth/callback?${new URLSearchParams({ code: query.code }).toString()}`);
+  const code = typeof query.code === "string" ? query.code : undefined;
+  const oauthError = typeof query.error === "string" ? query.error : undefined;
+  if (code && !oauthError) {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      if (typeof value === "string") params.set(key, value);
+    }
+    redirect(`/auth/callback?${params.toString()}`);
   }
 
   const locale = await getRequestLocale();
