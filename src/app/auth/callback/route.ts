@@ -11,24 +11,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=oauth`);
   }
 
-  const finishPath = "/auth/finish";
-  let response = NextResponse.redirect(`${origin}${finishPath}`);
+  const finishUrl = `${origin}/auth/finish`;
 
   try {
-    const supabase = createSupabaseRouteHandlerClient(
-      request,
-      () => `${origin}${finishPath}`,
-      (nextResponse) => {
-        response = nextResponse;
-      },
-    );
+    const { supabase, redirectWithAuthCookies } =
+      createSupabaseRouteHandlerClient(request);
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
       return NextResponse.redirect(`${origin}/login?error=oauth`);
     }
 
-    return response;
+    return redirectWithAuthCookies(finishUrl);
   } catch {
     return NextResponse.redirect(`${origin}/login?error=oauth`);
   }

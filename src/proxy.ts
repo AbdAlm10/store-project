@@ -93,6 +93,7 @@ export const config = {
     "/reset-password",
     "/onboarding",
     "/admin/:path*",
+    "/auth/google",
     "/auth/callback",
     "/auth/finish",
   ],

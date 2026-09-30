@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
-import { googleAuthAction } from "@/features/auth/actions";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils/cn";
 import { useI18n } from "@/i18n/provider";
 
 function GoogleIcon({ className }: { className?: string }) {
@@ -35,36 +35,16 @@ function GoogleIcon({ className }: { className?: string }) {
 
 export function GoogleAuthButton() {
   const { t } = useI18n();
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
 
   return (
     <div className="space-y-3">
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        disabled={pending}
-        onClick={() => {
-          setError(null);
-          startTransition(async () => {
-            const result = await googleAuthAction();
-            if (!result.ok) {
-              setError(result.error);
-              return;
-            }
-            window.location.assign(result.url);
-          });
-        }}
+      <Link
+        href="/auth/google"
+        className={cn(buttonVariants({ variant: "outline", size: "md" }), "w-full")}
       >
         <GoogleIcon className="h-5 w-5 shrink-0" />
-        {pending ? t("continuingWithGoogle") : t("continueWithGoogle")}
-      </Button>
-      {error ? (
-        <p className="text-sm text-red-600" role="alert">
-          {error}
-        </p>
-      ) : null}
+        {t("continueWithGoogle")}
+      </Link>
     </div>
   );
 }
