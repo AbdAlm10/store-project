@@ -23,11 +23,6 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s · ${appConfig.name}`,
     },
     description: t(locale, "heroSupport"),
-    icons: {
-      icon: [{ url: "/brand/dukkan-icon.png", type: "image/png", sizes: "512x512" }],
-      shortcut: ["/brand/dukkan-icon.png"],
-      apple: [{ url: "/brand/dukkan-icon.png", sizes: "512x512" }],
-    },
     openGraph: {
       title: appConfig.name,
       description: t(locale, "tagline"),
