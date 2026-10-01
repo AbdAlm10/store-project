@@ -84,7 +84,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     name: "Basic",
     description: "A clean catalog link for social sellers getting started.",
     priceMonthlyUsd: 7,
-    priceYearlyUsd: 60,
+    priceYearlyUsd: 40,
     limits: { ...BASIC_LIMITS },
   },
   pro: {
