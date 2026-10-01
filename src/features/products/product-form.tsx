@@ -82,7 +82,7 @@ export function ProductForm({
   storeId,
   categories,
   productId,
-  maxImagesPerProduct = 2,
+  maxImagesPerProduct = 3,
   initial,
 }: ProductFormProps) {
   const imageSlots = Math.max(1, maxImagesPerProduct);

@@ -39,8 +39,8 @@ export const BASIC_THEME_COLOR_KEYS = [
  * never hardcode limits in UI or random services.
  */
 const BASIC_LIMITS: PlanLimits = {
-  maxProducts: 50,
-  maxImagesPerProduct: 2,
+  maxProducts: 100,
+  maxImagesPerProduct: 3,
   maxCategories: 4,
   maxOptionsPerProduct: 3,
   maxNavActions: 1,

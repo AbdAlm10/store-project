@@ -56,7 +56,7 @@ export function ProductsWorkspace({
   products,
   categories,
   locale,
-  maxProducts = 50,
+  maxProducts = 100,
   productTotal,
 }: {
   storeId: string;
