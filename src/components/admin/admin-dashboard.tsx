@@ -351,6 +351,9 @@ function PlanMenu({
                 <p className="border-b border-slate-100 px-3 py-2 text-xs font-bold text-slate-500">
                   {open === "plan" ? "نوع الاشتراك" : "فترة الاشتراك"}
                 </p>
+                <p className="border-b border-slate-100 px-3 py-2 text-[11px] leading-5 text-slate-500">
+                  بعد استلام شام كاش، اختيار الخطة يفعّل المدة. إعادة اختيار الخطة الحالية تمدّدها من تاريخ الانتهاء إذا لم تنتهِ بعد.
+                </p>
                 {open === "plan"
                     ? (["trial", "basic", "pro"] as const).map((planId) => (
                       <PlanMenuItem

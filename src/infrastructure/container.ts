@@ -6,6 +6,7 @@ import { AnalyticsService } from "@/application/services/analytics-service";
 import { MediaService } from "@/application/services/media-service";
 import { AdminPlatformService } from "@/application/services/admin-platform-service";
 import { EntitlementService } from "@/application/services/entitlement-service";
+import { ReferralService } from "@/application/services/referral-service";
 import {
   MemoryAnalyticsRepository,
   MemoryCategoryRepository,
@@ -16,6 +17,7 @@ import {
   MemorySubscriptionRepository,
   MemoryUserRepository,
 } from "@/infrastructure/memory/repositories";
+import { MemoryReferralRepository } from "@/infrastructure/memory/referral-repository";
 import {
   MemoryAuthProvider,
   MemoryStorageProvider,
@@ -36,10 +38,12 @@ import {
   SupabaseUserRepository,
 } from "@/infrastructure/supabase/repositories";
 import { SupabasePlatformAdminRepository } from "@/infrastructure/supabase/platform-admin-repository";
+import { SupabaseReferralRepository } from "@/infrastructure/supabase/referral-repository";
 
 export type AppServices = {
   auth: AuthService;
   admin: AdminPlatformService;
+  referrals: ReferralService;
   stores: StoreService;
   products: ProductService;
   categories: CategoryService;
@@ -82,6 +86,9 @@ export function createServices(): AppServices {
   const platformAdmin = useSupabase
     ? new SupabasePlatformAdminRepository()
     : new MemoryPlatformAdminRepository();
+  const referrals = new ReferralService(
+    useSupabase ? new SupabaseReferralRepository() : new MemoryReferralRepository(),
+  );
 
   const authProvider = useSupabase
     ? new SupabaseAuthProvider()
@@ -93,7 +100,7 @@ export function createServices(): AppServices {
   const email = new NoopEmailProvider();
 
   const auth = new AuthService(authProvider, users);
-  const admin = new AdminPlatformService(auth, platformAdmin);
+  const admin = new AdminPlatformService(auth, platformAdmin, referrals);
   const entitlements = new EntitlementService(subscriptions);
   const storeService = new StoreService(
     auth,
@@ -129,6 +136,7 @@ export function createServices(): AppServices {
   return {
     auth,
     admin,
+    referrals,
     stores: storeService,
     products: productService,
     categories: categoryService,

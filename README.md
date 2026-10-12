@@ -1,6 +1,6 @@
-# YourStore
+# دكّان
 
-Production-oriented multi-tenant SaaS for social-first merchant storefronts.
+Production-oriented multi-tenant SaaS for social-first merchant storefronts. The product name is دكّان.
 
 **Value proposition:** All your store products in one link.
 

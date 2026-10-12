@@ -1,4 +1,4 @@
-import { PoweredByBrand } from "@/components/brand/powered-by-brand";
+import { StorefrontPlanCredit } from "@/components/brand/storefront-plan-credit";
 import { ProductCardSkeleton } from "@/components/storefront/product-card";
 import { StoreCatalog } from "@/components/storefront/store-catalog";
 import { StoreNav } from "@/components/storefront/store-header";
@@ -20,6 +20,7 @@ import {
   getCachedPublicCategories,
   getCachedPublicFeatured,
   getCachedStorefront,
+  getStorefrontPlanId,
 } from "@/lib/storefront-data";
 import { isStorefrontLocked, toLockedStore } from "@/lib/store-storefront-access";
 import type { Metadata } from "next";
@@ -82,9 +83,10 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
   const cssVars = storefrontCssVars(themeTokens);
 
   if (isSubscriptionPreview) {
+    const planId = await getStorefrontPlanId(store.id);
     return (
       <div
-        className="min-h-dvh"
+        className="flex min-h-dvh flex-col"
         style={{
           ...cssVars,
           background: "var(--store-bg)",
@@ -92,11 +94,18 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
           fontFamily: "var(--store-font-body)",
         }}
       >
-        <SubscriptionLockedView
-          store={store}
-          title={t("subscriptionStoreLockedTitle")}
-          body={t("subscriptionStoreLockedBody")}
-        />
+        <div className="flex-1">
+          <SubscriptionLockedView
+            store={store}
+            title={t("subscriptionStoreLockedTitle")}
+            body={t("subscriptionStoreLockedBody")}
+          />
+        </div>
+        {planId !== "pro" ? (
+          <footer className="py-3 text-center">
+            <StorefrontPlanCredit planId={planId} />
+          </footer>
+        ) : null}
       </div>
     );
   }
@@ -165,7 +174,7 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
           {store.name}
         </p>
         <div className="mt-1.5 flex justify-center">
-          <PoweredByBrand />
+          <StorefrontPlanCredit planId={await getStorefrontPlanId(store.id)} />
         </div>
       </footer>
     </div>

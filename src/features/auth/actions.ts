@@ -1,6 +1,8 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { getServices } from "@/infrastructure/container";
+import { REFERRAL_COOKIE_NAME } from "@/lib/referrals/cookie";
 import {
   enforceRateLimit,
   requestClientIp,
@@ -38,7 +40,17 @@ export async function registerAction(input: {
     const ip = await requestClientIp();
     if (ip) await enforceRateLimit("register", `ip:${ip}`);
     const services = getServices();
-    await services.auth.register(input);
+    const registered = await services.auth.register(input);
+    try {
+      const jar = await cookies();
+      const code = jar.get(REFERRAL_COOKIE_NAME)?.value;
+      if (code) {
+        await services.referrals.attachFromCode(registered.profile.id, code);
+        jar.delete(REFERRAL_COOKIE_NAME);
+      }
+    } catch (error) {
+      console.error("referral attach failed", error);
+    }
     return { ok: true };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };

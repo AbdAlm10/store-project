@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveAllowedAppOrigin } from "@/lib/app-origin";
+import { getServices } from "@/infrastructure/container";
 import { isSupabaseConfigured } from "@/infrastructure/supabase/config";
+import { REFERRAL_COOKIE_NAME } from "@/lib/referrals/cookie";
 import {
   createSupabaseRouteHandlerClient,
   waitForAuthCookieFlush,
@@ -94,7 +96,18 @@ export async function GET(request: NextRequest) {
     const nextPath =
       memberships && memberships.length > 0 ? "/dashboard" : "/onboarding";
 
-    return redirectWithAuthCookies(`${origin}${nextPath}`);
+    const ref = request.cookies.get(REFERRAL_COOKIE_NAME)?.value;
+    if (ref) {
+      try {
+        await getServices().referrals.attachFromCode(user.id, ref);
+      } catch (error) {
+        console.error("referral attach failed", error);
+      }
+    }
+
+    const response = redirectWithAuthCookies(`${origin}${nextPath}`);
+    if (ref) response.cookies.delete(REFERRAL_COOKIE_NAME);
+    return response;
   } catch {
     return NextResponse.redirect(`${origin}/login?error=oauth`);
   }

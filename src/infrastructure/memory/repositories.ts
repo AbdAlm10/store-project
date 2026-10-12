@@ -15,6 +15,8 @@ import type {
   UserRepository,
 } from "@/application/ports/repositories";
 import type { PlanId } from "@/config/plans";
+import type { ReferralAccessPatch } from "@/domain/referrals/book";
+import { contactIdentity } from "@/domain/referrals/normalize";
 import type {
   AnalyticsEvent,
   Category,
@@ -594,5 +596,60 @@ export class MemoryPlatformAdminRepository implements PlatformAdminRepository {
     };
     db.subscriptions.set(id, next);
     return next;
+  }
+}
+
+export function memoryReferralSubject(userId: string): {
+  identity: ReturnType<typeof contactIdentity>;
+  subscriptions: import("@/domain/referrals/book").ReferralSubscriptionSnapshot[];
+} {
+  const profile = db.profiles.get(userId);
+  const stores = [...db.stores.values()].filter((store) => store.ownerId === userId);
+  const subscriptions = [...db.subscriptions.values()]
+    .filter((sub) => stores.some((store) => store.id === sub.storeId))
+    .map((sub) => {
+      const store = stores.find((item) => item.id === sub.storeId)!;
+      return {
+        id: sub.id,
+        storeId: sub.storeId,
+        ownerId: store.ownerId,
+        planId: sub.planId,
+        status: sub.status,
+        trialEndsAt: sub.trialEndsAt,
+        currentPeriodEnd: sub.currentPeriodEnd,
+        storeStatus: store.status,
+        suspendedAt: store.suspendedAt,
+        updatedAt: sub.updatedAt,
+      };
+    });
+  return {
+    identity: contactIdentity(
+      [profile?.email, ...stores.map((store) => store.email)],
+      stores.flatMap((store) => [store.phone, store.whatsapp]),
+    ),
+    subscriptions,
+  };
+}
+
+export function memoryApplyReferralPatches(patches: ReferralAccessPatch[]): void {
+  for (const patch of patches) {
+    const current = db.subscriptions.get(patch.subscriptionId);
+    if (!current) continue;
+    db.subscriptions.set(patch.subscriptionId, {
+      ...current,
+      status: patch.status,
+      trialEndsAt: patch.trialEndsAt,
+      currentPeriodEnd: patch.currentPeriodEnd,
+      updatedAt: now(),
+    });
+    if (!patch.republish) continue;
+    const store = db.stores.get(patch.storeId);
+    if (!store || store.suspendedAt || store.status !== "restricted") continue;
+    db.stores.set(patch.storeId, {
+      ...store,
+      status: "published",
+      suspendedAt: null,
+      updatedAt: now(),
+    });
   }
 }

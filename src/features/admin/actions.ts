@@ -16,6 +16,18 @@ function revalidateAdmin() {
   revalidatePath("/admin");
 }
 
+function revalidateMerchantStore(slug: string, storeId: string) {
+  revalidatePath(`/${slug}`, "page");
+  revalidatePath(`/${slug}`, "layout");
+  updateTag("stores");
+  updateTag(storeTag(slug));
+  updateTag(storeProductsTag(slug));
+  updateTag(storeCategoriesTag(slug));
+  updateTag(storeIdTag(storeId));
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/subscription");
+}
+
 function readString(formData: FormData, key: string): string | null {
   const value = formData.get(key);
   if (typeof value !== "string") return null;
@@ -78,7 +90,12 @@ export async function adminChangeStorePlan(formData: FormData) {
   const billingPeriod = readString(formData, "billingPeriod") as BillingPeriod | null;
   if (!storeId || !planId || !billingPeriod) return;
   await runAdminAction(async () => {
-    await getServices().admin.changeStorePlan(storeId, planId, billingPeriod);
+    const result = await getServices().admin.changeStorePlan(
+      storeId,
+      planId,
+      billingPeriod,
+    );
+    revalidateMerchantStore(result.slug, result.storeId);
   });
 }
 
@@ -103,22 +120,7 @@ export async function adminExtendSubscription(formData: FormData) {
   if (!Number.isFinite(days) || days < 1 || days > 365) return;
 
   await runAdminAction(async () => {
-    const services = getServices();
-    const rows = await services.admin.getOverview();
-    const sub = rows.stores
-      .map((row) => row.subscription)
-      .find((item) => item?.id === subscriptionId);
-    if (!sub) return;
-
-    const endsAt = new Date();
-    endsAt.setDate(endsAt.getDate() + days);
-    const iso = endsAt.toISOString();
-    const trial = sub.planId === "trial" || sub.status === "trialing";
-
-    await services.admin.updateSubscription(subscriptionId, {
-      status: trial ? "trialing" : "active",
-      trialEndsAt: trial ? iso : sub.trialEndsAt,
-      currentPeriodEnd: trial ? sub.currentPeriodEnd : iso,
-    });
+    const result = await getServices().admin.extendSubscription(subscriptionId, days);
+    revalidateMerchantStore(result.slug, result.storeId);
   });
 }

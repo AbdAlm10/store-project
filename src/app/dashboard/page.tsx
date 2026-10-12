@@ -74,7 +74,11 @@ export default async function DashboardHomePage() {
   const upgradeUrl = buildSubscriptionWhatsAppUrl({
     storeName: store.name,
     storeSlug: store.slug,
-    intent: subscription.planId === "basic" ? "pro" : "basic",
+    intent:
+      subscription.planId === "pro" || (!subscriptionExpired && subscription.planId === "basic")
+        ? "pro"
+        : "basic",
+    mode: subscriptionExpired ? "renew" : "subscribe",
   });
 
   return (

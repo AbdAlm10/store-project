@@ -57,5 +57,13 @@ describe("store health", () => {
     });
     expect(health.percent).toBe(100);
     expect(health.completed).toBe(health.total);
+    expect(new Set(health.items.map((item) => item.href))).toEqual(
+      new Set([
+        "/dashboard/store",
+        "/dashboard/store-design",
+        "/dashboard/products/new",
+        "/dashboard/categories",
+      ]),
+    );
   });
 });
