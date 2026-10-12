@@ -81,11 +81,15 @@ export function OpeningHoursEditor({
           <p className="text-sm font-semibold text-slate-900">
             {t("openingHours")}
           </p>
-          <p className="text-xs text-slate-500">{t("hoursNotSet")}</p>
+          {legacyText ? (
+            <p className="text-xs text-slate-600">{legacyText}</p>
+          ) : (
+            <p className="text-xs text-slate-500">{t("hoursNotSet")}</p>
+          )}
         </div>
         {legacyText ? (
           <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
-            {t("hoursLegacyNote")}: {legacyText}
+            {t("hoursLegacyNote")}
           </p>
         ) : null}
         <button

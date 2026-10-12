@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { publicStorePathPrefix } from "@/lib/public-store-prefix";
 import type { Category, ProductWithMedia } from "@/domain/types/entities";
 import { buildVariantMatrix } from "@/lib/category-options";
-import { hasOpeningHours } from "@/lib/opening-hours";
+import { hasOpeningHours, isLegacyOpeningHoursText } from "@/lib/opening-hours";
 import { listedProductStock } from "@/lib/listed-stock";
 import { storeInitials } from "@/lib/store-initials";
 import { usedFilterValues } from "@/lib/used-filter-values";
@@ -40,10 +40,13 @@ describe("storefront merchant fixes", () => {
     ).toBe(9);
   });
 
-  it("treats blank opening hours as unset", () => {
+  it("treats blank opening hours as unset and keeps a written sentence", () => {
     expect(hasOpeningHours(null)).toBe(false);
     expect(hasOpeningHours("   ")).toBe(false);
     expect(hasOpeningHours('{"version":1,"days":[]}')).toBe(true);
+    expect(hasOpeningHours("Sat–Thu 10:00–20:00")).toBe(true);
+    expect(isLegacyOpeningHoursText("Sat–Thu 10:00–20:00")).toBe(true);
+    expect(isLegacyOpeningHoursText(null)).toBe(false);
   });
 
   it("offers filters only for values a product variant uses", () => {
