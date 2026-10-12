@@ -20,13 +20,30 @@ alter table public.support_messages
   add constraint support_messages_body_check
   check (char_length(trim(body)) > 0 and char_length(body) <= 2000);
 
-create index if not exists support_messages_user_created_idx
+drop index if exists public.support_messages_user_created_idx;
+create index support_messages_user_created_idx
   on public.support_messages (user_id, created_at desc);
 
-create index if not exists support_messages_created_idx
+drop index if exists public.support_messages_created_idx;
+create index support_messages_created_idx
   on public.support_messages (created_at desc);
 
 alter table public.support_messages enable row level security;
+
+do $fn$
+declare
+  policy_name text;
+begin
+  for policy_name in
+    select pol.policyname
+    from pg_policies pol
+    where pol.schemaname = 'public'
+      and pol.tablename = 'support_messages'
+  loop
+    execute format('drop policy if exists %I on public.support_messages', policy_name);
+  end loop;
+end
+$fn$;
 
 -- Merchants can insert their own user messages.
 drop policy if exists "support_messages_insert_own" on public.support_messages;

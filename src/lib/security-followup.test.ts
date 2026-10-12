@@ -219,6 +219,10 @@ describe("migration intent", () => {
     expect(combined).toContain("alter extension pgcrypto set schema extensions");
     expect(combined).toContain("drop policy if exists");
     expect(combined).toContain("create or replace function");
+    expect(combined).toContain("drop function if exists");
+    expect(combined).toContain("add column if not exists");
+    expect(applyAll).toMatch(/\nbegin;\n/);
+    expect(applyAll.trim().endsWith("commit;")).toBe(true);
     let cursor = 0;
     for (const file of files) {
       const at = applyAll.indexOf(file, cursor);

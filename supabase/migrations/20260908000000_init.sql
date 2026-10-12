@@ -28,6 +28,40 @@ $fn$;
 -- Helpers
 -- ---------------------------------------------------------------------------
 
+-- Older databases named these arguments differently (target_store, min_role,
+-- store_role). CREATE OR REPLACE cannot rename an argument, and the app calls
+-- target_store_id by name. Drop every overload, then create the names above.
+-- CASCADE removes policies and triggers that call the function. This file
+-- recreates them. Rows in tables are not deleted.
+do $fn$
+declare
+  sig text;
+begin
+  for sig in
+    select format(
+      '%I.%I(%s)',
+      n.nspname,
+      p.proname,
+      pg_get_function_identity_arguments(p.oid)
+    )
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.proname in (
+        'set_updated_at',
+        'store_role_rank',
+        'protect_profile_privileges',
+        'protect_store_owner',
+        'is_store_member',
+        'has_store_role',
+        'is_store_subscription_usable'
+      )
+  loop
+    execute 'drop function if exists ' || sig || ' cascade';
+  end loop;
+end
+$fn$;
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -412,12 +446,20 @@ alter table public.analytics_events
   add constraint analytics_events_metadata_size_check
   check (octet_length(metadata::text) <= 8000);
 
-create index if not exists analytics_events_store_created_idx
+drop index if exists public.analytics_events_store_created_idx;
+create index analytics_events_store_created_idx
   on public.analytics_events (store_id, created_at desc);
-create index if not exists products_store_status_idx
+drop index if exists public.products_store_status_idx;
+create index products_store_status_idx
   on public.products (store_id, status);
-create index if not exists categories_store_idx
+drop index if exists public.categories_store_idx;
+create index categories_store_idx
   on public.categories (store_id, sort_order);
+
+create unique index if not exists categories_store_id_slug_key
+  on public.categories (store_id, slug);
+create unique index if not exists products_store_id_slug_key
+  on public.products (store_id, slug);
 
 -- Helpers that read tables. Created after the tables so a fresh database
 -- accepts the function bodies.
@@ -590,6 +632,30 @@ alter table public.product_images enable row level security;
 alter table public.product_variants enable row level security;
 alter table public.subscriptions enable row level security;
 alter table public.analytics_events enable row level security;
+
+-- Remove policies left by an older script, including names this file does
+-- not use. The statements below create the policies the app expects.
+do $fn$
+declare
+  policy_name text;
+  target_table text;
+begin
+  foreach target_table in array array[
+    'profiles', 'stores', 'store_members', 'categories', 'products',
+    'product_images', 'product_variants', 'subscriptions', 'analytics_events'
+  ]
+  loop
+    for policy_name in
+      select pol.policyname
+      from pg_policies pol
+      where pol.schemaname = 'public'
+        and pol.tablename = target_table
+    loop
+      execute format('drop policy if exists %I on public.%I', policy_name, target_table);
+    end loop;
+  end loop;
+end
+$fn$;
 
 drop policy if exists profiles_select_own on public.profiles;
 create policy profiles_select_own
@@ -838,6 +904,8 @@ create policy analytics_events_select_member
 -- ---------------------------------------------------------------------------
 
 do $fn$
+declare
+  policy_name text;
 begin
   if to_regclass('storage.objects') is null then
     return;
@@ -855,6 +923,16 @@ begin
     set public = excluded.public,
         file_size_limit = excluded.file_size_limit,
         allowed_mime_types = excluded.allowed_mime_types;
+
+  for policy_name in
+    select pol.policyname
+    from pg_policies pol
+    where pol.schemaname = 'storage'
+      and pol.tablename = 'objects'
+      and pol.policyname like 'store_media%'
+  loop
+    execute format('drop policy if exists %I on storage.objects', policy_name);
+  end loop;
 
   execute 'drop policy if exists store_media_public_read on storage.objects';
   execute 'create policy store_media_public_read on storage.objects for select to anon, authenticated using (bucket_id = ''store-media'')';

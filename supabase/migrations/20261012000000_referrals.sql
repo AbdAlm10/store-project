@@ -20,6 +20,36 @@ begin
 end
 $fn$;
 
+-- Older databases may already have these functions with different argument
+-- names. Drop every overload, then create the names the app calls
+-- (p_user_id, p_referred_user_id, p_code, p_store_id). CASCADE drops policies
+-- that call them. This file recreates those policies. Rows are not deleted.
+do $fn$
+declare
+  sig text;
+begin
+  for sig in
+    select format(
+      '%I.%I(%s)',
+      n.nspname,
+      p.proname,
+      pg_get_function_identity_arguments(p.oid)
+    )
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.proname in (
+        'normalize_contact_phone',
+        'ensure_referral_code',
+        'attach_referral',
+        'grant_referral_month'
+      )
+  loop
+    execute 'drop function if exists ' || sig || ' cascade';
+  end loop;
+end
+$fn$;
+
 create or replace function public.normalize_contact_phone(raw text)
 returns text
 language sql
@@ -85,7 +115,8 @@ create table if not exists public.referral_audit_log (
   created_at timestamptz not null default now()
 );
 
-create index if not exists referrals_referrer_idx
+drop index if exists public.referrals_referrer_idx;
+create index referrals_referrer_idx
   on public.referrals (referrer_user_id, created_at desc);
 
 alter table public.referral_codes drop constraint if exists referral_codes_code_format;
@@ -128,6 +159,27 @@ alter table public.referral_codes enable row level security;
 alter table public.referrals enable row level security;
 alter table public.referral_rewards enable row level security;
 alter table public.referral_audit_log enable row level security;
+
+do $fn$
+declare
+  policy_name text;
+  target_table text;
+begin
+  foreach target_table in array array[
+    'referral_codes', 'referrals', 'referral_rewards', 'referral_audit_log'
+  ]
+  loop
+    for policy_name in
+      select pol.policyname
+      from pg_policies pol
+      where pol.schemaname = 'public'
+        and pol.tablename = target_table
+    loop
+      execute format('drop policy if exists %I on public.%I', policy_name, target_table);
+    end loop;
+  end loop;
+end
+$fn$;
 
 revoke all on public.referral_codes from anon, authenticated;
 revoke all on public.referrals from anon, authenticated;

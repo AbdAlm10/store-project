@@ -1,8 +1,10 @@
 -- Dukkaan full database setup.
--- Paste this whole file once into the Supabase SQL Editor.
--- It is the five migration files in timestamp order.
--- Safe to run again if an earlier paste stopped partway.
+-- Paste this whole file once into the Supabase SQL Editor, including the
+-- begin and commit lines. If any statement fails, nothing from this paste is kept.
+-- Safe to run again on a database that already has tables. Does not delete rows.
 -- Keep this file out of supabase/migrations so `supabase db push` does not apply it a second time.
+
+begin;
 
 -- ===========================================================================
 -- supabase/migrations/20260908000000_init.sql
@@ -37,6 +39,40 @@ $fn$;
 -- ---------------------------------------------------------------------------
 -- Helpers
 -- ---------------------------------------------------------------------------
+
+-- Older databases named these arguments differently (target_store, min_role,
+-- store_role). CREATE OR REPLACE cannot rename an argument, and the app calls
+-- target_store_id by name. Drop every overload, then create the names above.
+-- CASCADE removes policies and triggers that call the function. This file
+-- recreates them. Rows in tables are not deleted.
+do $fn$
+declare
+  sig text;
+begin
+  for sig in
+    select format(
+      '%I.%I(%s)',
+      n.nspname,
+      p.proname,
+      pg_get_function_identity_arguments(p.oid)
+    )
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.proname in (
+        'set_updated_at',
+        'store_role_rank',
+        'protect_profile_privileges',
+        'protect_store_owner',
+        'is_store_member',
+        'has_store_role',
+        'is_store_subscription_usable'
+      )
+  loop
+    execute 'drop function if exists ' || sig || ' cascade';
+  end loop;
+end
+$fn$;
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -422,12 +458,20 @@ alter table public.analytics_events
   add constraint analytics_events_metadata_size_check
   check (octet_length(metadata::text) <= 8000);
 
-create index if not exists analytics_events_store_created_idx
+drop index if exists public.analytics_events_store_created_idx;
+create index analytics_events_store_created_idx
   on public.analytics_events (store_id, created_at desc);
-create index if not exists products_store_status_idx
+drop index if exists public.products_store_status_idx;
+create index products_store_status_idx
   on public.products (store_id, status);
-create index if not exists categories_store_idx
+drop index if exists public.categories_store_idx;
+create index categories_store_idx
   on public.categories (store_id, sort_order);
+
+create unique index if not exists categories_store_id_slug_key
+  on public.categories (store_id, slug);
+create unique index if not exists products_store_id_slug_key
+  on public.products (store_id, slug);
 
 -- Helpers that read tables. Created after the tables so a fresh database
 -- accepts the function bodies.
@@ -600,6 +644,30 @@ alter table public.product_images enable row level security;
 alter table public.product_variants enable row level security;
 alter table public.subscriptions enable row level security;
 alter table public.analytics_events enable row level security;
+
+-- Remove policies left by an older script, including names this file does
+-- not use. The statements below create the policies the app expects.
+do $fn$
+declare
+  policy_name text;
+  target_table text;
+begin
+  foreach target_table in array array[
+    'profiles', 'stores', 'store_members', 'categories', 'products',
+    'product_images', 'product_variants', 'subscriptions', 'analytics_events'
+  ]
+  loop
+    for policy_name in
+      select pol.policyname
+      from pg_policies pol
+      where pol.schemaname = 'public'
+        and pol.tablename = target_table
+    loop
+      execute format('drop policy if exists %I on public.%I', policy_name, target_table);
+    end loop;
+  end loop;
+end
+$fn$;
 
 drop policy if exists profiles_select_own on public.profiles;
 create policy profiles_select_own
@@ -848,6 +916,8 @@ create policy analytics_events_select_member
 -- ---------------------------------------------------------------------------
 
 do $fn$
+declare
+  policy_name text;
 begin
   if to_regclass('storage.objects') is null then
     return;
@@ -865,6 +935,16 @@ begin
     set public = excluded.public,
         file_size_limit = excluded.file_size_limit,
         allowed_mime_types = excluded.allowed_mime_types;
+
+  for policy_name in
+    select pol.policyname
+    from pg_policies pol
+    where pol.schemaname = 'storage'
+      and pol.tablename = 'objects'
+      and pol.policyname like 'store_media%'
+  loop
+    execute format('drop policy if exists %I on storage.objects', policy_name);
+  end loop;
 
   execute 'drop policy if exists store_media_public_read on storage.objects';
   execute 'create policy store_media_public_read on storage.objects for select to anon, authenticated using (bucket_id = ''store-media'')';
@@ -903,13 +983,30 @@ alter table public.support_messages
   add constraint support_messages_body_check
   check (char_length(trim(body)) > 0 and char_length(body) <= 2000);
 
-create index if not exists support_messages_user_created_idx
+drop index if exists public.support_messages_user_created_idx;
+create index support_messages_user_created_idx
   on public.support_messages (user_id, created_at desc);
 
-create index if not exists support_messages_created_idx
+drop index if exists public.support_messages_created_idx;
+create index support_messages_created_idx
   on public.support_messages (created_at desc);
 
 alter table public.support_messages enable row level security;
+
+do $fn$
+declare
+  policy_name text;
+begin
+  for policy_name in
+    select pol.policyname
+    from pg_policies pol
+    where pol.schemaname = 'public'
+      and pol.tablename = 'support_messages'
+  loop
+    execute format('drop policy if exists %I on public.support_messages', policy_name);
+  end loop;
+end
+$fn$;
 
 -- Merchants can insert their own user messages.
 drop policy if exists "support_messages_insert_own" on public.support_messages;
@@ -1003,6 +1100,36 @@ begin
 end
 $fn$;
 
+-- Older databases may already have these functions with different argument
+-- names. Drop every overload, then create the names the app calls
+-- (p_user_id, p_referred_user_id, p_code, p_store_id). CASCADE drops policies
+-- that call them. This file recreates those policies. Rows are not deleted.
+do $fn$
+declare
+  sig text;
+begin
+  for sig in
+    select format(
+      '%I.%I(%s)',
+      n.nspname,
+      p.proname,
+      pg_get_function_identity_arguments(p.oid)
+    )
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.proname in (
+        'normalize_contact_phone',
+        'ensure_referral_code',
+        'attach_referral',
+        'grant_referral_month'
+      )
+  loop
+    execute 'drop function if exists ' || sig || ' cascade';
+  end loop;
+end
+$fn$;
+
 create or replace function public.normalize_contact_phone(raw text)
 returns text
 language sql
@@ -1068,7 +1195,8 @@ create table if not exists public.referral_audit_log (
   created_at timestamptz not null default now()
 );
 
-create index if not exists referrals_referrer_idx
+drop index if exists public.referrals_referrer_idx;
+create index referrals_referrer_idx
   on public.referrals (referrer_user_id, created_at desc);
 
 alter table public.referral_codes drop constraint if exists referral_codes_code_format;
@@ -1111,6 +1239,27 @@ alter table public.referral_codes enable row level security;
 alter table public.referrals enable row level security;
 alter table public.referral_rewards enable row level security;
 alter table public.referral_audit_log enable row level security;
+
+do $fn$
+declare
+  policy_name text;
+  target_table text;
+begin
+  foreach target_table in array array[
+    'referral_codes', 'referrals', 'referral_rewards', 'referral_audit_log'
+  ]
+  loop
+    for policy_name in
+      select pol.policyname
+      from pg_policies pol
+      where pol.schemaname = 'public'
+        and pol.tablename = target_table
+    loop
+      execute format('drop policy if exists %I on public.%I', policy_name, target_table);
+    end loop;
+  end loop;
+end
+$fn$;
 
 revoke all on public.referral_codes from anon, authenticated;
 revoke all on public.referrals from anon, authenticated;
@@ -1483,3 +1632,4 @@ begin
   end if;
 end $fn$;
 
+commit;
