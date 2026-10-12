@@ -8,4 +8,4 @@ alter table public.subscriptions
 
 alter table public.subscriptions
   add constraint subscriptions_billing_period_check
-  check (billing_period in ('monthly', 'yearly'));
+  check (billing_period::text in ('monthly', 'yearly'));

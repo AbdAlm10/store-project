@@ -97,6 +97,49 @@ as $fn$
   end;
 $fn$;
 
+-- Live databases may store store_members.role as an enum (membership_role
+-- or another name). text does not match that call. Add an overload for each
+-- existing enum, and for a type named membership_role wherever it lives.
+do $fn$
+declare
+  rec record;
+begin
+  for rec in
+    select distinct n.nspname as type_schema, t.typname as type_name
+    from pg_type t
+    join pg_namespace n on n.oid = t.typnamespace
+    where t.typtype = 'e'
+      and n.nspname not in ('pg_catalog', 'information_schema')
+      and (
+        t.typname = 'membership_role'
+        or exists (
+          select 1
+          from pg_attribute a
+          join pg_class c on c.oid = a.attrelid
+          join pg_namespace cn on cn.oid = c.relnamespace
+          where cn.nspname = 'public'
+            and c.relname = 'store_members'
+            and a.attname = 'role'
+            and not a.attisdropped
+            and a.atttypid = t.oid
+        )
+      )
+  loop
+    execute format(
+      'create or replace function public.store_role_rank(role %I.%I) returns integer language sql immutable as %L',
+      rec.type_schema,
+      rec.type_name,
+      'select public.store_role_rank(role::text)'
+    );
+    execute format(
+      'grant execute on function public.store_role_rank(%I.%I) to anon, authenticated',
+      rec.type_schema,
+      rec.type_name
+    );
+  end loop;
+end
+$fn$;
+
 create or replace function public.protect_profile_privileges()
 returns trigger
 language plpgsql
@@ -167,7 +210,7 @@ alter table public.profiles add column if not exists suspended_at timestamptz;
 alter table public.profiles drop constraint if exists profiles_platform_role_check;
 alter table public.profiles
   add constraint profiles_platform_role_check
-  check (platform_role in ('visitor', 'merchant', 'admin'));
+  check (platform_role::text in ('visitor', 'merchant', 'admin'));
 
 create table if not exists public.stores (
   id uuid primary key default gen_random_uuid(),
@@ -227,17 +270,17 @@ alter table public.stores add column if not exists suspended_at timestamptz;
 alter table public.stores drop constraint if exists stores_status_check;
 alter table public.stores
   add constraint stores_status_check
-  check (status in ('draft', 'published', 'suspended', 'restricted'));
+  check (status::text in ('draft', 'published', 'suspended', 'restricted'));
 
 alter table public.stores drop constraint if exists stores_currency_check;
 alter table public.stores
   add constraint stores_currency_check
-  check (currency in ('USD', 'EUR', 'SYP', 'TRY'));
+  check (currency::text in ('USD', 'EUR', 'SYP', 'TRY'));
 
 alter table public.stores drop constraint if exists stores_theme_id_check;
 alter table public.stores
   add constraint stores_theme_id_check
-  check (theme_id in ('clean', 'bold', 'warm', 'minimal', 'classic', 'ocean', 'night', 'rose'));
+  check (theme_id::text in ('clean', 'bold', 'warm', 'minimal', 'classic', 'ocean', 'night', 'rose'));
 
 alter table public.stores drop constraint if exists stores_theme_overrides_object_check;
 alter table public.stores
@@ -263,7 +306,7 @@ alter table public.store_members add column if not exists created_at timestamptz
 alter table public.store_members drop constraint if exists store_members_role_check;
 alter table public.store_members
   add constraint store_members_role_check
-  check (role in ('owner', 'manager', 'staff'));
+  check (role::text in ('owner', 'manager', 'staff'));
 
 create unique index if not exists store_members_store_user_key
   on public.store_members (store_id, user_id);
@@ -333,12 +376,12 @@ alter table public.products add column if not exists published_at timestamptz;
 alter table public.products drop constraint if exists products_status_check;
 alter table public.products
   add constraint products_status_check
-  check (status in ('draft', 'published', 'archived', 'hidden'));
+  check (status::text in ('draft', 'published', 'archived', 'hidden'));
 
 alter table public.products drop constraint if exists products_currency_check;
 alter table public.products
   add constraint products_currency_check
-  check (currency in ('USD', 'EUR', 'SYP', 'TRY'));
+  check (currency::text in ('USD', 'EUR', 'SYP', 'TRY'));
 
 create table if not exists public.product_images (
   id uuid primary key default gen_random_uuid(),
@@ -406,12 +449,12 @@ alter table public.subscriptions add column if not exists updated_at timestamptz
 alter table public.subscriptions drop constraint if exists subscriptions_plan_id_check;
 alter table public.subscriptions
   add constraint subscriptions_plan_id_check
-  check (plan_id in ('trial', 'basic', 'pro'));
+  check (plan_id::text in ('trial', 'basic', 'pro'));
 
 alter table public.subscriptions drop constraint if exists subscriptions_status_check;
 alter table public.subscriptions
   add constraint subscriptions_status_check
-  check (status in ('trialing', 'active', 'past_due', 'canceled', 'expired', 'restricted'));
+  check (status::text in ('trialing', 'active', 'past_due', 'canceled', 'expired', 'restricted'));
 
 create unique index if not exists subscriptions_store_id_key on public.subscriptions (store_id);
 
@@ -439,7 +482,7 @@ alter table public.analytics_events add column if not exists created_at timestam
 alter table public.analytics_events drop constraint if exists analytics_events_type_check;
 alter table public.analytics_events
   add constraint analytics_events_type_check
-  check (event_type in (
+  check (event_type::text in (
     'store_view', 'product_view', 'whatsapp_click', 'share', 'search', 'qr_scan'
   ));
 
@@ -502,7 +545,7 @@ as $fn$
     from public.store_members m
     where m.store_id = target_store_id
       and m.user_id = auth.uid()
-      and public.store_role_rank(m.role) >= public.store_role_rank(minimum_role)
+      and public.store_role_rank(m.role::text) >= public.store_role_rank(minimum_role::text)
   );
 $fn$;
 
@@ -518,14 +561,14 @@ as $fn$
   select coalesce(
     (
       select
-        s.status in ('trialing', 'active', 'past_due')
+        s.status::text in ('trialing', 'active', 'past_due')
         and (
-          s.status <> 'trialing'
+          s.status::text <> 'trialing'
           or s.trial_ends_at is null
           or s.trial_ends_at >= now()
         )
         and (
-          s.status = 'trialing'
+          s.status::text = 'trialing'
           or s.current_period_end is null
           or s.current_period_end >= now()
         )
@@ -689,7 +732,7 @@ drop policy if exists stores_select on public.stores;
 create policy stores_select
   on public.stores for select to anon, authenticated
   using (
-    status in ('published', 'restricted')
+    status::text in ('published', 'restricted')
     or owner_id = auth.uid()
     or public.is_store_member(id)
   );
@@ -743,7 +786,7 @@ create policy categories_select
     public.is_store_member(store_id)
     or exists (
       select 1 from public.stores s
-      where s.id = store_id and s.status in ('published', 'restricted')
+      where s.id = store_id and s.status::text in ('published', 'restricted')
     )
   );
 
@@ -772,7 +815,7 @@ create policy products_select
       status = 'published'
       and exists (
         select 1 from public.stores s
-        where s.id = store_id and s.status in ('published', 'restricted')
+        where s.id = store_id and s.status::text in ('published', 'restricted')
       )
     )
   );
@@ -805,7 +848,7 @@ create policy product_images_select
       where p.id = product_id
         and p.store_id = product_images.store_id
         and p.status = 'published'
-        and s.status in ('published', 'restricted')
+        and s.status::text in ('published', 'restricted')
     )
   );
 
@@ -837,7 +880,7 @@ create policy product_variants_select
       where p.id = product_id
         and p.store_id = product_variants.store_id
         and p.status = 'published'
-        and s.status in ('published', 'restricted')
+        and s.status::text in ('published', 'restricted')
     )
   );
 
@@ -863,7 +906,7 @@ create policy subscriptions_select_public
   using (
     exists (
       select 1 from public.stores s
-      where s.id = store_id and s.status in ('published', 'restricted')
+      where s.id = store_id and s.status::text in ('published', 'restricted')
     )
   );
 
@@ -968,7 +1011,7 @@ create table if not exists public.support_messages (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users (id) on delete set null,
   store_id uuid references public.stores (id) on delete set null,
-  sender text not null check (sender in ('user', 'system')),
+  sender text not null check (sender::text in ('user', 'system')),
   body text not null check (char_length(trim(body)) > 0 and char_length(body) <= 2000),
   created_at timestamptz not null default now()
 );
@@ -976,7 +1019,7 @@ create table if not exists public.support_messages (
 alter table public.support_messages drop constraint if exists support_messages_sender_check;
 alter table public.support_messages
   add constraint support_messages_sender_check
-  check (sender in ('user', 'system'));
+  check (sender::text in ('user', 'system'));
 
 alter table public.support_messages drop constraint if exists support_messages_body_check;
 alter table public.support_messages
@@ -1056,7 +1099,7 @@ alter table public.subscriptions
 
 alter table public.subscriptions
   add constraint subscriptions_billing_period_check
-  check (billing_period in ('monthly', 'yearly'));
+  check (billing_period::text in ('monthly', 'yearly'));
 
 -- ===========================================================================
 -- supabase/migrations/20260930000000_support_system_sender.sql
@@ -1170,7 +1213,7 @@ create table if not exists public.referrals (
   reject_reason text,
   created_at timestamptz not null default now(),
   rewarded_at timestamptz,
-  constraint referrals_status check (status in ('pending', 'rewarded', 'rejected')),
+  constraint referrals_status check (status::text in ('pending', 'rewarded', 'rejected')),
   constraint referrals_not_self check (referrer_user_id <> referred_user_id)
 );
 
@@ -1215,7 +1258,7 @@ alter table public.referral_codes
 alter table public.referrals drop constraint if exists referrals_status;
 alter table public.referrals
   add constraint referrals_status
-  check (status in ('pending', 'rewarded', 'rejected'));
+  check (status::text in ('pending', 'rewarded', 'rejected'));
 
 alter table public.referrals drop constraint if exists referrals_not_self;
 alter table public.referrals
@@ -1513,8 +1556,8 @@ begin
   join public.stores st on st.id = s.store_id
   where s.store_id = p_store_id
     and st.owner_id = p_referred_user_id
-    and s.plan_id in ('basic', 'pro')
-    and s.status = 'active'
+    and s.plan_id::text in ('basic', 'pro')
+    and s.status::text = 'active'
     and s.current_period_end > now();
 
   if v_plan is null then
@@ -1535,10 +1578,10 @@ begin
   where st.owner_id = v_ref.referrer_user_id
   order by
     case
-      when s.status in ('active', 'trialing', 'past_due')
+      when s.status::text in ('active', 'trialing', 'past_due')
         and (
-          (s.plan_id = 'trial' and (s.trial_ends_at is null or s.trial_ends_at >= now()))
-          or (s.plan_id <> 'trial' and (s.current_period_end is null or s.current_period_end >= now()))
+          (s.plan_id::text = 'trial' and (s.trial_ends_at is null or s.trial_ends_at >= now()))
+          or (s.plan_id::text <> 'trial' and (s.current_period_end is null or s.current_period_end >= now()))
         )
       then 0 else 1
     end,

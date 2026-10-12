@@ -222,6 +222,8 @@ describe("migration intent", () => {
     expect(combined).toContain("create or replace function");
     expect(combined).toContain("drop function if exists");
     expect(combined).toContain("add column if not exists");
+    expect(combined).toContain("store_role_rank(m.role::text)");
+    expect(combined).toContain("t.typname = 'membership_role'");
     expect(applyAll).toMatch(/\nbegin;\n/);
     expect(applyAll.trim().endsWith("commit;")).toBe(true);
     let cursor = 0;

@@ -90,7 +90,7 @@ create table if not exists public.referrals (
   reject_reason text,
   created_at timestamptz not null default now(),
   rewarded_at timestamptz,
-  constraint referrals_status check (status in ('pending', 'rewarded', 'rejected')),
+  constraint referrals_status check (status::text in ('pending', 'rewarded', 'rejected')),
   constraint referrals_not_self check (referrer_user_id <> referred_user_id)
 );
 
@@ -135,7 +135,7 @@ alter table public.referral_codes
 alter table public.referrals drop constraint if exists referrals_status;
 alter table public.referrals
   add constraint referrals_status
-  check (status in ('pending', 'rewarded', 'rejected'));
+  check (status::text in ('pending', 'rewarded', 'rejected'));
 
 alter table public.referrals drop constraint if exists referrals_not_self;
 alter table public.referrals
@@ -433,8 +433,8 @@ begin
   join public.stores st on st.id = s.store_id
   where s.store_id = p_store_id
     and st.owner_id = p_referred_user_id
-    and s.plan_id in ('basic', 'pro')
-    and s.status = 'active'
+    and s.plan_id::text in ('basic', 'pro')
+    and s.status::text = 'active'
     and s.current_period_end > now();
 
   if v_plan is null then
@@ -455,10 +455,10 @@ begin
   where st.owner_id = v_ref.referrer_user_id
   order by
     case
-      when s.status in ('active', 'trialing', 'past_due')
+      when s.status::text in ('active', 'trialing', 'past_due')
         and (
-          (s.plan_id = 'trial' and (s.trial_ends_at is null or s.trial_ends_at >= now()))
-          or (s.plan_id <> 'trial' and (s.current_period_end is null or s.current_period_end >= now()))
+          (s.plan_id::text = 'trial' and (s.trial_ends_at is null or s.trial_ends_at >= now()))
+          or (s.plan_id::text <> 'trial' and (s.current_period_end is null or s.current_period_end >= now()))
         )
       then 0 else 1
     end,
