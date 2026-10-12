@@ -96,10 +96,20 @@ export function resolveNavbarActions(
   return saved.filter((id) => Boolean(storeValueForNavbarAction(store, id)));
 }
 
-function ensureHttpUrl(value: string): string {
-  if (/^https?:\/\//i.test(value)) return value;
-  if (value.startsWith("//")) return `https:${value}`;
-  return `https://${value.replace(/^\/+/, "")}`;
+function ensureHttpUrl(value: string): string | null {
+  const candidate = /^https?:\/\//i.test(value)
+    ? value
+    : value.startsWith("//")
+      ? `https:${value}`
+      : `https://${value.replace(/^\/+/, "")}`;
+  try {
+    const url = new URL(candidate);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    if (url.username || url.password) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
 }
 
 export function hrefForNavbarAction(

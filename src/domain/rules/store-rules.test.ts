@@ -72,7 +72,7 @@ describe("whatsapp ordering", () => {
       quantity: 2,
     });
     expect(result?.url).toContain("wa.me/15550100");
-    expect(result?.message).toContain("Quantity: 2");
+    expect(result?.message).toContain("الكمية: 2");
   });
 });
 

@@ -1,4 +1,5 @@
 import { AppError } from "@/domain/errors";
+import { sniffImageType } from "@/lib/image-bytes";
 import { assertCanManageStore, assertStoreActive } from "@/domain/rules/store-rules";
 import type { StorageProvider, UploadedObject } from "@/application/ports/providers";
 import type {
@@ -38,13 +39,13 @@ export class MediaService {
     },
   ): Promise<UploadedObject> {
     await this.authorizeUpload(storeId);
-    this.validateFile(file);
+    const prepared = await this.prepareFile(file);
     return this.storage.upload({
       storeId,
       folder: "products",
       fileName: file.name,
-      contentType: file.type,
-      data: file.data,
+      contentType: prepared.contentType,
+      data: prepared.data,
     });
   }
 
@@ -60,13 +61,13 @@ export class MediaService {
     options?: { previousUrl?: string | null },
   ): Promise<UploadedObject> {
     const store = await this.authorizeUpload(storeId);
-    this.validateFile(file);
+    const prepared = await this.prepareFile(file);
     const uploaded = await this.storage.upload({
       storeId,
       folder: kind === "category" ? "categories" : "stores",
       fileName: `${kind}-${file.name}`,
-      contentType: file.type,
-      data: file.data,
+      contentType: prepared.contentType,
+      data: prepared.data,
     });
 
     const previousUrl = options?.previousUrl?.trim() || null;
@@ -134,17 +135,38 @@ export class MediaService {
     return store;
   }
 
-  private validateFile(file: { type: string; size: number }): void {
-    if (!ALLOWED_TYPES.has(file.type)) {
+  private async prepareFile(file: {
+    type: string;
+    size: number;
+    data: ArrayBuffer | Buffer | Blob;
+  }): Promise<{ contentType: string; data: Buffer }> {
+    if (file.size > MAX_BYTES) {
+      throw new AppError("VALIDATION", "Images must be 5MB or smaller.");
+    }
+    const data = await toUploadBuffer(file.data);
+    if (data.byteLength > MAX_BYTES) {
+      throw new AppError("VALIDATION", "Images must be 5MB or smaller.");
+    }
+    const sniffed = sniffImageType(data);
+    if (!sniffed || !ALLOWED_TYPES.has(sniffed)) {
       throw new AppError(
         "VALIDATION",
         "Only JPEG, PNG, WebP, and AVIF images are allowed.",
       );
     }
-    if (file.size > MAX_BYTES) {
-      throw new AppError("VALIDATION", "Images must be 5MB or smaller.");
+    if (file.type && ALLOWED_TYPES.has(file.type) && file.type !== sniffed) {
+      throw new AppError("VALIDATION", "محتوى الملف لا يطابق نوع الصورة.");
     }
+    return { contentType: sniffed, data };
   }
+}
+
+async function toUploadBuffer(
+  data: ArrayBuffer | Buffer | Blob,
+): Promise<Buffer> {
+  if (Buffer.isBuffer(data)) return data;
+  if (data instanceof Blob) return Buffer.from(await data.arrayBuffer());
+  return Buffer.from(data);
 }
 
 /** Extract storage object path from a Supabase public URL, or null if not ours. */

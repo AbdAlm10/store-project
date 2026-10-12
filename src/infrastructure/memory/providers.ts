@@ -1,4 +1,10 @@
 import { cookies } from "next/headers";
+import {
+  decodeSessionCookie,
+  encodeSessionCookie,
+  MEMORY_SESSION_COOKIE,
+  type MemorySessionPayload,
+} from "@/infrastructure/memory/session-cookie";
 import type {
   AuthProvider,
   AuthSession,
@@ -11,20 +17,17 @@ import type {
 import { AppError } from "@/domain/errors";
 import { findMemoryProfileByEmail } from "@/infrastructure/memory/repositories";
 
-const MEMORY_SESSION_COOKIE = "ys_memory_session";
-
-type CookiePayload = { id: string; email: string };
-
 async function writeSessionCookie(session: AuthSession): Promise<void> {
   try {
     const jar = await cookies();
-    const payload: CookiePayload = {
+    const payload: MemorySessionPayload = {
       id: session.user.id,
       email: session.user.email,
     };
-    jar.set(MEMORY_SESSION_COOKIE, JSON.stringify(payload), {
+    jar.set(MEMORY_SESSION_COOKIE, encodeSessionCookie(payload), {
       httpOnly: true,
       sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
       path: "/",
       maxAge: 60 * 60 * 24 * 30,
     });
@@ -42,23 +45,30 @@ async function clearSessionCookie(): Promise<void> {
   }
 }
 
-async function readSessionCookie(): Promise<AuthSession | null> {
+function sessionFromPayload(data: MemorySessionPayload): AuthSession {
+  return {
+    user: {
+      id: data.id,
+      email: data.email,
+      emailConfirmed: true,
+    },
+    accessToken: "memory-access-token",
+  };
+}
+
+/**
+ * Cookie is the per-request identity. The in-memory field is only a fallback
+ * for unit tests that run outside a Next.js request.
+ */
+async function readRequestSession(): Promise<AuthSession | null | undefined> {
   try {
     const jar = await cookies();
     const raw = jar.get(MEMORY_SESSION_COOKIE)?.value;
     if (!raw) return null;
-    const data = JSON.parse(raw) as CookiePayload;
-    if (!data?.id || !data?.email) return null;
-    return {
-      user: {
-        id: data.id,
-        email: data.email,
-        emailConfirmed: true,
-      },
-      accessToken: "memory-access-token",
-    };
+    const data = decodeSessionCookie(raw);
+    return data ? sessionFromPayload(data) : null;
   } catch {
-    return null;
+    return undefined;
   }
 }
 
@@ -142,8 +152,8 @@ export class MemoryAuthProvider implements AuthProvider {
   }
 
   async getSession(): Promise<AuthSession | null> {
-    if (this.session) return this.session;
-    this.session = await readSessionCookie();
+    const fromRequest = await readRequestSession();
+    if (fromRequest !== undefined) return fromRequest;
     return this.session;
   }
 

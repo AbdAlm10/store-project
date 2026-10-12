@@ -133,6 +133,8 @@ export class MemoryUserRepository implements UserRepository {
     const existing = db.profiles.get(profile.id);
     const next: Profile = {
       ...profile,
+      platformRole: existing?.platformRole ?? profile.platformRole,
+      suspendedAt: existing ? existing.suspendedAt : profile.suspendedAt,
       createdAt: existing?.createdAt ?? profile.createdAt ?? now(),
       updatedAt: now(),
     };

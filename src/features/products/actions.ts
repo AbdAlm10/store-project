@@ -2,6 +2,8 @@
 
 import { getServices } from "@/infrastructure/container";
 import { toUserMessage } from "@/domain/errors";
+
+const MAX_BULK_PRODUCTS = 100;
 import {
   revalidateStorefrontProduct,
   revalidateStorefrontStore,
@@ -78,6 +80,9 @@ export async function bulkUpdateProductStatusAction(
     if (uniqueIds.length === 0) {
       return { ok: false, error: "No products selected." };
     }
+    if (uniqueIds.length > MAX_BULK_PRODUCTS) {
+      return { ok: false, error: "يمكن تحديد 100 منتج كحد أقصى." };
+    }
 
     const services = getServices();
     const store = await services.stores.getStoreForOwner(storeId);
@@ -99,6 +104,9 @@ export async function bulkDeleteProductsAction(
     const uniqueIds = [...new Set(productIds.filter(Boolean))];
     if (uniqueIds.length === 0) {
       return { ok: false, error: "No products selected." };
+    }
+    if (uniqueIds.length > MAX_BULK_PRODUCTS) {
+      return { ok: false, error: "يمكن تحديد 100 منتج كحد أقصى." };
     }
 
     const services = getServices();

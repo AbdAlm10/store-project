@@ -37,6 +37,7 @@ import {
   storeToRow,
   withMedia,
 } from "@/infrastructure/supabase/mappers";
+import { postgrestOrIlike } from "@/lib/postgrest-filter";
 import { createSupabaseServerClient } from "@/infrastructure/supabase/server";
 
 async function db() {
@@ -64,22 +65,31 @@ export class SupabaseUserRepository implements UserRepository {
       Partial<Pick<Profile, "createdAt" | "updatedAt">>,
   ) {
     const supabase = await db();
-    const { data, error } = await supabase
-      .from("profiles")
-      .upsert(
-        {
-          id: profile.id,
-          email: profile.email,
-          full_name: profile.fullName,
-          avatar_url: profile.avatarUrl,
-          platform_role: profile.platformRole,
-          locale: profile.locale,
-          suspended_at: profile.suspendedAt,
-        },
-        { onConflict: "id" },
-      )
-      .select("*")
-      .single();
+    const existing = await this.findProfileById(profile.id);
+    const writable = {
+      email: profile.email,
+      full_name: profile.fullName,
+      avatar_url: profile.avatarUrl,
+      locale: profile.locale,
+      updated_at: new Date().toISOString(),
+    };
+    const { data, error } = existing
+      ? await supabase
+          .from("profiles")
+          .update(writable)
+          .eq("id", profile.id)
+          .select("*")
+          .single()
+      : await supabase
+          .from("profiles")
+          .insert({
+            id: profile.id,
+            ...writable,
+            platform_role: profile.platformRole,
+            suspended_at: profile.suspendedAt,
+          })
+          .select("*")
+          .single();
     if (error || !data) fail(error?.message ?? "Profile upsert failed");
     return mapProfile(data);
   }
@@ -416,8 +426,9 @@ export class SupabaseProductRepository implements ProductRepository {
       }
     }
     if (query.search?.trim()) {
-      const q = `%${query.search.trim()}%`;
-      builder = builder.or(`name.ilike.${q},description.ilike.${q}`);
+      builder = builder.or(
+        postgrestOrIlike(["name", "description"], query.search.trim()),
+      );
     }
 
     const from = (page - 1) * pageSize;

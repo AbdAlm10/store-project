@@ -183,9 +183,12 @@ export class AnalyticsService {
 
   async getDashboardStats(
     storeId: string,
-    rangeDays: 1 | 7 | 30 | 90,
+    rangeDays: number,
     options?: { includeTopProducts?: boolean },
   ): Promise<DashboardStats> {
+    if (rangeDays !== 1 && rangeDays !== 7 && rangeDays !== 30 && rangeDays !== 90) {
+      throw new AppError("VALIDATION", "نطاق التحليلات غير صالح.");
+    }
     const includeTopProducts = options?.includeTopProducts ?? true;
     const { session } = await this.auth.requireProfile();
     const store = await this.stores.findById(storeId);

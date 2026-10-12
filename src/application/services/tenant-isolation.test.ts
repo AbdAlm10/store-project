@@ -58,6 +58,8 @@ describe("auth + tenant isolation", () => {
       services.products.create(storeId, {
         name: "Duplicate Clear Case",
         slug: "clear-magsafe-case",
+        description:
+          "A duplicate clear case used only to assert the slug conflict check.",
         price: 20,
         status: "draft",
       }),

@@ -1,6 +1,6 @@
 "use server";
 
-import { toUserMessage } from "@/domain/errors";
+import { AppError, toUserMessage } from "@/domain/errors";
 import { getServices } from "@/infrastructure/container";
 import { isSupabaseConfigured } from "@/infrastructure/supabase/config";
 import { createSupabaseServerClient } from "@/infrastructure/supabase/server";
@@ -67,7 +67,7 @@ export async function sendSupportMessageAction(input: {
         },
       ]);
       if (error) {
-        throw new Error(error.message);
+        throw new AppError("INTERNAL", "تعذّر إرسال الرسالة.");
       }
     } else {
       saveSupportMessageMemory(userMessage);
@@ -95,7 +95,7 @@ export async function listSupportMessagesAction(): Promise<
         .eq("user_id", userId)
         .order("created_at", { ascending: true })
         .limit(100);
-      if (error) throw new Error(error.message);
+      if (error) throw new AppError("INTERNAL", "تعذّر تحميل الرسائل.");
       const messages: SupportMessage[] = (data ?? []).map((row) => ({
         id: row.id as string,
         userId: (row.user_id as string | null) ?? null,

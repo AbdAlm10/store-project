@@ -210,6 +210,18 @@ export class ProductService {
     }
 
     const data = productSchema.partial().parse(input);
+    if (data.images) {
+      const maxImages = await this.entitlements.maxImagesPerProduct(storeId);
+      if (data.images.length < 1) {
+        throw new AppError("VALIDATION", "Add at least one product image.");
+      }
+      if (data.images.length > maxImages) {
+        throw new AppError(
+          "LIMIT_REACHED",
+          `Your plan allows up to ${maxImages} images per product.`,
+        );
+      }
+    }
     const patch: Partial<Product> = {};
 
     if (data.name !== undefined) patch.name = data.name;
@@ -236,16 +248,6 @@ export class ProductService {
     const updated = await this.products.update(productId, patch);
 
     if (data.images) {
-      const maxImages = await this.entitlements.maxImagesPerProduct(storeId);
-      if (data.images.length < 1) {
-        throw new AppError("VALIDATION", "Add at least one product image.");
-      }
-      if (data.images.length > maxImages) {
-        throw new AppError(
-          "LIMIT_REACHED",
-          `Your plan allows up to ${maxImages} images per product.`,
-        );
-      }
       await this.products.replaceImages(
         productId,
         storeId,
@@ -297,8 +299,9 @@ export class ProductService {
     const count = await this.products.countByStore(storeId);
     await this.entitlements.assertCanCreateProduct(storeId, count);
 
+    const copySuffix = " (copy)";
     return this.create(storeId, {
-      name: `${existing.name} (copy)`,
+      name: `${existing.name.slice(0, 160 - copySuffix.length)}${copySuffix}`,
       description: existing.description,
       price: existing.price,
       compareAtPrice: existing.compareAtPrice,

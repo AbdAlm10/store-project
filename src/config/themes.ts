@@ -104,21 +104,53 @@ export function getTheme(_id?: ThemeId | null): ThemeDefinition {
   return { id: "clean", tokens: DEFAULT_THEME_TOKENS };
 }
 
+const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
+const LOGO_SIZE_VALUES = new Set<string>(
+  LOGO_SIZE_OPTIONS.map((option) => option.value),
+);
+
+function safeColor(value: string | undefined, fallback: string): string {
+  return value && HEX_COLOR.test(value) ? value : fallback;
+}
+
+function safeRadius(value: string | undefined, fallback: string): string {
+  if (!value || value.length > 16) return fallback;
+  const match = /^(\d+(?:\.\d+)?)(rem|px)$/.exec(value);
+  if (!match) return fallback;
+  const amount = Number(match[1]);
+  if (!Number.isFinite(amount) || amount < 0) return fallback;
+  if (match[2] === "rem" && amount <= 4) return value;
+  if (match[2] === "px" && amount <= 64) return value;
+  return fallback;
+}
+
 export function resolveThemeTokens(
   theme: ThemeDefinition | ThemeTokens = DEFAULT_THEME_TOKENS,
   overrides?: ThemeOverrides | null,
   primaryColor?: string | null,
 ): ThemeTokens {
   const base = "tokens" in theme ? theme.tokens : theme;
-  const { navbarActions: _navbarActions, ...tokenOverrides } = overrides ?? {};
-  void _navbarActions;
+  const tokenOverrides = overrides ?? {};
   const merged: ThemeTokens = {
     ...base,
-    ...tokenOverrides,
     fontDisplay: DEFAULT_THEME_TOKENS.fontDisplay,
     fontBody: DEFAULT_THEME_TOKENS.fontBody,
   };
-  if (primaryColor) {
+  for (const key of THEME_TOKEN_KEYS) {
+    const value = tokenOverrides[key];
+    if (typeof value === "string") merged[key] = safeColor(value, base[key]);
+  }
+  if (
+    typeof tokenOverrides.logoSize === "string" &&
+    LOGO_SIZE_VALUES.has(tokenOverrides.logoSize)
+  ) {
+    merged.logoSize = tokenOverrides.logoSize;
+  }
+  merged.radius = safeRadius(
+    typeof tokenOverrides.radius === "string" ? tokenOverrides.radius : undefined,
+    base.radius,
+  );
+  if (primaryColor && HEX_COLOR.test(primaryColor)) {
     merged.accent = primaryColor;
   }
   return merged;
