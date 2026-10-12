@@ -234,6 +234,31 @@ describe("migration intent", () => {
     }
   });
 
+  it("keeps the live delta idempotent and does not rename live functions", () => {
+    const sql = readFileSync(
+      path.join(process.cwd(), "supabase", "apply_live.sql"),
+      "utf8",
+    );
+    expect(sql).not.toMatch(/\$\$/);
+    expect((sql.match(/\$fn\$/g) ?? []).length % 2).toBe(0);
+    expect(sql).toMatch(/\nbegin;\n/);
+    expect(sql.trim().endsWith("commit;")).toBe(true);
+    expect(sql).not.toContain("create or replace function public.is_store_member");
+    expect(sql).toContain("is_store_subscription_usable(target_store_id uuid)");
+    expect(sql).toContain("has_store_role(target_store_id uuid, minimum_role text)");
+    expect(sql).toContain("store_role_rank(m.role::text)");
+    expect(sql).toContain("store_role_rank(role public.membership_role)");
+    expect(sql).toContain('drop policy if exists "Users can update own profile"');
+    expect(sql).toContain("drop policy if exists analytics_insert_public");
+    expect(sql).toContain("drop policy if exists support_messages_insert_system_own");
+    expect(sql).toContain("drop policy if exists subscriptions_update_member");
+    expect(sql).toContain("client_request_id");
+    expect(sql).toContain("ensure_referral_code(p_user_id uuid)");
+    expect(sql).toContain("revoke update (platform_role, suspended_at)");
+    expect(sql).not.toContain("drop function if exists public.is_store_member");
+    expect(sql).not.toContain("drop table");
+  });
+
   it("does not wildcard private image hosts", () => {
     const config = readFileSync(path.join(process.cwd(), "next.config.ts"), "utf8");
     expect(config).not.toContain('hostname: "**"');
