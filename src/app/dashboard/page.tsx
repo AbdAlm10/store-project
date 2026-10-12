@@ -31,6 +31,7 @@ import {
 import { DashboardTopBar } from "@/components/dashboard/dashboard-top-bar";
 import { LiveMetrics } from "@/components/dashboard/live-metrics";
 import { computeStoreHealth } from "@/domain/rules/store-health";
+import { PublishChecklistAction } from "@/features/stores/publish-store-button";
 import { EmptyState } from "@/components/ui/feedback";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
@@ -160,10 +161,13 @@ export default async function DashboardHomePage() {
           </div>
           <ul className="mt-4 max-h-40 space-y-0.5 overflow-y-auto ys-scrollbar-none">
             {health.items.map((item) => (
-              <li key={item.id}>
+              <li
+                key={item.id}
+                className="flex items-center gap-2 rounded-xl px-1 py-1.5 text-sm text-slate-600 transition hover:bg-white/60 hover:text-slate-900"
+              >
                 <Link
                   href={item.href}
-                  className="flex items-center gap-2 rounded-xl px-1 py-1.5 text-sm text-slate-600 transition hover:bg-white/60 hover:text-slate-900"
+                  className="flex min-w-0 flex-1 items-center gap-2"
                 >
                   {item.done ? (
                     <Check className="h-4 w-4 text-brand-600" aria-hidden />
@@ -171,9 +175,15 @@ export default async function DashboardHomePage() {
                     <Circle className="h-4 w-4 text-slate-300" aria-hidden />
                   )}
                   <span className={item.done ? "text-slate-400" : "font-medium text-slate-800"}>
-                    {t(item.labelKey)}
+                    {t(item.done ? item.labelKey : item.pendingLabelKey)}
                   </span>
                 </Link>
+                {item.id === "published" && !item.done ? (
+                  <PublishChecklistAction
+                    storeId={store.id}
+                    hasWhatsapp={Boolean(store.whatsapp?.trim())}
+                  />
+                ) : null}
               </li>
             ))}
           </ul>
@@ -258,6 +268,7 @@ export default async function DashboardHomePage() {
             label={t("qaPreview")}
             description={t("qaPreviewDesc")}
             icon={Share2}
+            reload
           />
         </div>
       </section>

@@ -9,6 +9,7 @@ import {
   WEEKDAYS,
   defaultOpeningHours,
   formatTime12h,
+  isLegacyOpeningHoursText,
   parseOpeningHours,
 } from "@/lib/opening-hours";
 import { cn } from "@/lib/utils/cn";
@@ -33,13 +34,15 @@ export function OpeningHoursEditor({
   legacyText?: string | null;
 }) {
   const { t } = useI18n();
-  const schedule = parseOpeningHours(value);
+  const structured = Boolean(value?.trim()) && !isLegacyOpeningHoursText(value);
+  const schedule = structured ? parseOpeningHours(value) : null;
 
   function commit(next: OpeningHoursSchedule) {
     onChange(JSON.stringify(next));
   }
 
   function updateDay(day: Weekday, patch: Partial<DayHours>) {
+    if (!schedule) return;
     commit({
       version: 1,
       days: schedule.days.map((item) =>
@@ -49,6 +52,7 @@ export function OpeningHoursEditor({
   }
 
   function applyWeekdays() {
+    if (!schedule) return;
     const template = schedule.days.find((d) => d.day === "mon") ?? {
       day: "mon" as const,
       closed: false,
@@ -68,6 +72,31 @@ export function OpeningHoursEditor({
 
   function resetDefaults() {
     commit(defaultOpeningHours());
+  }
+
+  if (!schedule) {
+    return (
+      <div className="space-y-2.5">
+        <div>
+          <p className="text-sm font-semibold text-slate-900">
+            {t("openingHours")}
+          </p>
+          <p className="text-xs text-slate-500">{t("hoursNotSet")}</p>
+        </div>
+        {legacyText ? (
+          <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            {t("hoursLegacyNote")}: {legacyText}
+          </p>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => commit(defaultOpeningHours())}
+          className="rounded-lg px-2 py-1 text-xs font-medium text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
+        >
+          {t("setOpeningHours")}
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -93,6 +122,13 @@ export function OpeningHoursEditor({
             className="rounded-lg px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
           >
             {t("hoursReset")}
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="rounded-lg px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
+          >
+            {t("clearOpeningHours")}
           </button>
         </div>
       </div>

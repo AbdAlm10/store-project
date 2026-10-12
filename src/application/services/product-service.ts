@@ -116,6 +116,17 @@ export class ProductService {
     const store = await this.requireStaff(storeId);
     assertStoreActive(store);
     const data = productSchema.parse(input);
+    const requestId = data.clientRequestId?.trim();
+    if (requestId) {
+      const prior = await this.products
+        .findByClientRequestId(storeId, requestId)
+        .catch((error: unknown) => {
+          const message = error instanceof Error ? error.message : "";
+          if (/client_request_id/i.test(message)) return null;
+          throw error;
+        });
+      if (prior && prior.storeId === storeId) return prior;
+    }
     const count = await this.products.countByStore(storeId);
     await this.entitlements.assertCanCreateProduct(storeId, count);
 
@@ -160,6 +171,7 @@ export class ProductService {
       specifications: data.specifications ?? {},
       featured: data.featured ?? false,
       publishedAt: status === "published" ? new Date().toISOString() : null,
+      clientRequestId: requestId || null,
     });
 
     if (data.images?.length) {

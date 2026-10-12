@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   discountPercent,
   isSubscriptionUsable,
+  publishNeedsWhatsapp,
   slugify,
 } from "@/domain/rules/store-rules";
 import { EntitlementService } from "@/application/services/entitlement-service";
@@ -18,6 +19,31 @@ describe("domain rules", () => {
 
   it("slugifies store names", () => {
     expect(slugify("Al Noor Store!")).toBe("al-noor-store");
+  });
+
+  it("requires a WhatsApp number only when publishing", () => {
+    expect(
+      publishNeedsWhatsapp({
+        currentStatus: "draft",
+        currentWhatsapp: null,
+        nextStatus: "published",
+      }),
+    ).toBe(true);
+    expect(
+      publishNeedsWhatsapp({
+        currentStatus: "draft",
+        currentWhatsapp: "   ",
+        nextStatus: "published",
+        nextWhatsapp: "+963944000000",
+      }),
+    ).toBe(false);
+    expect(
+      publishNeedsWhatsapp({
+        currentStatus: "published",
+        currentWhatsapp: null,
+        nextStatus: "published",
+      }),
+    ).toBe(false);
   });
 
   it("expires paid subscriptions after their current period", () => {

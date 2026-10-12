@@ -41,6 +41,15 @@ describe("store health", () => {
     expect(health.percent).toBeLessThan(50);
     expect(health.items.find((item) => item.id === "name")?.done).toBe(true);
     expect(health.items.find((item) => item.id === "product")?.done).toBe(false);
+    expect(health.items.find((item) => item.id === "whatsapp")?.pendingLabelKey).toBe(
+      "healthWhatsappTodo",
+    );
+    expect(health.items.find((item) => item.id === "published")?.pendingLabelKey).toBe(
+      "healthPublishedTodo",
+    );
+    expect(health.items.find((item) => item.id === "published")?.labelKey).toBe(
+      "healthPublished",
+    );
   });
 
   it("reaches 100% when checklist is complete", () => {

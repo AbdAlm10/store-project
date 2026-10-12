@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { getServices } from "@/infrastructure/container";
 import { toUserMessage } from "@/domain/errors";
 import { revalidateStorefrontStore } from "@/lib/revalidate-storefront";
@@ -15,7 +16,9 @@ export async function createStoreAction(input: {
   try {
     const services = getServices();
     const store = await services.stores.createStore(input);
-    revalidateStorefrontStore(store);
+    after(() => {
+      revalidateStorefrontStore(store);
+    });
     return { ok: true, storeId: store.id };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };

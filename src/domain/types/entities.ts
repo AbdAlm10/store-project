@@ -134,6 +134,8 @@ export type Product = {
   createdAt: string;
   updatedAt: string;
   publishedAt: string | null;
+  /** Set on create so a retried save returns the same product. */
+  clientRequestId?: string | null;
 };
 
 export type ProductWithMedia = Product & {

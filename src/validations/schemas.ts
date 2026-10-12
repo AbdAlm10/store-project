@@ -250,6 +250,13 @@ export const productSchema = z.object({
     .refine((value) => Object.keys(value).length <= 40, "عدد المواصفات كبير جدًا.")
     .optional(),
   featured: z.boolean().optional(),
+  clientRequestId: z
+    .string()
+    .trim()
+    .min(8)
+    .max(80)
+    .regex(/^[A-Za-z0-9_-]+$/)
+    .optional(),
   images: z
     .array(
       z.object({

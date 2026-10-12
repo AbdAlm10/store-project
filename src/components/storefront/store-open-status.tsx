@@ -3,6 +3,7 @@
 import { useI18n } from "@/i18n/provider";
 import {
   formatOpeningHoursSummary,
+  hasOpeningHours,
   isLegacyOpeningHoursText,
   isOpenNow,
   parseOpeningHours,
@@ -89,6 +90,8 @@ export function StoreOpenStatus({
       : isOpen
         ? "#16a34a"
         : "#dc2626";
+
+  if (!hasOpeningHours(openingHours)) return null;
 
   return (
     <div ref={rootRef} className="relative shrink-0">

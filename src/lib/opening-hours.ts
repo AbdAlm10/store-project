@@ -34,6 +34,11 @@ export function defaultOpeningHours(): OpeningHoursSchedule {
   };
 }
 
+/** True when the merchant saved hours. Blank means no open/closed badge. */
+export function hasOpeningHours(raw: string | null | undefined): boolean {
+  return Boolean(raw?.trim());
+}
+
 export function parseOpeningHours(
   raw: string | null | undefined,
 ): OpeningHoursSchedule {

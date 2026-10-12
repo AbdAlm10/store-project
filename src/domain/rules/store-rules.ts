@@ -76,6 +76,22 @@ export function canPublishPublicly(status: StoreStatus): boolean {
   return status === "published";
 }
 
+/** Publishing needs a WhatsApp number. Already-published stores can still be edited. */
+export function publishNeedsWhatsapp(input: {
+  currentStatus: StoreStatus;
+  currentWhatsapp: string | null;
+  nextStatus?: StoreStatus;
+  nextWhatsapp?: string | null;
+}): boolean {
+  const nextStatus = input.nextStatus ?? input.currentStatus;
+  if (nextStatus !== "published" || input.currentStatus === "published") {
+    return false;
+  }
+  const whatsapp =
+    input.nextWhatsapp !== undefined ? input.nextWhatsapp : input.currentWhatsapp;
+  return !whatsapp?.trim();
+}
+
 export function discountPercent(
   price: number,
   compareAtPrice: number | null | undefined,

@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { getServices } from "@/infrastructure/container";
 import { toUserMessage } from "@/domain/errors";
 import { revalidateStorefrontStore } from "@/lib/revalidate-storefront";
@@ -29,7 +30,25 @@ export async function updateStoreAction(
       await services.media.deleteOwnedPublicUrl(storeId, existing.coverUrl);
     }
 
-    revalidateStorefrontStore(store);
+    after(() => {
+      revalidateStorefrontStore(store);
+    });
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: toUserMessage(error) };
+  }
+}
+
+export async function publishStoreAction(
+  storeId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const store = await getServices().stores.updateStore(storeId, {
+      status: "published",
+    });
+    after(() => {
+      revalidateStorefrontStore(store);
+    });
     return { ok: true };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };

@@ -348,17 +348,7 @@ export function ProductPurchasePanel({
             >
               {activeStock === 0 ? t("outOfStock") : t("orderWhatsApp")}
             </a>
-          ) : (
-            <div
-              className="inline-flex rounded-2xl h-14 flex-1 items-center justify-center px-6 text-sm font-bold"
-              style={{
-                background: "var(--store-text)",
-                color: "var(--store-bg)",
-              }}
-            >
-              {t("orderWhatsApp")}
-            </div>
-          )}
+          ) : null}
 
           <FavoriteButton
             storeSlug={store.slug}

@@ -19,7 +19,7 @@ import {
 } from "@/validations/schemas";
 import { cn } from "@/lib/utils/cn";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type VariantDraft = {
   name: string;
@@ -89,7 +89,11 @@ export function ProductForm({
   const { t } = useI18n();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
+  const submitLock = useRef(false);
+  const requestIdRef = useRef(
+    globalThis.crypto?.randomUUID?.() ?? `req-${Date.now().toString(36)}`,
+  );
   const [intent, setIntent] = useState<"archive" | "publish" | "save">("save");
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? "");
   const [variants, setVariants] = useState<VariantDraft[]>(
@@ -115,6 +119,13 @@ export function ProductForm({
   const optionSchema: CategoryOptionDef[] =
     selectedCategory?.optionSchema ?? [];
   const [prunedCount, setPrunedCount] = useState(0);
+  const [uploadingSlots, setUploadingSlots] = useState<Record<number, boolean>>(
+    {},
+  );
+  const [selectedLabels, setSelectedLabels] = useState<Record<string, string[]>>(
+    {},
+  );
+  const uploading = Object.values(uploadingSlots).some(Boolean);
 
   const schemaKey = useMemo(
     () =>
@@ -188,14 +199,26 @@ export function ProductForm({
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
+        if (submitLock.current || uploading) {
+          if (uploading) setError(t("waitForImageUpload"));
+          return;
+        }
         const formData = new FormData(event.currentTarget);
+        const submitter = (event.nativeEvent as SubmitEvent).submitter;
+        const action =
+          submitter instanceof HTMLButtonElement && submitter.value
+            ? submitter.value
+            : intent;
         const statusOverride =
-          intent === "archive"
+          action === "archive"
             ? "archived"
-            : intent === "publish"
+            : action === "publish"
               ? "published"
               : undefined;
-        const payload = buildPayload(formData, statusOverride);
+        const payload = {
+          ...buildPayload(formData, statusOverride),
+          ...(productId ? {} : { clientRequestId: requestIdRef.current }),
+        };
         if (!payload.name.trim()) {
           setError(t("productNameRequired"));
           return;
@@ -212,17 +235,29 @@ export function ProductForm({
         }
 
         setError(null);
-        startTransition(async () => {
-          const result = productId
-            ? await updateProductAction(storeId, productId, payload)
-            : await createProductAction(storeId, payload);
-          if (!result.ok) {
-            setError(result.error);
-            return;
+        if (action === "archive" || action === "publish" || action === "save") {
+          setIntent(action);
+        }
+        submitLock.current = true;
+        setPending(true);
+        void (async () => {
+          try {
+            const result = productId
+              ? await updateProductAction(storeId, productId, payload)
+              : await createProductAction(storeId, payload);
+            if (!result.ok) {
+              setError(result.error);
+              submitLock.current = false;
+              setPending(false);
+              return;
+            }
+            router.push("/dashboard/products");
+            router.refresh();
+          } catch {
+            submitLock.current = false;
+            setPending(false);
           }
-          router.push("/dashboard/products");
-          router.refresh();
-        });
+        })();
       }}
     >
       <Section title={t("sectionProductInfo")}>
@@ -323,32 +358,88 @@ export function ProductForm({
       <Section title={t("variantsSection")} description={t("variantsHint")}>
         {optionSchema.length > 0 ? (
           <div className="flex flex-wrap gap-2">
+            {optionSchema.map((opt) =>
+              opt.values.length === 0 ? null : (
+                <div key={opt.id} className="w-full space-y-1.5">
+                  <p className="text-xs font-semibold text-slate-500">
+                    {opt.name}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {opt.values.map((value) => {
+                      const selected = (selectedLabels[opt.name] ?? []).includes(
+                        value.label,
+                      );
+                      return (
+                        <button
+                          key={`${opt.id}-${value.label}`}
+                          type="button"
+                          aria-pressed={selected}
+                          className={cn(
+                            "rounded-full px-3 py-1 text-xs font-medium ring-1 transition",
+                            selected
+                              ? "bg-brand-700 text-white ring-brand-700"
+                              : "bg-white text-slate-700 ring-slate-200 hover:bg-slate-50",
+                          )}
+                          onClick={() =>
+                            setSelectedLabels((current) => {
+                              const list = current[opt.name] ?? [];
+                              const next = list.includes(value.label)
+                                ? list.filter((item) => item !== value.label)
+                                : [...list, value.label];
+                              return { ...current, [opt.name]: next };
+                            })
+                          }
+                        >
+                          {value.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ),
+            )}
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => {
-                const matrix = buildVariantMatrix(optionSchema);
+                const axes = optionSchema.filter((opt) => opt.values.length > 0);
+                const missing = axes.some(
+                  (opt) => (selectedLabels[opt.name] ?? []).length === 0,
+                );
+                if (missing) {
+                  setError(t("pickVariantValuesHint"));
+                  return;
+                }
+                const narrowed = optionSchema.map((opt) => ({
+                  ...opt,
+                  values: opt.values.filter((value) =>
+                    (selectedLabels[opt.name] ?? []).includes(value.label),
+                  ),
+                }));
+                const matrix = buildVariantMatrix(narrowed);
+                const priceField = document.getElementById("price");
+                const typed =
+                  priceField instanceof HTMLInputElement
+                    ? priceField.value.trim()
+                    : "";
+                const price = typed || String(initial?.price ?? "");
+                setError(null);
                 setVariants(
                   matrix.map((item) => ({
                     name: item.name,
                     options: item.options,
-                    price: "",
+                    price,
                     stock: "",
                   })),
                 );
                 setPrunedCount(0);
               }}
             >
-              {t("generateVariants")}
+              {t("generateSelectedVariants")}
             </Button>
             <p className="w-full text-xs text-slate-500">
-              {optionSchema
-                .map(
-                  (opt) =>
-                    `${opt.name}: ${opt.values.map((value) => value.label).join("/")}`,
-                )
-                .join(" · ")}
+              {t("pickVariantValuesHint")}
             </p>
             {prunedCount > 0 ? (
               <p className="w-full rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900 ring-1 ring-amber-200">
@@ -448,6 +539,12 @@ export function ProductForm({
                 kind="product"
                 compact
                 value={url}
+                onBusyChange={(busy) =>
+                  setUploadingSlots((current) => ({
+                    ...current,
+                    [index]: busy,
+                  }))
+                }
                 onChange={(next) =>
                   setImageUrls((list) =>
                     list.map((item, i) => (i === index ? next : item)),
@@ -469,7 +566,8 @@ export function ProductForm({
       <div className="flex flex-wrap gap-2">
         <Button
           type="submit"
-          disabled={pending}
+          value="save"
+          disabled={pending || uploading}
           onClick={() => setIntent("save")}
         >
           {pending && intent === "save" ? (
@@ -483,8 +581,9 @@ export function ProductForm({
         </Button>
         <Button
           type="submit"
+          value="archive"
           variant="outline"
-          disabled={pending}
+          disabled={pending || uploading}
           onClick={() => setIntent("archive")}
         >
           {pending && intent === "archive" ? (
@@ -494,8 +593,9 @@ export function ProductForm({
         </Button>
         <Button
           type="submit"
+          value="publish"
           variant="secondary"
-          disabled={pending}
+          disabled={pending || uploading}
           onClick={() => setIntent("publish")}
         >
           {pending && intent === "publish" ? (
@@ -506,7 +606,7 @@ export function ProductForm({
         <Button
           type="button"
           variant="ghost"
-          disabled={pending}
+          disabled={pending || uploading}
           onClick={() => router.push("/dashboard/products")}
         >
           {t("cancel")}

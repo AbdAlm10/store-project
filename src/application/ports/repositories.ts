@@ -59,6 +59,7 @@ export interface ProductRepository {
   list(query: ListProductsQuery): Promise<Paginated<ProductWithMedia>>;
   findById(id: string): Promise<ProductWithMedia | null>;
   findBySlug(storeId: string, slug: string): Promise<ProductWithMedia | null>;
+  findByClientRequestId(storeId: string, requestId: string): Promise<Product | null>;
   countByStore(storeId: string, statuses?: ProductStatus[]): Promise<number>;
   create(input: Omit<Product, "id" | "createdAt" | "updatedAt" | "publishedAt"> & { id?: string; publishedAt?: string | null }): Promise<Product>;
   update(id: string, patch: Partial<Product>): Promise<Product>;

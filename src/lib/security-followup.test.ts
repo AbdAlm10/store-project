@@ -203,6 +203,7 @@ describe("migration intent", () => {
       "20260929000000_subscription_billing_period.sql",
       "20260930000000_support_system_sender.sql",
       "20261012000000_referrals.sql",
+      "20261013000000_product_client_request_id.sql",
     ];
     const combined = files
       .map((file) => readFileSync(path.join(root, file), "utf8"))

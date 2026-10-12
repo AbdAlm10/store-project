@@ -1,4 +1,5 @@
 import { StorefrontPlanCredit } from "@/components/brand/storefront-plan-credit";
+import { DraftPreviewBanner } from "@/components/storefront/draft-preview-banner";
 import { ProductCardSkeleton } from "@/components/storefront/product-card";
 import { StoreCatalog } from "@/components/storefront/store-catalog";
 import { StoreNav } from "@/components/storefront/store-header";
@@ -24,7 +25,6 @@ import {
 } from "@/lib/storefront-data";
 import { isStorefrontLocked, toLockedStore } from "@/lib/store-storefront-access";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -136,12 +136,13 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
             action={t("upgradeSubscription")}
           />
         ) : (
-          <div className="bg-amber-500 px-4 py-2 text-center text-sm font-medium text-amber-950">
-            {t("draftStorePreview")} {" "}
-            <Link href="/dashboard/store" className="underline" prefetch={false}>
-              {t("publishStoreNow")}
-            </Link>
-          </div>
+          <DraftPreviewBanner
+            storeId={store.id}
+            hasWhatsapp={Boolean(store.whatsapp?.trim())}
+            message={t("draftStorePreview")}
+            publishLabel={t("publishThisStore")}
+            whatsappLabel={t("whatsappRequiredToPublish")}
+          />
         )
       ) : null}
       <StoreNav store={store} />

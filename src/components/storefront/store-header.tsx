@@ -2,6 +2,7 @@ import { StoreNavActions } from "@/components/storefront/store-nav-actions";
 import { SafeImage } from "@/components/ui/safe-image";
 import type { Store } from "@/domain/types/entities";
 import { resolveNavbarActions } from "@/lib/navbar-actions";
+import { storeInitials } from "@/lib/store-initials";
 import { MapPin } from "lucide-react";
 import Link from "next/link";
 
@@ -53,7 +54,7 @@ export function StoreNav({
             />
           ) : (
             <div
-              className="flex shrink-0 items-center justify-center text-base font-bold sm:text-lg"
+              className="flex shrink-0 items-center justify-center text-xs font-bold leading-none sm:text-sm"
               style={{
                 height: "var(--store-logo-size)",
                 width: "var(--store-logo-size)",
@@ -62,7 +63,7 @@ export function StoreNav({
                 color: "var(--store-button-text)",
               }}
             >
-              {store.name.slice(0, 1)}
+              {storeInitials(store.name)}
             </div>
           )}
           <div className="min-w-0">
@@ -72,6 +73,11 @@ export function StoreNav({
             >
               {store.name}
             </span>
+            {store.description?.trim() ? (
+              <span className="mt-0.5 block truncate text-xs opacity-75 sm:text-sm">
+                {store.description}
+              </span>
+            ) : null}
             {store.location && !actions.includes("location") ? (
               <span className="mt-0.5 flex min-w-0 items-center text-xs opacity-75 sm:text-sm">
                 <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />

@@ -326,6 +326,15 @@ export class MemoryProductRepository implements ProductRepository {
     return product ? withMedia(product) : null;
   }
 
+  async findByClientRequestId(storeId: string, requestId: string) {
+    return (
+      [...db.products.values()].find(
+        (item) =>
+          item.storeId === storeId && item.clientRequestId === requestId,
+      ) ?? null
+    );
+  }
+
   async countByStore(storeId: string, statuses?: ProductStatus[]) {
     return [...db.products.values()].filter(
       (product) =>
@@ -358,7 +367,16 @@ export class MemoryProductRepository implements ProductRepository {
       createdAt: now(),
       updatedAt: now(),
       publishedAt: input.publishedAt ?? null,
+      clientRequestId: input.clientRequestId ?? null,
     };
+    if (input.clientRequestId) {
+      const existing = [...db.products.values()].find(
+        (item) =>
+          item.storeId === input.storeId &&
+          item.clientRequestId === input.clientRequestId,
+      );
+      if (existing) return existing;
+    }
     db.products.set(product.id, product);
     return product;
   }

@@ -10,8 +10,8 @@ import { useI18n } from "@/i18n/provider";
 import {
   isColorOptionName,
   isSizeOptionName,
-  resolveValueHex,
 } from "@/lib/option-colors";
+import { usedFilterValues } from "@/lib/used-filter-values";
 import { cn } from "@/lib/utils/cn";
 import {
   ChevronDown,
@@ -109,61 +109,20 @@ export function StoreCatalog({
     return categories;
   }, [categories, categorySlug, categoryBySlug]);
 
-  const sizeOptions = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const cat of schemaSource) {
-      for (const opt of cat.optionSchema) {
-        if (!isSizeOptionName(opt.name)) continue;
-        for (const value of opt.values) {
-          if (value.label) map.set(value.label.toLowerCase(), value.label);
-        }
-      }
-    }
-    return [...map.values()];
-  }, [schemaSource]);
+  const filterProducts = useMemo(() => {
+    if (!categorySlug) return products;
+    const category = categoryBySlug.get(categorySlug);
+    if (!category) return products;
+    return products.filter((item) => item.categoryId === category.id);
+  }, [products, categorySlug, categoryBySlug]);
 
-  const colorOptions = useMemo(() => {
-    const map = new Map<string, { label: string; hex: string }>();
-    for (const cat of schemaSource) {
-      for (const opt of cat.optionSchema) {
-        if (!(opt.kind === "color" || isColorOptionName(opt.name))) continue;
-        for (const value of opt.values) {
-          if (!value.label) continue;
-          const key = value.label.toLowerCase();
-          if (map.has(key)) continue;
-          map.set(key, {
-            label: value.label,
-            hex: resolveValueHex(value) ?? "#94A3B8",
-          });
-        }
-      }
-    }
-    return [...map.values()];
-  }, [schemaSource]);
-
-  const propertyGroups = useMemo(() => {
-    const groups: Array<{ name: string; values: string[] }> = [];
-    const seenNames = new Set<string>();
-    for (const cat of schemaSource) {
-      for (const opt of cat.optionSchema) {
-        if (isSizeOptionName(opt.name)) continue;
-        if (opt.kind === "color" || isColorOptionName(opt.name)) continue;
-        const key = opt.name.trim().toLowerCase();
-        if (!key || seenNames.has(key)) continue;
-        const values = [
-          ...new Map(
-            opt.values
-              .filter((value) => value.label.trim())
-              .map((value) => [value.label.toLowerCase(), value.label]),
-          ).values(),
-        ];
-        if (!values.length) continue;
-        seenNames.add(key);
-        groups.push({ name: opt.name, values });
-      }
-    }
-    return groups;
-  }, [schemaSource]);
+  const usedFilters = useMemo(
+    () => usedFilterValues(filterProducts, schemaSource),
+    [filterProducts, schemaSource],
+  );
+  const sizeOptions = usedFilters.sizes;
+  const colorOptions = usedFilters.colors;
+  const propertyGroups = usedFilters.groups;
 
   const filtered = useMemo(() => {
     let list = [...products];

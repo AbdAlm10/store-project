@@ -474,6 +474,18 @@ export class SupabaseProductRepository implements ProductRepository {
     return item ?? null;
   }
 
+  async findByClientRequestId(storeId: string, requestId: string) {
+    const supabase = await db();
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("store_id", storeId)
+      .eq("client_request_id", requestId)
+      .maybeSingle();
+    if (error) fail(error.message);
+    return data ? mapProduct(data) : null;
+  }
+
   async countByStore(storeId: string, statuses?: ProductStatus[]) {
     const supabase = await db();
     let builder = supabase
@@ -491,14 +503,31 @@ export class SupabaseProductRepository implements ProductRepository {
       id?: string;
       publishedAt?: string | null;
     },
-  ) {
+  ): Promise<Product> {
     const supabase = await db();
     const { data, error } = await supabase
       .from("products")
       .insert(productToRow({ ...input, publishedAt: input.publishedAt ?? null }))
       .select("*")
       .single();
-    if (error || !data) fail(error?.message ?? "Product create failed");
+    if (error || !data) {
+      const message = error?.message ?? "Product create failed";
+      if (input.clientRequestId) {
+        const existing = await this.findByClientRequestId(
+          input.storeId,
+          input.clientRequestId,
+        ).catch(() => null);
+        if (existing) return existing;
+        if (
+          /client_request_id/i.test(message) &&
+          /does not exist|schema cache|could not find/i.test(message)
+        ) {
+          const { clientRequestId: _ignored, ...rest } = input;
+          return this.create(rest);
+        }
+      }
+      fail(message);
+    }
     return mapProduct(data);
   }
 
