@@ -1,5 +1,6 @@
 import { LOGO_SIZE_OPTIONS, THEME_TOKEN_KEYS } from "@/config/themes";
 import { isAllowedImageUrl } from "@/lib/http-url";
+import { isReservedStoreSlug } from "@/lib/reserved-slugs";
 import {
   isColorOptionName,
   parseOptionValueInput,
@@ -65,23 +66,6 @@ export const updatePasswordSchema = z
     path: ["confirmPassword"],
   });
 
-const RESERVED_STORE_SLUGS = new Set([
-  "admin",
-  "api",
-  "dashboard",
-  "login",
-  "register",
-  "reset-password",
-  "onboarding",
-  "settings",
-  "subscription",
-  "explore",
-  "app",
-  "www",
-  "static",
-  "assets",
-]);
-
 const internationalPhoneSchema = z
   .string()
   .trim()
@@ -93,8 +77,8 @@ const internationalPhoneSchema = z
 export const createStoreSchema = z.object({
   name: z.string().trim().min(2).max(80),
   slug: slugSchema.refine(
-    (slug) => !RESERVED_STORE_SLUGS.has(slug),
-    "This store URL is reserved. Choose another.",
+    (slug) => !isReservedStoreSlug(slug),
+    "رابط المتجر محجوز. اختر اسمًا آخر.",
   ),
   description: z.string().trim().max(1000).optional(),
   currency: z.enum(["USD", "EUR", "SYP", "TRY"]),

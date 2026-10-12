@@ -8,6 +8,7 @@ import {
   TRIAL_DAYS,
   earlyBirdPrice,
   planPrice,
+  yearlySavingsPercent,
   type BillingPeriod,
   type PlanId,
 } from "@/config/plans";
@@ -16,7 +17,7 @@ import { useI18n } from "@/i18n/provider";
 import { cn } from "@/lib/utils/cn";
 import { Check, X } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 type FeatureLine = {
   key: MessageKey;
@@ -47,7 +48,6 @@ function featuresFor(planId: PlanId): FeatureLine[] {
         },
         { key: "planFeatUnlimitedOptions", included: true },
         { key: "planFeatOneNavAction", included: true },
-        { key: "planFeatFullCustomization", included: true },
         { key: "planFeatSupport", included: true },
       ];
     case "basic":
@@ -109,9 +109,19 @@ const PLAN_DESC_KEY: Record<PlanId, MessageKey> = {
 
 const PLAN_ORDER: PlanId[] = ["trial", "pro", "basic"];
 
+function formatPrice(value: number): string {
+  const rounded = Math.round((value + Number.EPSILON) * 100) / 100;
+  if (Number.isInteger(rounded)) return String(rounded);
+  return rounded.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+}
+
 export function PricingSection() {
   const { t } = useI18n();
   const [period, setPeriod] = useState<BillingPeriod>("monthly");
+  const maxYearlySave = Math.max(
+    yearlySavingsPercent(PLANS.basic),
+    yearlySavingsPercent(PLANS.pro),
+  );
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6" id="pricing">
@@ -127,7 +137,7 @@ export function PricingSection() {
       <Reveal delayMs={40}>
         <div className="mt-8 flex justify-center">
           <div
-            className="inline-flex rounded-full bg-slate-100 p-1"
+            className="inline-flex min-h-11 items-center rounded-full bg-slate-100 p-1"
             role="group"
             aria-label={t("billingPeriod")}
           >
@@ -140,7 +150,12 @@ export function PricingSection() {
               active={period === "yearly"}
               onClick={() => setPeriod("yearly")}
               label={t("billingYearly")}
-              badge={t("billingYearlySave")}
+              badge={
+                <>
+                  {t("billingYearlySavePrefix")}{" "}
+                  <bdi dir="ltr">{maxYearlySave}%</bdi>
+                </>
+              }
             />
           </div>
         </div>
@@ -196,12 +211,24 @@ export function PricingSection() {
                     </p>
                   ) : (
                     <>
-                      <p className="text-4xl font-semibold tracking-tight">
-                        ${formatPrice(price)}
+                      <p className="text-4xl font-semibold">
+                        <bdi dir="ltr">${formatPrice(price)}</bdi>
                         <span className="text-base font-medium opacity-60">
                           {period === "yearly" ? t("perYear") : t("perMonth")}
                         </span>
                       </p>
+                      {period === "yearly" ? (
+                        <p
+                          className={cn(
+                            "mt-2 text-sm font-medium",
+                            highlighted ? "text-sand-300" : "text-sand-700",
+                          )}
+                        >
+                          {t("yearlySaveWord")}{" "}
+                          <bdi dir="ltr">{yearlySavingsPercent(plan)}%</bdi>{" "}
+                          {t("yearlySavingsTail")}
+                        </p>
+                      ) : null}
                       {bird !== null && bird < price ? (
                         <p
                           className={cn(
@@ -209,12 +236,12 @@ export function PricingSection() {
                             highlighted ? "text-brand-300" : "text-brand-700",
                           )}
                         >
-                          {t("earlyBirdPrice", {
-                            price: formatPrice(bird),
-                            period:
-                              period === "yearly"
-                                ? t("perYear")
-                                : t("perMonth"),
+                          {t("earlyBirdLead")}{" "}
+                          <bdi dir="ltr">
+                            ${formatPrice(bird)}
+                            {period === "yearly" ? t("perYear") : t("perMonth")}
+                          </bdi>{" "}
+                          {t("earlyBirdOff", {
                             percent: Math.round(
                               EARLY_BIRD_DISCOUNT[
                                 planId === "basic" ? "basic" : "pro"
@@ -286,14 +313,14 @@ function PeriodButton({
   active: boolean;
   onClick: () => void;
   label: string;
-  badge?: string;
+  badge?: ReactNode;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold leading-none transition",
+        "inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 text-sm font-semibold leading-none transition",
         active
           ? "bg-white text-slate-900 shadow-sm"
           : "text-slate-500 hover:text-slate-800",
@@ -301,7 +328,7 @@ function PeriodButton({
     >
       <span className="leading-none">{label}</span>
       {badge ? (
-        <span className="inline-flex shrink-0 items-center rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold leading-none text-brand-800">
+        <span className="inline-flex shrink-0 items-center rounded-full bg-brand-100 px-2 py-0.5 text-sm font-bold leading-none text-brand-800">
           {badge}
         </span>
       ) : null}
@@ -309,6 +336,3 @@ function PeriodButton({
   );
 }
 
-function formatPrice(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(2);
-}

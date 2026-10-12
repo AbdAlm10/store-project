@@ -123,6 +123,17 @@ export function planPrice(
   return period === "yearly" ? plan.priceYearlyUsd : plan.priceMonthlyUsd;
 }
 
+/** Percent saved by paying yearly instead of twelve monthly bills. */
+export function yearlySavingsPercent(plan: PlanDefinition): number {
+  const fullYear = plan.priceMonthlyUsd * 12;
+  if (fullYear <= 0) return 0;
+  return Math.round(((fullYear - plan.priceYearlyUsd) / fullYear) * 100);
+}
+
+/**
+ * Price after the early-bird rate. Rounded to cents — do not ceil,
+ * or 15 × 0.7 becomes 11 instead of 10.5.
+ */
 export function earlyBirdPrice(
   planId: "basic" | "pro",
   period: BillingPeriod,
@@ -130,5 +141,6 @@ export function earlyBirdPrice(
   const plan = PLANS[planId];
   const base = planPrice(plan, period);
   const discount = EARLY_BIRD_DISCOUNT[planId];
-  return Math.ceil(base * (1 - discount) - Number.EPSILON);
+  const raw = base * (1 - discount);
+  return Math.round((raw + Number.EPSILON) * 100) / 100;
 }

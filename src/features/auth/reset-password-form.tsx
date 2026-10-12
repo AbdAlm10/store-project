@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input, Label } from "@/components/ui/forms";
+import { PasswordField } from "@/features/auth/auth-fields";
 import { updatePasswordAction } from "@/features/auth/actions";
 import { useI18n } from "@/i18n/provider";
 import { useRouter } from "next/navigation";
@@ -54,28 +54,21 @@ export function ResetPasswordForm() {
         });
       }}
     >
-      <div>
-        <Label htmlFor="password">{t("newPassword")}</Label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-        />
-      </div>
-      <div>
-        <Label htmlFor="confirmPassword">{t("confirmPassword")}</Label>
-        <Input
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-        />
-      </div>
+      <PasswordField
+        id="password"
+        name="password"
+        label={t("newPassword")}
+        autoComplete="new-password"
+        minLength={8}
+        hint={t("passwordMinHint")}
+      />
+      <PasswordField
+        id="confirmPassword"
+        name="confirmPassword"
+        label={t("confirmPassword")}
+        autoComplete="new-password"
+        minLength={8}
+      />
       {error ? (
         <p className="text-sm text-red-600" role="alert">
           {error}

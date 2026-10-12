@@ -24,7 +24,7 @@ export function ProductFrame({
         <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
         <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
         {label ? (
-          <span className="ms-2 truncate text-[11px] font-medium text-slate-400">
+          <span className="ms-2 truncate text-sm font-medium text-slate-500">
             {label}
           </span>
         ) : null}

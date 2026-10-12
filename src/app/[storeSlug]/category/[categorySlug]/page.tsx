@@ -17,6 +17,7 @@ import {
 } from "@/lib/storefront-data";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
+import { isReservedStoreSlug } from "@/lib/reserved-slugs";
 
 type Props = PageProps<"/[storeSlug]/category/[categorySlug]">;
 
@@ -24,23 +25,31 @@ export const revalidate = 60;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { storeSlug, categorySlug } = await params;
+  if (isReservedStoreSlug(storeSlug)) {
+    return { title: "الصفحة غير موجودة" };
+  }
   try {
     const store = await getCachedStorefront(storeSlug);
     const categories = await getCachedPublicCategories(store.id, store.slug);
     const category = categories.find((item) => item.slug === categorySlug);
-    if (!category) return { title: "Category not found" };
+    if (!category) {
+      const locale = await getRequestLocale(store.defaultLocale);
+      return { title: createTranslator(locale)("categoryNotFound") };
+    }
     return {
       title: `${category.name} · ${store.name}`,
       description: `Browse ${category.name} at ${store.name}`,
       alternates: { canonical: categoryUrl(store.slug, category.slug) },
     };
   } catch {
-    return { title: "Category not found" };
+    const locale = await getRequestLocale();
+    return { title: createTranslator(locale)("categoryNotFound") };
   }
 }
 
 export default async function CategoryPage({ params }: Props) {
   const { storeSlug, categorySlug } = await params;
+  if (isReservedStoreSlug(storeSlug)) notFound();
   let store;
   try {
     store = await getCachedStorefront(storeSlug);

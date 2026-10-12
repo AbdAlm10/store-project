@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input, Label } from "@/components/ui/forms";
+import { EmailField, PasswordField } from "@/features/auth/auth-fields";
 import { loginAction } from "@/features/auth/actions";
 import {
   AuthDivider,
@@ -45,26 +45,13 @@ export function LoginForm() {
           });
         }}
       >
-        <div>
-          <Label htmlFor="email">{t("email")}</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-          />
-        </div>
-        <div>
-          <Label htmlFor="password">{t("password")}</Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-          />
-        </div>
+        <EmailField label={t("email")} />
+        <PasswordField
+          id="password"
+          name="password"
+          label={t("password")}
+          autoComplete="current-password"
+        />
         {error ? (
           <p className="text-sm text-red-600" role="alert">
             {error}

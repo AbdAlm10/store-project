@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { PLANS, TRIAL_DAYS } from "@/config/plans";
+import { earlyBirdPrice, PLANS, TRIAL_DAYS, yearlySavingsPercent } from "@/config/plans";
 import { nextPeriodEnd, PAID_MONTH_DAYS, PAID_YEAR_DAYS } from "@/domain/billing/period";
 import { buildSubscriptionWhatsAppUrl } from "@/lib/social/sharing";
 import { t } from "@/i18n/messages";
@@ -18,6 +18,18 @@ describe("plan prices", () => {
     expect(source.includes("$95")).toBe(false);
     expect(source.includes("$210")).toBe(false);
     expect(t("ar", "faq3A")).toContain("50$");
+  });
+
+  it("keeps the early-bird rate and shows the exact discounted price", () => {
+    expect(earlyBirdPrice("pro", "monthly")).toBe(10.5);
+    expect(earlyBirdPrice("basic", "monthly")).toBe(6.65);
+    expect(earlyBirdPrice("pro", "yearly")).toBe(105);
+    expect(earlyBirdPrice("basic", "yearly")).toBe(47.5);
+  });
+
+  it("computes yearly savings from the listed prices", () => {
+    expect(yearlySavingsPercent(PLANS.basic)).toBe(40);
+    expect(yearlySavingsPercent(PLANS.pro)).toBe(17);
   });
 });
 

@@ -5,7 +5,7 @@
   --background: #f7f4ef;
   --foreground: #1c241e;
   --surface: #ffffff;
-  --muted: #6b746e;
+  --muted: #5d665f;
   --accent: #58a379;
   --accent-ink: #3a7a56;
   --sand: #e3d2ad;
@@ -71,6 +71,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem;
 }
 
 body {
@@ -233,7 +234,7 @@ html:has(.dashboard-shell) body {
 .ys-landing {
   --ys-landing-bg: #f4f5f4;
   --ys-landing-ink: #121816;
-  --ys-landing-muted: #5f6b64;
+  --ys-landing-muted: #5d665f;
   --ys-landing-soft: #ffffff;
   --ys-landing-shadow: 0 28px 70px -36px rgb(18 24 22 / 0.28);
   background: var(--ys-landing-bg);
@@ -405,6 +406,37 @@ html:has(.dashboard-shell) body {
 .ys-ambient-ring-delay {
   animation-duration: 64s;
   animation-direction: reverse;
+}
+
+/* Connected Arabic letters break when letter-spacing is applied. */
+:lang(ar) * {
+  letter-spacing: 0 !important;
+}
+
+:lang(ar) h1 {
+  line-height: 1.35;
+}
+
+:lang(ar) h2 {
+  line-height: 1.4;
+}
+
+:focus-visible {
+  outline: 2px solid #58a379;
+  outline-offset: 3px;
+}
+
+.ys-landing :where(.text-slate-500) {
+  color: #5d665f;
+}
+
+.ys-landing :where(.text-xs, .text-\[10px\], .text-\[11px\]) {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.ys-landing summary::-webkit-details-marker {
+  display: none;
 }
 
 @media (scripting: none) {

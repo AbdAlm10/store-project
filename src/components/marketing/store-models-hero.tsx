@@ -25,34 +25,72 @@ const MODELS = [
   },
 ] as const;
 
-/** Three equal-size storefront mockups, slightly scattered side by side. */
+function Shot({
+  src,
+  alt,
+  priority = false,
+  sizes,
+}: {
+  src: string;
+  alt: string;
+  priority?: boolean;
+  sizes: string;
+}) {
+  return (
+    <div className="relative aspect-[3/2] w-full overflow-hidden rounded-2xl border border-white/90 bg-white shadow-[0_22px_48px_-22px_rgba(15,23,42,0.48)] ring-1 ring-slate-900/5">
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        className="object-cover object-top"
+        sizes={sizes}
+        priority={priority}
+      />
+    </div>
+  );
+}
+
+/** Desktop: three tilted shots. Mobile: a swipeable row, one shot at a time. */
 export function StoreModelsHero({ className }: { className?: string }) {
   return (
-    <div
-      className={cn(
-        "mx-auto flex w-full max-w-5xl items-center justify-center gap-2.5 px-1 sm:gap-4 sm:px-2 lg:gap-5",
-        className,
-      )}
-    >
-      {MODELS.map((model) => (
-        <div
-          key={model.src}
-          className={cn("w-[32%] min-w-0", model.rotate, model.offset)}
-        >
-          <div className={model.float}>
-            <div className="relative aspect-[3/2] w-full overflow-hidden rounded-xl border border-white/90 bg-white shadow-[0_22px_48px_-22px_rgba(15,23,42,0.48)] ring-1 ring-slate-900/5 sm:rounded-2xl">
-              <Image
+    <div className={className}>
+      <div
+        className="ys-scrollbar-none flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:hidden"
+        role="region"
+        aria-label="نماذج المتاجر"
+      >
+        {MODELS.map((model, index) => (
+          <div
+            key={model.src}
+            className="w-[80vw] shrink-0 snap-center"
+          >
+            <Shot
+              src={model.src}
+              alt={model.alt}
+              priority={index === 0}
+              sizes="80vw"
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="mx-auto hidden w-full max-w-5xl items-center justify-center gap-4 px-2 md:flex lg:gap-5">
+        {MODELS.map((model) => (
+          <div
+            key={model.src}
+            className={cn("w-[32%] min-w-0", model.rotate, model.offset)}
+          >
+            <div className={model.float}>
+              <Shot
                 src={model.src}
                 alt={model.alt}
-                fill
-                className="object-cover object-top"
-                sizes="(max-width: 640px) 34vw, 340px"
                 priority={model.src.includes("fashion")}
+                sizes="340px"
               />
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

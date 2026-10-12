@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
   // websocket prevents the client runtime from hydrating.
   allowedDevOrigins: ["127.0.0.1", "192.168.5.8", "192.168.56.1"],
   images: {
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "https",
