@@ -1,13 +1,30 @@
 -- Referral ledger. Merchants cannot insert, update, or delete these rows.
 -- Service role runs ensure_referral_code, attach_referral, and grant_referral_month.
+-- Function bodies use a named dollar tag so the SQL editor keeps them in one piece.
 
-create extension if not exists pgcrypto;
+create schema if not exists extensions;
+
+do $fn$
+begin
+  if not exists (select 1 from pg_extension where extname = 'pgcrypto') then
+    execute 'create extension pgcrypto with schema extensions';
+  elsif not exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where p.proname = 'gen_random_bytes'
+      and n.nspname = 'extensions'
+  ) then
+    execute 'alter extension pgcrypto set schema extensions';
+  end if;
+end
+$fn$;
 
 create or replace function public.normalize_contact_phone(raw text)
 returns text
 language sql
 immutable
-as $$
+as $fn$
   with cleaned as (
     select regexp_replace(coalesce(raw, ''), '[^0-9]', '', 'g') as digits
   )
@@ -24,7 +41,7 @@ as $$
     else digits
   end
   from cleaned;
-$$;
+$fn$;
 
 create table if not exists public.referral_codes (
   id uuid primary key default gen_random_uuid(),
@@ -71,6 +88,42 @@ create table if not exists public.referral_audit_log (
 create index if not exists referrals_referrer_idx
   on public.referrals (referrer_user_id, created_at desc);
 
+alter table public.referral_codes drop constraint if exists referral_codes_code_format;
+alter table public.referral_codes
+  add constraint referral_codes_code_format
+  check (code ~ '^[A-Za-z0-9_-]{16,64}$');
+
+alter table public.referral_codes drop constraint if exists referral_codes_user_id_key;
+alter table public.referral_codes
+  add constraint referral_codes_user_id_key unique (user_id);
+
+alter table public.referral_codes drop constraint if exists referral_codes_code_key;
+alter table public.referral_codes
+  add constraint referral_codes_code_key unique (code);
+
+alter table public.referrals drop constraint if exists referrals_status;
+alter table public.referrals
+  add constraint referrals_status
+  check (status in ('pending', 'rewarded', 'rejected'));
+
+alter table public.referrals drop constraint if exists referrals_not_self;
+alter table public.referrals
+  add constraint referrals_not_self
+  check (referrer_user_id <> referred_user_id);
+
+alter table public.referrals drop constraint if exists referrals_referred_user_id_key;
+alter table public.referrals
+  add constraint referrals_referred_user_id_key unique (referred_user_id);
+
+alter table public.referral_rewards drop constraint if exists referral_rewards_one_month;
+alter table public.referral_rewards
+  add constraint referral_rewards_one_month
+  check (days = 30);
+
+alter table public.referral_rewards drop constraint if exists referral_rewards_once;
+alter table public.referral_rewards
+  add constraint referral_rewards_once unique (referral_id, beneficiary_user_id);
+
 alter table public.referral_codes enable row level security;
 alter table public.referrals enable row level security;
 alter table public.referral_rewards enable row level security;
@@ -113,7 +166,7 @@ returns text
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $fn$
 declare
   existing text;
   created text;
@@ -133,14 +186,14 @@ exception
     select code into existing from public.referral_codes where user_id = p_user_id;
     return existing;
 end;
-$$;
+$fn$;
 
 create or replace function public.attach_referral(p_referred_user_id uuid, p_code text)
 returns text
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $fn$
 declare
   v_owner uuid;
   v_existing uuid;
@@ -229,7 +282,7 @@ exception
   when unique_violation then
     return 'ignored';
 end;
-$$;
+$fn$;
 
 create or replace function public.grant_referral_month(
   p_referred_user_id uuid,
@@ -239,7 +292,7 @@ returns text
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $fn$
 declare
   v_ref public.referrals%rowtype;
   v_referrer_email text;
@@ -425,7 +478,7 @@ exception
     );
     return 'already_rewarded';
 end;
-$$;
+$fn$;
 
 revoke all on function public.normalize_contact_phone(text) from public, anon, authenticated;
 revoke all on function public.ensure_referral_code(uuid) from public, anon, authenticated;
@@ -437,7 +490,7 @@ grant execute on function public.ensure_referral_code(uuid) to service_role;
 grant execute on function public.attach_referral(uuid, text) to service_role;
 grant execute on function public.grant_referral_month(uuid, uuid) to service_role;
 
-do $$
+do $fn$
 begin
   if exists (select 1 from pg_roles where rolname = 'service_role') then
     grant select, insert, update, delete on public.referral_codes to service_role;
@@ -445,4 +498,4 @@ begin
     grant select, insert, update, delete on public.referral_rewards to service_role;
     grant select, insert on public.referral_audit_log to service_role;
   end if;
-end $$;
+end $fn$;

@@ -1,9 +1,28 @@
 -- Schema and row level security inferred from the application model.
--- Apply this file, then every later file in supabase/migrations, in the
--- Supabase SQL editor or with `supabase db push`.
+-- Paste supabase/apply_all.sql once in the Supabase SQL editor, or apply
+-- every file in supabase/migrations in timestamp order with `supabase db push`.
 -- Deploying the Next.js app does not execute this SQL.
+-- Function bodies use a named dollar tag so the SQL editor keeps them in one piece.
 
-create extension if not exists pgcrypto;
+-- pgcrypto belongs in schema extensions (extensions.gen_random_bytes).
+-- A stopped earlier paste may have created it in public; move it.
+create schema if not exists extensions;
+
+do $fn$
+begin
+  if not exists (select 1 from pg_extension where extname = 'pgcrypto') then
+    execute 'create extension pgcrypto with schema extensions';
+  elsif not exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where p.proname = 'gen_random_bytes'
+      and n.nspname = 'extensions'
+  ) then
+    execute 'alter extension pgcrypto set schema extensions';
+  end if;
+end
+$fn$;
 
 -- ---------------------------------------------------------------------------
 -- Helpers
@@ -12,93 +31,32 @@ create extension if not exists pgcrypto;
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
-as $$
+as $fn$
 begin
   new.updated_at = now();
   return new;
 end;
-$$;
+$fn$;
 
 create or replace function public.store_role_rank(role text)
 returns integer
 language sql
 immutable
-as $$
+as $fn$
   select case role
     when 'staff' then 1
     when 'manager' then 2
     when 'owner' then 3
     else 0
   end;
-$$;
-
-create or replace function public.is_store_member(target_store_id uuid)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1
-    from public.store_members m
-    where m.store_id = target_store_id
-      and m.user_id = auth.uid()
-  );
-$$;
-
-create or replace function public.has_store_role(target_store_id uuid, minimum_role text)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1
-    from public.store_members m
-    where m.store_id = target_store_id
-      and m.user_id = auth.uid()
-      and public.store_role_rank(m.role) >= public.store_role_rank(minimum_role)
-  );
-$$;
-
--- Boolean only. Missing row stays usable so a store without a subscription
--- row is not locked. Does not return plan or billing columns.
-create or replace function public.is_store_subscription_usable(target_store_id uuid)
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select coalesce(
-    (
-      select
-        s.status in ('trialing', 'active', 'past_due')
-        and (
-          s.status <> 'trialing'
-          or s.trial_ends_at is null
-          or s.trial_ends_at >= now()
-        )
-        and (
-          s.status = 'trialing'
-          or s.current_period_end is null
-          or s.current_period_end >= now()
-        )
-      from public.subscriptions s
-      where s.store_id = target_store_id
-    ),
-    true
-  );
-$$;
+$fn$;
 
 create or replace function public.protect_profile_privileges()
 returns trigger
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $fn$
 declare
   jwt_role text;
 begin
@@ -118,13 +76,13 @@ begin
   new.suspended_at := old.suspended_at;
   return new;
 end;
-$$;
+$fn$;
 
 create or replace function public.protect_store_owner()
 returns trigger
 language plpgsql
 set search_path = public
-as $$
+as $fn$
 begin
   if new.owner_id is distinct from old.owner_id
      and coalesce(auth.jwt() ->> 'role', '') <> 'service_role'
@@ -133,7 +91,7 @@ begin
   end if;
   return new;
 end;
-$$;
+$fn$;
 
 -- ---------------------------------------------------------------------------
 -- Tables
@@ -461,6 +419,69 @@ create index if not exists products_store_status_idx
 create index if not exists categories_store_idx
   on public.categories (store_id, sort_order);
 
+-- Helpers that read tables. Created after the tables so a fresh database
+-- accepts the function bodies.
+create or replace function public.is_store_member(target_store_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  select exists (
+    select 1
+    from public.store_members m
+    where m.store_id = target_store_id
+      and m.user_id = auth.uid()
+  );
+$fn$;
+
+create or replace function public.has_store_role(target_store_id uuid, minimum_role text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  select exists (
+    select 1
+    from public.store_members m
+    where m.store_id = target_store_id
+      and m.user_id = auth.uid()
+      and public.store_role_rank(m.role) >= public.store_role_rank(minimum_role)
+  );
+$fn$;
+
+-- Boolean only. Missing row stays usable so a store without a subscription
+-- row is not locked. Does not return plan or billing columns.
+create or replace function public.is_store_subscription_usable(target_store_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  select coalesce(
+    (
+      select
+        s.status in ('trialing', 'active', 'past_due')
+        and (
+          s.status <> 'trialing'
+          or s.trial_ends_at is null
+          or s.trial_ends_at >= now()
+        )
+        and (
+          s.status = 'trialing'
+          or s.current_period_end is null
+          or s.current_period_end >= now()
+        )
+      from public.subscriptions s
+      where s.store_id = target_store_id
+    ),
+    true
+  );
+$fn$;
+
 -- ---------------------------------------------------------------------------
 -- Triggers
 -- ---------------------------------------------------------------------------
@@ -548,13 +569,13 @@ grant execute on function public.has_store_role(uuid, text) to anon, authenticat
 grant execute on function public.is_store_subscription_usable(uuid) to anon, authenticated;
 grant execute on function public.store_role_rank(text) to anon, authenticated;
 
-do $$
+do $fn$
 begin
   if exists (select 1 from pg_roles where rolname = 'service_role') then
     grant all privileges on all tables in schema public to service_role;
     grant execute on all functions in schema public to service_role;
   end if;
-end $$;
+end $fn$;
 
 -- ---------------------------------------------------------------------------
 -- Row level security
@@ -816,7 +837,7 @@ create policy analytics_events_select_member
 -- Storage: public reads, member writes under stores/{storeId}/...
 -- ---------------------------------------------------------------------------
 
-do $$
+do $fn$
 begin
   if to_regclass('storage.objects') is null then
     return;
@@ -836,34 +857,12 @@ begin
         allowed_mime_types = excluded.allowed_mime_types;
 
   execute 'drop policy if exists store_media_public_read on storage.objects';
-  execute $policy$
-    create policy store_media_public_read
-      on storage.objects for select
-      to anon, authenticated
-      using (bucket_id = 'store-media')
-  $policy$;
+  execute 'create policy store_media_public_read on storage.objects for select to anon, authenticated using (bucket_id = ''store-media'')';
 
   execute 'drop policy if exists store_media_member_insert on storage.objects';
-  execute $policy$
-    create policy store_media_member_insert
-      on storage.objects for insert
-      to authenticated
-      with check (
-        bucket_id = 'store-media'
-        and (storage.foldername(name))[1] = 'stores'
-        and public.is_store_member(((storage.foldername(name))[2])::uuid)
-      )
-  $policy$;
+  execute 'create policy store_media_member_insert on storage.objects for insert to authenticated with check (bucket_id = ''store-media'' and (storage.foldername(name))[1] = ''stores'' and public.is_store_member(((storage.foldername(name))[2])::uuid))';
 
   execute 'drop policy if exists store_media_member_delete on storage.objects';
-  execute $policy$
-    create policy store_media_member_delete
-      on storage.objects for delete
-      to authenticated
-      using (
-        bucket_id = 'store-media'
-        and (storage.foldername(name))[1] = 'stores'
-        and public.is_store_member(((storage.foldername(name))[2])::uuid)
-      )
-  $policy$;
-end $$;
+  execute 'create policy store_media_member_delete on storage.objects for delete to authenticated using (bucket_id = ''store-media'' and (storage.foldername(name))[1] = ''stores'' and public.is_store_member(((storage.foldername(name))[2])::uuid))';
+end
+$fn$;

@@ -10,6 +10,16 @@ create table if not exists public.support_messages (
   created_at timestamptz not null default now()
 );
 
+alter table public.support_messages drop constraint if exists support_messages_sender_check;
+alter table public.support_messages
+  add constraint support_messages_sender_check
+  check (sender in ('user', 'system'));
+
+alter table public.support_messages drop constraint if exists support_messages_body_check;
+alter table public.support_messages
+  add constraint support_messages_body_check
+  check (char_length(trim(body)) > 0 and char_length(body) <= 2000);
+
 create index if not exists support_messages_user_created_idx
   on public.support_messages (user_id, created_at desc);
 

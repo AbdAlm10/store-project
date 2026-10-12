@@ -196,6 +196,37 @@ describe("migration intent", () => {
     expect(sql).toContain("support_messages_insert_system_own");
   });
 
+  it("keeps pasted migrations in one piece and safe to repeat", () => {
+    const files = [
+      "20260908000000_init.sql",
+      "20260920000000_support_messages.sql",
+      "20260929000000_subscription_billing_period.sql",
+      "20260930000000_support_system_sender.sql",
+      "20261012000000_referrals.sql",
+    ];
+    const combined = files
+      .map((file) => readFileSync(path.join(root, file), "utf8"))
+      .join("\n");
+    const applyAll = readFileSync(
+      path.join(process.cwd(), "supabase", "apply_all.sql"),
+      "utf8",
+    );
+    expect(combined).not.toMatch(/\$\$/);
+    expect(applyAll).not.toMatch(/\$\$/);
+    expect(applyAll).not.toContain("$policy$");
+    expect((combined.match(/\$fn\$/g) ?? []).length % 2).toBe(0);
+    expect(combined).not.toMatch(/\$\$\s*begin/);
+    expect(combined).toContain("alter extension pgcrypto set schema extensions");
+    expect(combined).toContain("drop policy if exists");
+    expect(combined).toContain("create or replace function");
+    let cursor = 0;
+    for (const file of files) {
+      const at = applyAll.indexOf(file, cursor);
+      expect(at).toBeGreaterThanOrEqual(0);
+      cursor = at + file.length;
+    }
+  });
+
   it("does not wildcard private image hosts", () => {
     const config = readFileSync(path.join(process.cwd(), "next.config.ts"), "utf8");
     expect(config).not.toContain('hostname: "**"');

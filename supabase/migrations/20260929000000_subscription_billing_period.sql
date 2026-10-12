@@ -1,3 +1,5 @@
+-- Safe to run again. Init already adds the column; this remains for databases
+-- that applied an older init file.
 alter table public.subscriptions
   add column if not exists billing_period text not null default 'monthly';
 
