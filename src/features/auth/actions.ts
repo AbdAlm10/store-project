@@ -1,12 +1,11 @@
 "use server";
 
-import { headers } from "next/headers";
 import { getServices } from "@/infrastructure/container";
 import {
   enforceRateLimit,
   requestClientIp,
 } from "@/infrastructure/rate-limit/enforce";
-import { getRequestAppOrigin } from "@/lib/app-origin";
+import { resolveAllowedAppOrigin } from "@/lib/app-origin";
 import { toUserMessage } from "@/domain/errors";
 import { revalidateDashboard } from "@/lib/revalidate-dashboard";
 import { revalidateStorefrontStore } from "@/lib/revalidate-storefront";
@@ -51,9 +50,9 @@ export async function googleAuthAction(): Promise<
 > {
   try {
     const services = getServices();
-    const headerStore = await headers();
-    const appOrigin = getRequestAppOrigin(headerStore) ?? undefined;
-    const { url } = await services.auth.startGoogleSignIn({ appOrigin });
+    const { url } = await services.auth.startGoogleSignIn({
+      appOrigin: resolveAllowedAppOrigin(),
+    });
     return { ok: true, url };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };

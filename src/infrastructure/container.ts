@@ -22,6 +22,7 @@ import {
   NoopEmailProvider,
   StubPaymentProvider,
 } from "@/infrastructure/memory/providers";
+import { assertProductionDataPlane } from "@/infrastructure/runtime-guard";
 import { isSupabaseConfigured } from "@/infrastructure/supabase/config";
 import { SupabaseAuthProvider } from "@/infrastructure/supabase/auth";
 import { SupabaseStorageProvider } from "@/infrastructure/supabase/storage";
@@ -54,6 +55,7 @@ export type AppServices = {
  * Composition root. Uses Supabase when env is configured; otherwise memory/demo.
  */
 export function createServices(): AppServices {
+  assertProductionDataPlane();
   const useSupabase = isSupabaseConfigured();
 
   const users = useSupabase

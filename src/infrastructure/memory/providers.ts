@@ -15,7 +15,29 @@ import type {
   UploadedObject,
 } from "@/application/ports/providers";
 import { AppError } from "@/domain/errors";
+import {
+  getPasswordRecord,
+  setPasswordRecord,
+  verifyPassword,
+} from "@/infrastructure/memory/password";
 import { findMemoryProfileByEmail } from "@/infrastructure/memory/repositories";
+
+const DEMO_USER_IDS: Record<string, string> = {
+  "merchant@alnoor.demo": "00000000-0000-4000-8000-000000000001",
+  "admin@yourstore.app": "00000000-0000-4000-8000-000000000099",
+};
+
+function assertPasswordLength(password: string): void {
+  if (password.length < 8) {
+    throw new AppError(
+      "VALIDATION",
+      "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
+    );
+  }
+  if (password.length > 72) {
+    throw new AppError("VALIDATION", "كلمة المرور طويلة جدًا.");
+  }
+}
 
 async function writeSessionCookie(session: AuthSession): Promise<void> {
   try {
@@ -85,16 +107,17 @@ export class MemoryAuthProvider implements AuthProvider {
     password: string;
     fullName?: string;
   }): Promise<AuthSession> {
-    if (input.password.length < 8) {
-      throw new AppError(
-        "VALIDATION",
-        "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
-      );
+    assertPasswordLength(input.password);
+    const email = input.email.toLowerCase();
+    if (getPasswordRecord(email)) {
+      throw new AppError("CONFLICT", "هذا البريد مسجل بالفعل.");
     }
+    const userId = DEMO_USER_IDS[email] ?? crypto.randomUUID();
+    setPasswordRecord(email, userId, input.password);
     this.session = {
       user: {
-        id: crypto.randomUUID(),
-        email: input.email.toLowerCase(),
+        id: userId,
+        email,
         emailConfirmed: true,
       },
       accessToken: "memory-access-token",
@@ -104,25 +127,22 @@ export class MemoryAuthProvider implements AuthProvider {
   }
 
   async signIn(input: { email: string; password: string }): Promise<AuthSession> {
-    if (!input.password) {
+    const email = input.email.toLowerCase();
+    const record = getPasswordRecord(email);
+    if (
+      !input.password ||
+      !record ||
+      !verifyPassword(input.password, record.hash)
+    ) {
       throw new AppError(
         "UNAUTHORIZED",
         "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
       );
     }
-    const email = input.email.toLowerCase();
-    const demoIds: Record<string, string> = {
-      "merchant@alnoor.demo": "00000000-0000-4000-8000-000000000001",
-      "admin@yourstore.app": "00000000-0000-4000-8000-000000000099",
-    };
-
-    let userId: string | undefined = demoIds[email];
-    if (!userId) {
-      userId = findMemoryProfileByEmail(email)?.id;
-    }
-    if (!userId) {
-      userId = crypto.randomUUID();
-    }
+    const userId =
+      DEMO_USER_IDS[email] ??
+      findMemoryProfileByEmail(email)?.id ??
+      record.userId;
 
     this.session = {
       user: {
@@ -162,15 +182,12 @@ export class MemoryAuthProvider implements AuthProvider {
   }
 
   async updatePassword(password: string): Promise<void> {
-    if (password.length < 8) {
-      throw new AppError(
-        "VALIDATION",
-        "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
-      );
+    assertPasswordLength(password);
+    const session = await this.getSession();
+    if (!session) {
+      throw new AppError("UNAUTHORIZED", "يجب تسجيل الدخول للمتابعة.");
     }
-    if (password.length > 72) {
-      throw new AppError("VALIDATION", "كلمة المرور طويلة جدًا.");
-    }
+    setPasswordRecord(session.user.email, session.user.id, password);
   }
 }
 

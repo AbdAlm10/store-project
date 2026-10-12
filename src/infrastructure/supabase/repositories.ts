@@ -173,7 +173,7 @@ export class SupabaseStoreRepository implements StoreRepository {
       }
       if (error.message.toLowerCase().includes("theme_overrides")) {
         fail(
-          "Missing theme_overrides column. Run migration 20260908000007_theme_overrides.sql in the Supabase SQL Editor, then try again.",
+          "Missing theme_overrides column. Apply supabase/migrations/20260908000000_init.sql in the Supabase SQL Editor, then try again.",
         );
       }
       fail(error.message);
@@ -193,7 +193,7 @@ export class SupabaseStoreRepository implements StoreRepository {
     if (error || !data) {
       if (error?.message.toLowerCase().includes("theme_overrides")) {
         fail(
-          "Missing theme_overrides column. Run migration 20260908000007_theme_overrides.sql in the Supabase SQL Editor, then try again.",
+          "Missing theme_overrides column. Apply supabase/migrations/20260908000000_init.sql in the Supabase SQL Editor, then try again.",
         );
       }
       fail(error?.message ?? "Store update failed");
@@ -249,7 +249,7 @@ export class SupabaseStoreMemberRepository implements StoreMemberRepository {
     if (error) {
       if (error.message.toLowerCase().includes("row-level security")) {
         fail(
-          "Could not add store membership (RLS). Apply migration 20260908000005_fix_store_members_rls.sql in Supabase SQL Editor, then try again.",
+          "Could not add store membership (RLS). Apply supabase/migrations/20260908000000_init.sql in the Supabase SQL Editor, then try again.",
         );
       }
       fail(error.message);

@@ -54,9 +54,9 @@ describe("demo session cookie", () => {
   it("uses the request cookie instead of another user's in-memory session", async () => {
     jar.clear();
     const auth = new MemoryAuthProvider();
-    await auth.signIn({ email: "a@example.com", password: "password123" });
+    await auth.signUp({ email: "a@example.com", password: "password123" });
     const cookieA = jar.get(MEMORY_SESSION_COOKIE);
-    await auth.signIn({ email: "b@example.com", password: "password123" });
+    await auth.signUp({ email: "b@example.com", password: "password123" });
     jar.set(MEMORY_SESSION_COOKIE, cookieA ?? "");
 
     const session = await auth.getSession();

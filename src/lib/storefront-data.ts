@@ -48,7 +48,9 @@ async function loadPublishedStore(slug: string): Promise<Store> {
 
   const { data: subRow } = await supabase
     .from("subscriptions")
-    .select("*")
+    .select(
+      "id, store_id, plan_id, billing_period, status, trial_ends_at, current_period_end, created_at, updated_at",
+    )
     .eq("store_id", data.id)
     .maybeSingle();
 

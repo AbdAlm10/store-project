@@ -2,6 +2,7 @@
 
 import { AppError, toUserMessage } from "@/domain/errors";
 import { getServices } from "@/infrastructure/container";
+import { createSupabaseAdminClient } from "@/infrastructure/supabase/admin-client";
 import { isSupabaseConfigured } from "@/infrastructure/supabase/config";
 import { createSupabaseServerClient } from "@/infrastructure/supabase/server";
 import {
@@ -48,26 +49,28 @@ export async function sendSupportMessageAction(input: {
 
     if (isSupabaseConfigured()) {
       const supabase = await createSupabaseServerClient();
-      const { error } = await supabase.from("support_messages").insert([
-        {
-          id: userMessage.id,
-          user_id: userId,
-          store_id: storeId,
-          sender: "user",
-          body: userMessage.body,
-          created_at: userMessage.createdAt,
-        },
-        {
-          id: systemMessage.id,
-          user_id: userId,
-          store_id: storeId,
-          sender: "system",
-          body: systemMessage.body,
-          created_at: systemMessage.createdAt,
-        },
-      ]);
+      const { error } = await supabase.from("support_messages").insert({
+        id: userMessage.id,
+        user_id: userId,
+        store_id: storeId,
+        sender: "user",
+        body: userMessage.body,
+        created_at: userMessage.createdAt,
+      });
       if (error) {
         throw new AppError("INTERNAL", "تعذّر إرسال الرسالة.");
+      }
+      const admin = createSupabaseAdminClient();
+      const { error: systemError } = await admin.from("support_messages").insert({
+        id: systemMessage.id,
+        user_id: userId,
+        store_id: storeId,
+        sender: "system",
+        body: systemMessage.body,
+        created_at: systemMessage.createdAt,
+      });
+      if (systemError) {
+        throw new AppError("INTERNAL", "تعذّر حفظ رد الدعم.");
       }
     } else {
       saveSupportMessageMemory(userMessage);

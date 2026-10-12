@@ -8,8 +8,16 @@ import { revalidatePath } from "next/cache";
 
 const TEST_PLAN_IDS: PlanId[] = ["trial", "basic", "pro"];
 
+/** Explicit opt-in, and never in production. */
+export function subscriptionTestActionsEnabled(): boolean {
+  return (
+    process.env.ENABLE_SUBSCRIPTION_TEST_ACTIONS === "true" &&
+    process.env.NODE_ENV !== "production"
+  );
+}
+
 export async function simulateSubscriptionExpiry(formData: FormData) {
-  if (process.env.NODE_ENV === "production") return;
+  if (!subscriptionTestActionsEnabled()) return;
 
   const planId = formData.get("planId");
   if (typeof planId !== "string" || !TEST_PLAN_IDS.includes(planId as PlanId)) {
@@ -29,7 +37,7 @@ export async function simulateSubscriptionExpiry(formData: FormData) {
 }
 
 export async function restoreSubscriptionAfterTest() {
-  if (process.env.NODE_ENV === "production") return;
+  if (!subscriptionTestActionsEnabled()) return;
 
   const services = getServices();
   const stores = await services.stores.listMyStores();

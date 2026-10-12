@@ -41,19 +41,13 @@ export async function POST(request: Request) {
         ? { ...(body.metadata as Record<string, unknown>) }
         : {};
 
-    // Prefer server-resolved city; keep a client hint only if server has none.
-    const clientCity =
-      typeof metadata.city === "string" ? metadata.city.trim() : "";
-
+    delete metadata.city;
+    delete metadata.location;
+    delete metadata.countryCode;
     if (geo?.city) {
       metadata.city = formatCityLabel(geo);
       metadata.countryCode = geo.countryCode;
       metadata.location = formatCityLabel(geo);
-    } else if (clientCity && clientCity !== "—" && clientCity !== "تطوير") {
-      metadata.city = clientCity;
-      metadata.location = clientCity;
-    } else {
-      delete metadata.location;
     }
 
     await getServices().analytics.track({

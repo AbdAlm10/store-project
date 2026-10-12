@@ -160,6 +160,16 @@ export class AnalyticsService {
 
   async track(input: unknown): Promise<void> {
     const data = analyticsTrackSchema.parse(input);
+    const store = await this.stores.findById(data.storeId);
+    if (!store) {
+      throw new AppError("NOT_FOUND", "المتجر غير موجود.");
+    }
+    if (data.productId) {
+      const product = await this.products.findById(data.productId);
+      if (!product || product.storeId !== store.id) {
+        throw new AppError("VALIDATION", "المنتج لا يتبع هذا المتجر.");
+      }
+    }
     await this.analytics.track({
       storeId: data.storeId,
       productId: data.productId ?? null,

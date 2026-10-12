@@ -24,7 +24,7 @@ export interface RateLimiter {
 
 type Bucket = { count: number; resetAt: number };
 
-const LIMITS: Record<RateLimitKey, { limit: number; windowMs: number }> = {
+export const RATE_LIMITS: Record<RateLimitKey, { limit: number; windowMs: number }> = {
   login: { limit: 10, windowMs: 60_000 },
   register: { limit: 5, windowMs: 60_000 },
   product_create: { limit: 60, windowMs: 60_000 },
@@ -38,7 +38,7 @@ export class MemoryRateLimiter implements RateLimiter {
   private readonly buckets = new Map<string, Bucket>();
 
   async check(key: RateLimitKey, identity: string): Promise<RateLimitResult> {
-    const config = LIMITS[key];
+    const config = RATE_LIMITS[key];
     const bucketKey = `${key}:${identity}`;
     const now = Date.now();
     const current = this.buckets.get(bucketKey);

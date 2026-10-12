@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { appConfig } from "@/config/app";
-import { safeHttpOrigin } from "@/lib/http-url";
+import { resolveAllowedAppOrigin } from "@/lib/app-origin";
 import { isSupabaseConfigured } from "@/infrastructure/supabase/config";
 import {
   createSupabaseRouteHandlerClient,
@@ -22,7 +21,7 @@ function metaString(
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const { searchParams } = requestUrl;
-  const origin = safeHttpOrigin(requestUrl.origin) ?? appConfig.url;
+  const origin = resolveAllowedAppOrigin(requestUrl.origin);
   const code = searchParams.get("code");
   const oauthError = searchParams.get("error");
   const flowId = searchParams.get("sb_flow_id");
