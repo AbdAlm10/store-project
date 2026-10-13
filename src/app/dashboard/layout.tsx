@@ -6,7 +6,7 @@ import { StoreQrButton } from "@/features/dashboard/store-qr-button";
 import { SupportWidget } from "@/features/support/support-widget";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
-import { EARLY_BIRD_DISCOUNT, type PlanId } from "@/config/plans";
+import { EARLY_BIRD_DISCOUNT } from "@/config/plans";
 import { isSubscriptionUsable } from "@/domain/rules/store-rules";
 import type { Subscription } from "@/domain/types/entities";
 import { getServices } from "@/infrastructure/container";
@@ -35,9 +35,21 @@ export default async function DashboardLayout({
   const t = createTranslator(locale);
   const stores = await getDashboardStores().catch(() => []);
   const activeStore = stores[0];
+  const services = getServices();
   const subscription = activeStore
-    ? await getServices().entitlements.getSubscription(activeStore.id).catch(() => null)
+    ? await services.entitlements.getSubscription(activeStore.id).catch(() => null)
     : null;
+  if (
+    activeStore &&
+    subscription &&
+    !isSubscriptionUsable(subscription) &&
+    activeStore.status === "published" &&
+    !activeStore.suspendedAt
+  ) {
+    await services.stores.ensureFrozenIfExpired(activeStore.id).catch((error) => {
+      console.error("freeze expired store failed", error);
+    });
+  }
 
   return (
     <div className="dashboard-shell grid h-dvh w-full overflow-hidden bg-white lg:grid-cols-[248px_minmax(0,1fr)]">
@@ -156,12 +168,7 @@ function PlanOfferBadge({
       ? subscription.trialEndsAt
       : subscription.currentPeriodEnd;
   const days = remainingDays(endAt);
-  const discount =
-    subscription.planId === "trial"
-      ? Math.round(EARLY_BIRD_DISCOUNT.pro * 100)
-      : subscription.planId === "basic" || subscription.planId === "pro"
-        ? Math.round(EARLY_BIRD_DISCOUNT[subscription.planId as Exclude<PlanId, "trial">] * 100)
-        : 0;
+  const discount = Math.round(EARLY_BIRD_DISCOUNT * 100);
   const expired = !isSubscriptionUsable(subscription);
 
   return (
@@ -174,7 +181,9 @@ function PlanOfferBadge({
     >
       {expired
         ? t("offerBadgeExpired")
-        : t("offerBadge", { discount, days })}
+        : subscription.planId === "trial"
+          ? t("offerBadge", { discount, days })
+          : t("offerBadgeDays", { days })}
     </span>
   );
 }

@@ -4,9 +4,10 @@ import { Reveal } from "@/components/marketing/reveal";
 import { Button } from "@/components/ui/button";
 import {
   EARLY_BIRD_DISCOUNT,
+  EARLY_BIRD_SLOT_LIMIT,
   PLANS,
-  TRIAL_DAYS,
   earlyBirdPrice,
+  formatUsd,
   planPrice,
   yearlySavingsPercent,
   type BillingPeriod,
@@ -36,7 +37,7 @@ function basicFeatures(): FeatureLine[] {
       },
       included: true,
     },
-    { key: "planFeatNoAnalytics", included: false },
+    { key: "planFeatBasicAnalytics", included: true },
     {
       key: "planFeatCategories",
       vars: { count: basic.maxCategories },
@@ -49,6 +50,7 @@ function basicFeatures(): FeatureLine[] {
     },
     { key: "planFeatOneNavAction", included: true },
     { key: "planFeatLimitedColors", included: true },
+    { key: "planFeatCustomDomain", included: false },
     { key: "planFeatSupport", included: true },
   ];
 }
@@ -75,6 +77,7 @@ function featuresFor(planId: PlanId): FeatureLine[] {
         { key: "planFeatUnlimitedOptions", included: true },
         { key: "planFeatAllNavActions", included: true },
         { key: "planFeatFullCustomization", included: true },
+        { key: "planFeatCustomDomain", included: true },
         { key: "planFeatSupport", included: true },
       ];
   }
@@ -93,12 +96,6 @@ const PLAN_DESC_KEY: Record<PlanId, MessageKey> = {
 };
 
 const PLAN_ORDER: PlanId[] = ["trial", "pro", "basic"];
-
-function formatPrice(value: number): string {
-  const rounded = Math.round((value + Number.EPSILON) * 100) / 100;
-  if (Number.isInteger(rounded)) return String(rounded);
-  return rounded.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
-}
 
 export function PricingSection() {
   const { t } = useI18n();
@@ -149,9 +146,8 @@ export function PricingSection() {
       <Reveal delayMs={80}>
         <p className="mx-auto mt-5 max-w-xl text-center text-sm text-slate-500">
           {t("earlyBirdBanner", {
-            trialDays: TRIAL_DAYS,
-            proPercent: Math.round(EARLY_BIRD_DISCOUNT.pro * 100),
-            basicPercent: Math.round(EARLY_BIRD_DISCOUNT.basic * 100),
+            slots: EARLY_BIRD_SLOT_LIMIT,
+            percent: Math.round(EARLY_BIRD_DISCOUNT * 100),
           })}
         </p>
       </Reveal>
@@ -197,7 +193,7 @@ export function PricingSection() {
                   ) : (
                     <>
                       <p className="text-4xl font-semibold">
-                        <bdi dir="ltr">${formatPrice(price)}</bdi>
+                        <bdi dir="ltr">${formatUsd(price)}</bdi>
                         <span className="text-base font-medium opacity-60">
                           {period === "yearly" ? t("perYear") : t("perMonth")}
                         </span>
@@ -223,15 +219,11 @@ export function PricingSection() {
                         >
                           {t("earlyBirdLead")}{" "}
                           <bdi dir="ltr">
-                            ${formatPrice(bird)}
+                            ${formatUsd(bird)}
                             {period === "yearly" ? t("perYear") : t("perMonth")}
                           </bdi>{" "}
                           {t("earlyBirdOff", {
-                            percent: Math.round(
-                              EARLY_BIRD_DISCOUNT[
-                                planId === "basic" ? "basic" : "pro"
-                              ] * 100,
-                            ),
+                            percent: Math.round(EARLY_BIRD_DISCOUNT * 100),
                           })}
                         </p>
                       ) : null}

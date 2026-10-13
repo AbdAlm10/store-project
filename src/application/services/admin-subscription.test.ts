@@ -6,6 +6,8 @@ import type {
   PlatformAdminRepository,
 } from "@/application/ports/platform-admin";
 import type { Profile, Store, Subscription } from "@/domain/types/entities";
+import type { EarlyBirdLedger } from "@/infrastructure/billing/early-bird-ledger";
+import type { EarlyBirdGrant } from "@/domain/billing/early-bird";
 import { isSubscriptionUsable } from "@/domain/rules/store-rules";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -59,7 +61,7 @@ function subscription(partial: Partial<Subscription> = {}): Subscription {
   };
 }
 
-function harness(row: AdminStoreRow) {
+function harness(row: AdminStoreRow, earlyBird?: EarlyBirdLedger) {
   const grants: string[] = [];
   const repo: PlatformAdminRepository = {
     async listUsers() {
@@ -98,12 +100,17 @@ function harness(row: AdminStoreRow) {
   const auth = {
     requireAdmin: async () => ({ profile: { id: "admin" } }),
   } as unknown as AuthService;
-  const service = new AdminPlatformService(auth, repo, {
-    grantOnFirstPaidActivation: async ({ referredUserId }) => {
-      grants.push(referredUserId);
-      return "skipped";
+  const service = new AdminPlatformService(
+    auth,
+    repo,
+    {
+      grantOnFirstPaidActivation: async ({ referredUserId }) => {
+        grants.push(referredUserId);
+        return "skipped";
+      },
     },
-  });
+    earlyBird,
+  );
   return { row, service, grants };
 }
 
@@ -162,6 +169,47 @@ describe("admin Sham Cash activation", () => {
     await locked.service.changeStorePlan("store-1", "pro", "monthly");
     expect(locked.row.store.status).toBe("restricted");
     expect(locked.row.store.suspendedAt).toBe(suspendedAt);
+  });
+
+  it("records the early-bird first-year Sham Cash amount", async () => {
+    const recorded: number[] = [];
+    const grant: EarlyBirdGrant = {
+      userId: "owner-1",
+      storeId: "store-1",
+      slotNumber: 1,
+      claimedAt: "2026-01-01T00:00:00.000Z",
+      appliedAt: null,
+      discountUntil: null,
+      planId: null,
+      billingPeriod: null,
+      chargedAmountUsd: null,
+    };
+    const ledger: EarlyBirdLedger = {
+      async claim() {
+        return { eligible: true, slotNumber: 1, alreadyClaimed: true };
+      },
+      async findByUserId() {
+        return grant;
+      },
+      async recordActivation(input) {
+        recorded.push(input.chargedAmountUsd);
+        grant.discountUntil = input.discountUntil;
+        grant.chargedAmountUsd = input.chargedAmountUsd;
+        grant.appliedAt = input.appliedAt;
+      },
+    };
+    const { service } = harness(
+      {
+        store: store(),
+        owner: null,
+        subscription: subscription({ planId: "trial", status: "trialing" }),
+      },
+      ledger,
+    );
+    await service.changeStorePlan("store-1", "basic", "yearly");
+    expect(recorded).toEqual([30]);
+    await service.changeStorePlan("store-1", "trial", "monthly");
+    expect(recorded).toEqual([30]);
   });
 
   it("extends extra days from the current end", async () => {

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/feedback";
 import { Input, Select } from "@/components/ui/forms";
 import { SafeImage } from "@/components/ui/safe-image";
+import { PLANS } from "@/config/plans";
 import type { Category, ProductWithMedia } from "@/domain/types/entities";
 import type { ProductStatus } from "@/domain/types/enums";
 import {
@@ -57,7 +58,7 @@ export function ProductsWorkspace({
   products,
   categories,
   locale,
-  maxProducts = 100,
+  maxProducts = PLANS.basic.limits.maxProducts,
   productTotal,
 }: {
   storeId: string;

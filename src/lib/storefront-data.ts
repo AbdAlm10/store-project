@@ -79,7 +79,11 @@ async function loadPublishedStore(slug: string): Promise<Store> {
     }
   }
 
-  return resolveStorefrontAccess(store, subscription);
+  const resolved = resolveStorefrontAccess(store, subscription);
+  if (resolved.status !== "published") {
+    throw new AppError("NOT_FOUND", "Store not found.");
+  }
+  return resolved;
 }
 
 function isPlanId(value: unknown): value is PlanId {
@@ -223,6 +227,31 @@ async function attachPublicMediaMany(
   );
 }
 
+async function customerHiddenNow(slug: string): Promise<boolean> {
+  if (!isSupabaseConfigured()) {
+    try {
+      await getServices().stores.getPublicStoreBySlug(slug);
+      return false;
+    } catch {
+      return true;
+    }
+  }
+
+  const supabase = createSupabasePublicClient();
+  const { data, error } = await supabase
+    .from("stores")
+    .select("id, status")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error || !data || data.status !== "published") return true;
+  const { data: usable, error: usableError } = await supabase.rpc(
+    "is_store_subscription_usable",
+    { target_store_id: data.id },
+  );
+  if (!usableError && usable === false) return true;
+  return false;
+}
+
 /** Cross-request cached published store (ISR-style, 60s + tag purge). */
 export function getCachedPublicStore(slug: string): Promise<Store> {
   return unstable_cache(
@@ -303,7 +332,13 @@ export function getCachedPublicProduct(
  */
 export const getCachedStorefront = cache(async (slug: string): Promise<Store> => {
   try {
-    return await getCachedPublicStore(slug);
+    const store = await getCachedPublicStore(slug);
+    // Re-check outside the 60s cache so an expiry freeze and an admin
+    // reactivation hide or restore the storefront on the next request.
+    if (await customerHiddenNow(slug)) {
+      throw new AppError("NOT_FOUND", "Store not found.");
+    }
+    return store;
   } catch (error) {
     if (error instanceof AppError && error.code === "NOT_FOUND") {
       return getServices().stores.getStorefrontBySlug(slug);

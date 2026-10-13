@@ -36,6 +36,7 @@ import { EmptyState } from "@/components/ui/feedback";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
 import { isSubscriptionUsable } from "@/domain/rules/store-rules";
+import { claimEarlyBirdForMerchant } from "@/infrastructure/billing/early-bird-ledger";
 import { buildSubscriptionWhatsAppUrl } from "@/lib/social/sharing";
 
 export const metadata = {
@@ -72,6 +73,10 @@ export default async function DashboardHomePage() {
 
   const isNew = products.total === 0;
   const subscriptionExpired = !isSubscriptionUsable(subscription);
+  const earlyBird = await claimEarlyBirdForMerchant({
+    userId: profile.id,
+    storeId: store.id,
+  });
   const upgradeUrl = buildSubscriptionWhatsAppUrl({
     storeName: store.name,
     storeSlug: store.slug,
@@ -80,6 +85,7 @@ export default async function DashboardHomePage() {
         ? "pro"
         : "basic",
     mode: subscriptionExpired ? "renew" : "subscribe",
+    earlyBird,
   });
 
   return (

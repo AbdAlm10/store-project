@@ -2,10 +2,11 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { DashboardCard } from "@/components/dashboard/ui";
 import { buttonVariants } from "@/components/ui/button";
 import { appConfig } from "@/config/app";
-import { PLANS, type PlanId } from "@/config/plans";
+import { earlyBirdPrice, formatUsd, PLANS, type PlanId } from "@/config/plans";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator, type MessageKey } from "@/i18n/messages";
 import { getServices } from "@/infrastructure/container";
+import { claimEarlyBirdForMerchant } from "@/infrastructure/billing/early-bird-ledger";
 import { buildSubscriptionWhatsAppUrl } from "@/lib/social/sharing";
 import { isSubscriptionUsable } from "@/domain/rules/store-rules";
 import { CopyReferralLink } from "@/features/dashboard/copy-referral-link";
@@ -39,17 +40,29 @@ export default async function SubscriptionPage() {
     .then((result) => result.total);
 
   const subscriptionIsUsable = isSubscriptionUsable(subscription);
+  let earlyBird = false;
+  try {
+    const { profile } = await services.auth.requireProfile();
+    earlyBird = await claimEarlyBirdForMerchant({
+      userId: profile.id,
+      storeId: store.id,
+    });
+  } catch (error) {
+    console.error("early-bird claim failed", error);
+  }
   const proWhatsAppUrl = buildSubscriptionWhatsAppUrl({
     storeName: store.name,
     storeSlug: store.slug,
     intent: "pro",
     mode: subscription.planId === "pro" && !subscriptionIsUsable ? "renew" : "subscribe",
+    earlyBird,
   });
   const basicWhatsAppUrl = buildSubscriptionWhatsAppUrl({
     storeName: store.name,
     storeSlug: store.slug,
     intent: "basic",
     mode: subscription.planId === "basic" && !subscriptionIsUsable ? "renew" : "subscribe",
+    earlyBird,
   });
   const isPro = subscription.planId === "pro";
   const expired = !subscriptionIsUsable;
@@ -120,8 +133,18 @@ export default async function SubscriptionPage() {
         {plan.priceYearlyUsd > 0 ? (
           <p className="mt-4 text-sm text-slate-500">
             {t("subscriptionPricing", {
-              monthly: plan.priceMonthlyUsd,
-              yearly: plan.priceYearlyUsd,
+              monthly: formatUsd(plan.priceMonthlyUsd),
+              yearly: formatUsd(plan.priceYearlyUsd),
+            })}
+          </p>
+        ) : null}
+        {earlyBird ? (
+          <p className="mt-2 text-sm font-medium text-brand-800">
+            {t("subscriptionEarlyBird", {
+              basicMonthly: formatUsd(earlyBirdPrice("basic", "monthly")),
+              basicYearly: formatUsd(earlyBirdPrice("basic", "yearly")),
+              proMonthly: formatUsd(earlyBirdPrice("pro", "monthly")),
+              proYearly: formatUsd(earlyBirdPrice("pro", "yearly")),
             })}
           </p>
         ) : null}

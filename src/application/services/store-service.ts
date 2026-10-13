@@ -18,6 +18,7 @@ import type {
   StoreRepository,
   SubscriptionRepository,
 } from "@/application/ports/repositories";
+import { isHiddenFromCustomers } from "@/lib/store-storefront-access";
 import { parseNavbarActions } from "@/lib/navbar-actions";
 import { createStoreSchema, updateStoreSchema } from "@/validations/schemas";
 import type { AuthService } from "./auth-service";
@@ -176,19 +177,31 @@ export class StoreService {
 
   async getPublicStoreBySlug(slug: string): Promise<Store> {
     const store = await this.stores.findBySlug(slug);
-    if (
-      !store ||
-      (store.status !== "published" && store.status !== "restricted")
-    ) {
+    if (!store || store.status !== "published") {
       throw new AppError("NOT_FOUND", "Store not found.");
     }
     const subscription = await this.subscriptions
       .findByStoreId(store.id)
       .catch(() => null);
-    const { resolveStorefrontAccess } = await import(
-      "@/lib/store-storefront-access"
-    );
-    return resolveStorefrontAccess(store, subscription);
+    if (isHiddenFromCustomers(store, subscription)) {
+      throw new AppError("NOT_FOUND", "Store not found.");
+    }
+    return store;
+  }
+
+  /**
+   * Persist an expiry freeze. Products stay. Admin activation republishes
+   * when suspendedAt is null. An explicit admin suspension is left alone.
+   */
+  async ensureFrozenIfExpired(storeId: string): Promise<boolean> {
+    const store = await this.stores.findById(storeId);
+    if (!store || store.suspendedAt || store.status !== "published") return false;
+    const subscription = await this.subscriptions
+      .findByStoreId(storeId)
+      .catch(() => null);
+    if (!subscription || isSubscriptionUsable(subscription)) return false;
+    await this.stores.update(storeId, { status: "restricted" });
+    return true;
   }
 
   async restrictForExpiredSubscription(storeId: string): Promise<Store> {
@@ -227,12 +240,11 @@ export class StoreService {
       "@/lib/store-storefront-access"
     );
 
-    if (
-      store.suspendedAt ||
-      store.status === "restricted" ||
-      (subscription && !isSubscriptionUsable(subscription))
-    ) {
-      return resolveStorefrontAccess(store, subscription);
+    if (isHiddenFromCustomers(store, subscription)) {
+      if (await this.viewerIsMember(store.id)) {
+        return resolveStorefrontAccess(store, subscription);
+      }
+      throw new AppError("NOT_FOUND", "Store not found.");
     }
 
     if (store.status === "published") {
@@ -251,6 +263,16 @@ export class StoreService {
     }
 
     throw new AppError("NOT_FOUND", "Store not found.");
+  }
+
+  private async viewerIsMember(storeId: string): Promise<boolean> {
+    try {
+      const { session } = await this.auth.requireProfile();
+      const membership = await this.members.findMembership(storeId, session.user.id);
+      return Boolean(membership);
+    } catch {
+      return false;
+    }
   }
 
   private async sanitizeThemeOverrides(

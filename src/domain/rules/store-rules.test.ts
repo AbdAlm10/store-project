@@ -86,6 +86,32 @@ describe("entitlements", () => {
       AppError,
     );
   });
+
+  it("enforces the Basic product and category caps", async () => {
+    const subscriptions = new MemorySubscriptionRepository();
+    const service = new EntitlementService(subscriptions);
+    const storeId = "00000000-0000-4000-8000-000000000011";
+    const future = new Date(Date.now() + 86_400_000).toISOString();
+    await subscriptions.create({
+      storeId,
+      planId: "basic",
+      billingPeriod: "monthly",
+      status: "active",
+      trialEndsAt: null,
+      currentPeriodEnd: future,
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
+    });
+
+    await expect(service.assertCanCreateProduct(storeId, 149)).resolves.toBeUndefined();
+    await expect(service.assertCanCreateProduct(storeId, 150)).rejects.toMatchObject({
+      code: "LIMIT_REACHED",
+    });
+    await expect(service.assertCanCreateCategory(storeId, 9)).resolves.toBeUndefined();
+    await expect(service.assertCanCreateCategory(storeId, 10)).rejects.toMatchObject({
+      code: "LIMIT_REACHED",
+    });
+  });
 });
 
 describe("whatsapp ordering", () => {
