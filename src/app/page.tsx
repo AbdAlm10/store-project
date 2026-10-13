@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import {
   ArrowLeft,
   BarChart3,
@@ -25,20 +24,11 @@ import { PricingSection } from "@/components/marketing/pricing-section";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator, type MessageKey } from "@/i18n/messages";
 import { publicSupportWhatsAppUrl } from "@/lib/support-contact";
-import { existsSync } from "node:fs";
-import path from "node:path";
-
-function marketingShot(file: string): string | null {
-  const abs = path.join(process.cwd(), "public", "marketing", file);
-  return existsSync(abs) ? `/marketing/${file}` : null;
-}
 
 export default async function HomePage() {
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
 
-  const storefrontShot = marketingShot("alnoor-store.webp");
-  const productShot = marketingShot("alnoor-product.webp");
   const supportWhatsApp = publicSupportWhatsAppUrl();
   const beforePoints = ["valueBefore1", "valueBefore2", "valueBefore3"] as const;
   const afterPoints = ["valueAfter1", "valueAfter2", "valueAfter3"] as const;
@@ -150,38 +140,6 @@ export default async function HomePage() {
                   ))}
                 </ul>
               </div>
-            </div>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              {storefrontShot ? (
-                <figure className="overflow-hidden rounded-[1.35rem] bg-white shadow-[var(--ys-landing-shadow)]">
-                  <Image
-                    src={storefrontShot}
-                    alt={t("showcaseStorefront")}
-                    width={1024}
-                    height={733}
-                    className="h-auto w-full"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                  />
-                  <figcaption className="px-4 py-3 text-sm font-medium text-slate-700">
-                    {t("showcaseStorefront")}
-                  </figcaption>
-                </figure>
-              ) : null}
-              {productShot ? (
-                <figure className="overflow-hidden rounded-[1.35rem] bg-white shadow-[var(--ys-landing-shadow)]">
-                  <Image
-                    src={productShot}
-                    alt={t("showcaseProduct")}
-                    width={1024}
-                    height={867}
-                    className="h-auto w-full"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                  />
-                  <figcaption className="px-4 py-3 text-sm font-medium text-slate-700">
-                    {t("showcaseProduct")}
-                  </figcaption>
-                </figure>
-              ) : null}
             </div>
           </Reveal>
         </section>

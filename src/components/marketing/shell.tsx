@@ -151,10 +151,6 @@ export async function MarketingFooter({ locale }: { locale?: Locale } = {}) {
       <div className="border-t border-slate-200/70">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p>
-            {t("footerPayments")}:{" "}
-            <span className="font-semibold text-slate-800">{t("footerShamCash")}</span>
-          </p>
-          <p>
             © {new Date().getFullYear()} {appConfig.name}. {t("footerRights")}
           </p>
         </div>
