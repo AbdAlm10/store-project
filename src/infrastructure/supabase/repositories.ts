@@ -132,12 +132,19 @@ export class SupabaseStoreRepository implements StoreRepository {
 
   async listByUserId(userId: string) {
     const supabase = await db();
-    const { data: memberships, error: memberError } = await supabase
-      .from("store_members")
-      .select("store_id")
-      .eq("user_id", userId);
+    const [{ data: memberships, error: memberError }, { data: owned, error: ownedError }] =
+      await Promise.all([
+        supabase.from("store_members").select("store_id").eq("user_id", userId),
+        supabase.from("stores").select("id").eq("owner_id", userId),
+      ]);
     if (memberError) fail(memberError.message);
-    const ids = (memberships ?? []).map((row) => row.store_id as string);
+    if (ownedError) fail(ownedError.message);
+    const ids = [
+      ...new Set([
+        ...(memberships ?? []).map((row) => row.store_id as string),
+        ...(owned ?? []).map((row) => row.id as string),
+      ]),
+    ];
     if (ids.length === 0) return [];
     const { data, error } = await supabase.from("stores").select("*").in("id", ids);
     if (error) fail(error.message);

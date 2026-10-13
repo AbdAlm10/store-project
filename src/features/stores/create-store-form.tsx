@@ -29,12 +29,24 @@ function toStoreSlug(value: string): string {
     .slice(0, 60);
 }
 
+export type StoreDraft = {
+  name: string;
+  slug: string;
+  description?: string;
+  currency: string;
+  whatsapp?: string;
+  defaultLocale?: string;
+};
+
 export function CreateStoreForm({
   onSuccess,
   redirectOnSuccess = true,
+  onDraft,
 }: {
   onSuccess?: () => void;
   redirectOnSuccess?: boolean;
+  /** Keep the draft in the wizard. The store row is written on the last step. */
+  onDraft?: (draft: StoreDraft) => void;
 } = {}) {
   const router = useRouter();
   const { t } = useI18n();
@@ -55,15 +67,20 @@ export function CreateStoreForm({
           toStoreSlug(String(formData.get("name") ?? ""));
         setSlug(nextSlug);
         setError(null);
+        const draft: StoreDraft = {
+          name: String(formData.get("name") ?? ""),
+          slug: nextSlug,
+          description: String(formData.get("description") ?? ""),
+          currency: String(formData.get("currency") ?? "USD"),
+          whatsapp: String(formData.get("whatsapp") ?? ""),
+          defaultLocale: "ar",
+        };
+        if (onDraft) {
+          onDraft(draft);
+          return;
+        }
         startTransition(async () => {
-          const result = await createStoreAction({
-            name: String(formData.get("name") ?? ""),
-            slug: nextSlug,
-            description: String(formData.get("description") ?? ""),
-            currency: String(formData.get("currency") ?? "USD"),
-            whatsapp: String(formData.get("whatsapp") ?? ""),
-            defaultLocale: "ar",
-          });
+          const result = await createStoreAction(draft);
           if (!result.ok) {
             setError(result.error);
             return;

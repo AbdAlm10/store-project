@@ -8,7 +8,11 @@ import type {
 } from "@/application/ports/providers";
 import { AppError } from "@/domain/errors";
 import { AUTH_AR, localizeAuthMessage } from "@/lib/auth-messages";
-import { isAuthUserVerified, otpFailureMessage } from "@/lib/email-verification";
+import {
+  emailSignupNeedsOtp,
+  isAuthUserVerified,
+  otpFailureMessage,
+} from "@/lib/email-verification";
 import { createSupabaseServerClient } from "@/infrastructure/supabase/server";
 import { appConfig } from "@/config/app";
 import { resolveAllowedAppOrigin } from "@/lib/app-origin";
@@ -76,7 +80,10 @@ export class SupabaseAuthProvider implements AuthProvider {
     if (!data.user) {
       throw new AppError("VALIDATION", AUTH_AR.generic);
     }
-    if (!data.session || !isAuthUserVerified(data.user)) {
+    if (
+      !data.session ||
+      emailSignupNeedsOtp({ hasSession: true, user: data.user })
+    ) {
       return { status: "verify_email", email };
     }
     return {

@@ -1,10 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/brand/brand-logo";
-import { CreateStoreForm } from "@/features/stores/create-store-form";
+import {
+  CreateStoreForm,
+  type StoreDraft,
+} from "@/features/stores/create-store-form";
+import { createStoreAction } from "@/features/stores/actions";
 import { useI18n } from "@/i18n/provider";
 
 const stepKeys = [
@@ -15,7 +20,28 @@ const stepKeys = [
 
 export function OnboardingWizard() {
   const { t } = useI18n();
+  const router = useRouter();
   const [step, setStep] = useState(1);
+  const [draft, setDraft] = useState<StoreDraft | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function finish(href: string) {
+    if (!draft) {
+      setStep(2);
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const result = await createStoreAction(draft);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      router.push(href);
+      router.refresh();
+    });
+  }
 
   return (
     <div className="mx-auto flex min-h-full max-w-xl flex-col justify-center px-4 py-12">
@@ -69,8 +95,11 @@ export function OnboardingWizard() {
           <p className="mt-2 text-sm text-slate-600">{t("onboardingNameHint")}</p>
           <div className="mt-6">
             <CreateStoreForm
-              onSuccess={() => setStep(3)}
-              redirectOnSuccess={false}
+              onDraft={(next) => {
+                setDraft(next);
+                setError(null);
+                setStep(3);
+              }}
             />
           </div>
           <button
@@ -94,13 +123,25 @@ export function OnboardingWizard() {
             <li>{t("onboardingReadyStep2")}</li>
             <li>{t("onboardingReadyStep3")}</li>
           </ol>
+          {error ? (
+            <p className="mt-4 text-sm text-red-600" role="alert">
+              {error}
+            </p>
+          ) : null}
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/dashboard/products/new">
-              <Button>{t("addFirstProduct")}</Button>
-            </Link>
-            <Link href="/dashboard">
-              <Button variant="outline">{t("goToDashboard")}</Button>
-            </Link>
+            <Button
+              onClick={() => finish("/dashboard/products/new")}
+              disabled={pending}
+            >
+              {t("addFirstProduct")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => finish("/dashboard")}
+              disabled={pending}
+            >
+              {t("goToDashboard")}
+            </Button>
           </div>
         </div>
       ) : null}
