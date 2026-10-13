@@ -1,4 +1,10 @@
 import { cookies } from "next/headers";
+import {
+  decodeSessionCookie,
+  encodeSessionCookie,
+  MEMORY_SESSION_COOKIE,
+  type MemorySessionPayload,
+} from "@/infrastructure/memory/session-cookie";
 import type {
   AuthProvider,
   AuthSession,
@@ -9,22 +15,41 @@ import type {
   UploadedObject,
 } from "@/application/ports/providers";
 import { AppError } from "@/domain/errors";
+import {
+  getPasswordRecord,
+  setPasswordRecord,
+  verifyPassword,
+} from "@/infrastructure/memory/password";
 import { findMemoryProfileByEmail } from "@/infrastructure/memory/repositories";
 
-const MEMORY_SESSION_COOKIE = "ys_memory_session";
+const DEMO_USER_IDS: Record<string, string> = {
+  "merchant@alnoor.demo": "00000000-0000-4000-8000-000000000001",
+  "admin@yourstore.app": "00000000-0000-4000-8000-000000000099",
+};
 
-type CookiePayload = { id: string; email: string };
+function assertPasswordLength(password: string): void {
+  if (password.length < 8) {
+    throw new AppError(
+      "VALIDATION",
+      "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
+    );
+  }
+  if (password.length > 72) {
+    throw new AppError("VALIDATION", "كلمة المرور طويلة جدًا.");
+  }
+}
 
 async function writeSessionCookie(session: AuthSession): Promise<void> {
   try {
     const jar = await cookies();
-    const payload: CookiePayload = {
+    const payload: MemorySessionPayload = {
       id: session.user.id,
       email: session.user.email,
     };
-    jar.set(MEMORY_SESSION_COOKIE, JSON.stringify(payload), {
+    jar.set(MEMORY_SESSION_COOKIE, encodeSessionCookie(payload), {
       httpOnly: true,
       sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
       path: "/",
       maxAge: 60 * 60 * 24 * 30,
     });
@@ -42,23 +67,30 @@ async function clearSessionCookie(): Promise<void> {
   }
 }
 
-async function readSessionCookie(): Promise<AuthSession | null> {
+function sessionFromPayload(data: MemorySessionPayload): AuthSession {
+  return {
+    user: {
+      id: data.id,
+      email: data.email,
+      emailConfirmed: true,
+    },
+    accessToken: "memory-access-token",
+  };
+}
+
+/**
+ * Cookie is the per-request identity. The in-memory field is only a fallback
+ * for unit tests that run outside a Next.js request.
+ */
+async function readRequestSession(): Promise<AuthSession | null | undefined> {
   try {
     const jar = await cookies();
     const raw = jar.get(MEMORY_SESSION_COOKIE)?.value;
     if (!raw) return null;
-    const data = JSON.parse(raw) as CookiePayload;
-    if (!data?.id || !data?.email) return null;
-    return {
-      user: {
-        id: data.id,
-        email: data.email,
-        emailConfirmed: true,
-      },
-      accessToken: "memory-access-token",
-    };
+    const data = decodeSessionCookie(raw);
+    return data ? sessionFromPayload(data) : null;
   } catch {
-    return null;
+    return undefined;
   }
 }
 
@@ -75,16 +107,17 @@ export class MemoryAuthProvider implements AuthProvider {
     password: string;
     fullName?: string;
   }): Promise<AuthSession> {
-    if (input.password.length < 8) {
-      throw new AppError(
-        "VALIDATION",
-        "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
-      );
+    assertPasswordLength(input.password);
+    const email = input.email.toLowerCase();
+    if (getPasswordRecord(email)) {
+      throw new AppError("CONFLICT", "هذا البريد مسجل بالفعل.");
     }
+    const userId = DEMO_USER_IDS[email] ?? crypto.randomUUID();
+    setPasswordRecord(email, userId, input.password);
     this.session = {
       user: {
-        id: crypto.randomUUID(),
-        email: input.email.toLowerCase(),
+        id: userId,
+        email,
         emailConfirmed: true,
       },
       accessToken: "memory-access-token",
@@ -94,25 +127,22 @@ export class MemoryAuthProvider implements AuthProvider {
   }
 
   async signIn(input: { email: string; password: string }): Promise<AuthSession> {
-    if (!input.password) {
+    const email = input.email.toLowerCase();
+    const record = getPasswordRecord(email);
+    if (
+      !input.password ||
+      !record ||
+      !verifyPassword(input.password, record.hash)
+    ) {
       throw new AppError(
         "UNAUTHORIZED",
         "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
       );
     }
-    const email = input.email.toLowerCase();
-    const demoIds: Record<string, string> = {
-      "merchant@alnoor.demo": "00000000-0000-4000-8000-000000000001",
-      "admin@yourstore.app": "00000000-0000-4000-8000-000000000099",
-    };
-
-    let userId: string | undefined = demoIds[email];
-    if (!userId) {
-      userId = findMemoryProfileByEmail(email)?.id;
-    }
-    if (!userId) {
-      userId = crypto.randomUUID();
-    }
+    const userId =
+      DEMO_USER_IDS[email] ??
+      findMemoryProfileByEmail(email)?.id ??
+      record.userId;
 
     this.session = {
       user: {
@@ -142,8 +172,8 @@ export class MemoryAuthProvider implements AuthProvider {
   }
 
   async getSession(): Promise<AuthSession | null> {
-    if (this.session) return this.session;
-    this.session = await readSessionCookie();
+    const fromRequest = await readRequestSession();
+    if (fromRequest !== undefined) return fromRequest;
     return this.session;
   }
 
@@ -152,15 +182,12 @@ export class MemoryAuthProvider implements AuthProvider {
   }
 
   async updatePassword(password: string): Promise<void> {
-    if (password.length < 8) {
-      throw new AppError(
-        "VALIDATION",
-        "يجب أن تكون كلمة المرور 8 أحرف على الأقل.",
-      );
+    assertPasswordLength(password);
+    const session = await this.getSession();
+    if (!session) {
+      throw new AppError("UNAUTHORIZED", "يجب تسجيل الدخول للمتابعة.");
     }
-    if (password.length > 72) {
-      throw new AppError("VALIDATION", "كلمة المرور طويلة جدًا.");
-    }
+    setPasswordRecord(session.user.email, session.user.id, password);
   }
 }
 

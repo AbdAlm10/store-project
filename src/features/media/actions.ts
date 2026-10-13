@@ -1,7 +1,13 @@
 "use server";
 
 import { getServices } from "@/infrastructure/container";
+import {
+  enforceRateLimit,
+  requestClientIp,
+} from "@/infrastructure/rate-limit/enforce";
 import { toUserMessage } from "@/domain/errors";
+
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 export type UploadImageKind = "product" | "logo" | "cover" | "category";
 
@@ -15,6 +21,12 @@ export async function uploadImageAction(
     if (!(file instanceof File) || file.size === 0) {
       return { ok: false, error: "No image file provided." };
     }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return { ok: false, error: "Images must be 5MB or smaller." };
+    }
+
+    const ip = await requestClientIp();
+    await enforceRateLimit("upload", `${storeId}:${ip ?? "unknown"}`);
 
     const previousUrl = String(formData.get("previousUrl") ?? "").trim() || null;
 

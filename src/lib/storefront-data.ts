@@ -6,6 +6,7 @@ import type {
   ProductWithMedia,
   Store,
 } from "@/domain/types/entities";
+import type { PlanId } from "@/config/plans";
 import { isSupabaseConfigured } from "@/infrastructure/supabase/config";
 import { createSupabasePublicClient } from "@/infrastructure/supabase/public-client";
 import {
@@ -48,7 +49,9 @@ async function loadPublishedStore(slug: string): Promise<Store> {
 
   const { data: subRow } = await supabase
     .from("subscriptions")
-    .select("*")
+    .select(
+      "id, store_id, plan_id, billing_period, status, trial_ends_at, current_period_end, created_at, updated_at",
+    )
     .eq("store_id", data.id)
     .maybeSingle();
 
@@ -78,6 +81,30 @@ async function loadPublishedStore(slug: string): Promise<Store> {
 
   return resolveStorefrontAccess(store, subscription);
 }
+
+function isPlanId(value: unknown): value is PlanId {
+  return value === "trial" || value === "basic" || value === "pro";
+}
+
+/** Plan shown on the public storefront. Pro hides the دكّان badge. */
+export const getStorefrontPlanId = cache(async (storeId: string): Promise<PlanId | null> => {
+  if (!isSupabaseConfigured()) {
+    try {
+      const subscription = await getServices().entitlements.getSubscription(storeId);
+      return subscription.planId;
+    } catch {
+      return null;
+    }
+  }
+
+  const supabase = createSupabasePublicClient();
+  const { data } = await supabase
+    .from("subscriptions")
+    .select("plan_id")
+    .eq("store_id", storeId)
+    .maybeSingle();
+  return isPlanId(data?.plan_id) ? data.plan_id : null;
+});
 
 async function loadPublicCategories(storeId: string): Promise<Category[]> {
   if (!isSupabaseConfigured()) {

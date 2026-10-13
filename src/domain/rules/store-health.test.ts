@@ -41,6 +41,15 @@ describe("store health", () => {
     expect(health.percent).toBeLessThan(50);
     expect(health.items.find((item) => item.id === "name")?.done).toBe(true);
     expect(health.items.find((item) => item.id === "product")?.done).toBe(false);
+    expect(health.items.find((item) => item.id === "whatsapp")?.pendingLabelKey).toBe(
+      "healthWhatsappTodo",
+    );
+    expect(health.items.find((item) => item.id === "published")?.pendingLabelKey).toBe(
+      "healthPublishedTodo",
+    );
+    expect(health.items.find((item) => item.id === "published")?.labelKey).toBe(
+      "healthPublished",
+    );
   });
 
   it("reaches 100% when checklist is complete", () => {
@@ -57,5 +66,13 @@ describe("store health", () => {
     });
     expect(health.percent).toBe(100);
     expect(health.completed).toBe(health.total);
+    expect(new Set(health.items.map((item) => item.href))).toEqual(
+      new Set([
+        "/dashboard/store",
+        "/dashboard/store-design",
+        "/dashboard/products/new",
+        "/dashboard/categories",
+      ]),
+    );
   });
 });

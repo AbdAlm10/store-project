@@ -160,6 +160,16 @@ export class AnalyticsService {
 
   async track(input: unknown): Promise<void> {
     const data = analyticsTrackSchema.parse(input);
+    const store = await this.stores.findById(data.storeId);
+    if (!store) {
+      throw new AppError("NOT_FOUND", "المتجر غير موجود.");
+    }
+    if (data.productId) {
+      const product = await this.products.findById(data.productId);
+      if (!product || product.storeId !== store.id) {
+        throw new AppError("VALIDATION", "المنتج لا يتبع هذا المتجر.");
+      }
+    }
     await this.analytics.track({
       storeId: data.storeId,
       productId: data.productId ?? null,
@@ -183,9 +193,12 @@ export class AnalyticsService {
 
   async getDashboardStats(
     storeId: string,
-    rangeDays: 1 | 7 | 30 | 90,
+    rangeDays: number,
     options?: { includeTopProducts?: boolean },
   ): Promise<DashboardStats> {
+    if (rangeDays !== 1 && rangeDays !== 7 && rangeDays !== 30 && rangeDays !== 90) {
+      throw new AppError("VALIDATION", "نطاق التحليلات غير صالح.");
+    }
     const includeTopProducts = options?.includeTopProducts ?? true;
     const { session } = await this.auth.requireProfile();
     const store = await this.stores.findById(storeId);

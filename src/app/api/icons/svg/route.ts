@@ -1,6 +1,26 @@
 import { NextResponse } from "next/server";
 import { ICONIFY_ALLOWED_PREFIXES } from "@/lib/icon-search";
 
+function sanitizeIconSvg(raw: string): string | null {
+  const start = raw.indexOf("<svg");
+  const end = raw.lastIndexOf("</svg>");
+  if (start === -1 || end === -1 || end < start) return null;
+  const svg = raw
+    .slice(start, end + "</svg>".length)
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, "")
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
+    .replace(/<(?:object|embed|link)\b[^>]*\/?>/gi, "")
+    .replace(/\son\w+\s*=\s*(['"])[^'"]*\1/gi, "")
+    .replace(
+      /\s(?:href|xlink:href)\s*=\s*(['"])\s*(?:javascript:|data:|https?:)[^'"]*\1/gi,
+      "",
+    )
+    .replace(/javascript:/gi, "");
+  if (!svg.includes("<svg") || !svg.includes("</svg>")) return null;
+  return svg;
+}
+
 export async function GET(request: Request) {
   const id = (new URL(request.url).searchParams.get("id") ?? "").trim();
   if (!/^[a-z0-9-]+:[a-z0-9-]+$/i.test(id)) {
@@ -20,13 +40,16 @@ export async function GET(request: Request) {
     if (!upstream.ok) {
       return NextResponse.json({ error: "Icon not found" }, { status: 404 });
     }
-    const svg = await upstream.text();
-    if (!svg.includes("<svg")) {
+    const svg = sanitizeIconSvg(await upstream.text());
+    if (!svg) {
       return NextResponse.json({ error: "Invalid SVG" }, { status: 502 });
     }
     return new NextResponse(svg, {
       headers: {
         "Content-Type": "image/svg+xml; charset=utf-8",
+        "Content-Security-Policy":
+          "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        "X-Content-Type-Options": "nosniff",
         "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
       },
     });

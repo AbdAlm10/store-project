@@ -15,6 +15,7 @@ import {
 import { ProductActions } from "@/features/products/product-actions";
 import type { Locale } from "@/i18n/config";
 import { useI18n } from "@/i18n/provider";
+import { listedProductStock } from "@/lib/listed-stock";
 import { formatMoney } from "@/lib/social/sharing";
 import { cn } from "@/lib/utils/cn";
 import {
@@ -527,7 +528,7 @@ export function ProductsWorkspace({
                           {formatMoney(product.price, product.currency, locale)}
                         </td>
                         <td className="px-3 py-3.5 text-slate-500">
-                          {product.stock == null ? "—" : product.stock}
+                          {listedProductStock(product) ?? "—"}
                         </td>
                         <td className="px-3 py-3.5">
                           <StatusBadge status={product.status} />

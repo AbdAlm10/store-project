@@ -84,7 +84,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     name: "Basic",
     description: "A clean catalog link for social sellers getting started.",
     priceMonthlyUsd: 7,
-    priceYearlyUsd: 40,
+    priceYearlyUsd: 50,
     limits: { ...BASIC_LIMITS },
   },
   pro: {
@@ -130,6 +130,5 @@ export function earlyBirdPrice(
   const plan = PLANS[planId];
   const base = planPrice(plan, period);
   const discount = EARLY_BIRD_DISCOUNT[planId];
-  // Ceil so yearly lands on clean marketing prices ($95 / $210).
   return Math.ceil(base * (1 - discount) - Number.EPSILON);
 }

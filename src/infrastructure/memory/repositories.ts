@@ -15,6 +15,8 @@ import type {
   UserRepository,
 } from "@/application/ports/repositories";
 import type { PlanId } from "@/config/plans";
+import type { ReferralAccessPatch } from "@/domain/referrals/book";
+import { contactIdentity } from "@/domain/referrals/normalize";
 import type {
   AnalyticsEvent,
   Category,
@@ -133,6 +135,8 @@ export class MemoryUserRepository implements UserRepository {
     const existing = db.profiles.get(profile.id);
     const next: Profile = {
       ...profile,
+      platformRole: existing?.platformRole ?? profile.platformRole,
+      suspendedAt: existing ? existing.suspendedAt : profile.suspendedAt,
       createdAt: existing?.createdAt ?? profile.createdAt ?? now(),
       updatedAt: now(),
     };
@@ -322,6 +326,15 @@ export class MemoryProductRepository implements ProductRepository {
     return product ? withMedia(product) : null;
   }
 
+  async findByClientRequestId(storeId: string, requestId: string) {
+    return (
+      [...db.products.values()].find(
+        (item) =>
+          item.storeId === storeId && item.clientRequestId === requestId,
+      ) ?? null
+    );
+  }
+
   async countByStore(storeId: string, statuses?: ProductStatus[]) {
     return [...db.products.values()].filter(
       (product) =>
@@ -354,7 +367,16 @@ export class MemoryProductRepository implements ProductRepository {
       createdAt: now(),
       updatedAt: now(),
       publishedAt: input.publishedAt ?? null,
+      clientRequestId: input.clientRequestId ?? null,
     };
+    if (input.clientRequestId) {
+      const existing = [...db.products.values()].find(
+        (item) =>
+          item.storeId === input.storeId &&
+          item.clientRequestId === input.clientRequestId,
+      );
+      if (existing) return existing;
+    }
     db.products.set(product.id, product);
     return product;
   }
@@ -592,5 +614,60 @@ export class MemoryPlatformAdminRepository implements PlatformAdminRepository {
     };
     db.subscriptions.set(id, next);
     return next;
+  }
+}
+
+export function memoryReferralSubject(userId: string): {
+  identity: ReturnType<typeof contactIdentity>;
+  subscriptions: import("@/domain/referrals/book").ReferralSubscriptionSnapshot[];
+} {
+  const profile = db.profiles.get(userId);
+  const stores = [...db.stores.values()].filter((store) => store.ownerId === userId);
+  const subscriptions = [...db.subscriptions.values()]
+    .filter((sub) => stores.some((store) => store.id === sub.storeId))
+    .map((sub) => {
+      const store = stores.find((item) => item.id === sub.storeId)!;
+      return {
+        id: sub.id,
+        storeId: sub.storeId,
+        ownerId: store.ownerId,
+        planId: sub.planId,
+        status: sub.status,
+        trialEndsAt: sub.trialEndsAt,
+        currentPeriodEnd: sub.currentPeriodEnd,
+        storeStatus: store.status,
+        suspendedAt: store.suspendedAt,
+        updatedAt: sub.updatedAt,
+      };
+    });
+  return {
+    identity: contactIdentity(
+      [profile?.email, ...stores.map((store) => store.email)],
+      stores.flatMap((store) => [store.phone, store.whatsapp]),
+    ),
+    subscriptions,
+  };
+}
+
+export function memoryApplyReferralPatches(patches: ReferralAccessPatch[]): void {
+  for (const patch of patches) {
+    const current = db.subscriptions.get(patch.subscriptionId);
+    if (!current) continue;
+    db.subscriptions.set(patch.subscriptionId, {
+      ...current,
+      status: patch.status,
+      trialEndsAt: patch.trialEndsAt,
+      currentPeriodEnd: patch.currentPeriodEnd,
+      updatedAt: now(),
+    });
+    if (!patch.republish) continue;
+    const store = db.stores.get(patch.storeId);
+    if (!store || store.suspendedAt || store.status !== "restricted") continue;
+    db.stores.set(patch.storeId, {
+      ...store,
+      status: "published",
+      suspendedAt: null,
+      updatedAt: now(),
+    });
   }
 }

@@ -37,6 +37,7 @@ import {
   storeToRow,
   withMedia,
 } from "@/infrastructure/supabase/mappers";
+import { postgrestOrIlike } from "@/lib/postgrest-filter";
 import { createSupabaseServerClient } from "@/infrastructure/supabase/server";
 
 async function db() {
@@ -64,22 +65,31 @@ export class SupabaseUserRepository implements UserRepository {
       Partial<Pick<Profile, "createdAt" | "updatedAt">>,
   ) {
     const supabase = await db();
-    const { data, error } = await supabase
-      .from("profiles")
-      .upsert(
-        {
-          id: profile.id,
-          email: profile.email,
-          full_name: profile.fullName,
-          avatar_url: profile.avatarUrl,
-          platform_role: profile.platformRole,
-          locale: profile.locale,
-          suspended_at: profile.suspendedAt,
-        },
-        { onConflict: "id" },
-      )
-      .select("*")
-      .single();
+    const existing = await this.findProfileById(profile.id);
+    const writable = {
+      email: profile.email,
+      full_name: profile.fullName,
+      avatar_url: profile.avatarUrl,
+      locale: profile.locale,
+      updated_at: new Date().toISOString(),
+    };
+    const { data, error } = existing
+      ? await supabase
+          .from("profiles")
+          .update(writable)
+          .eq("id", profile.id)
+          .select("*")
+          .single()
+      : await supabase
+          .from("profiles")
+          .insert({
+            id: profile.id,
+            ...writable,
+            platform_role: profile.platformRole,
+            suspended_at: profile.suspendedAt,
+          })
+          .select("*")
+          .single();
     if (error || !data) fail(error?.message ?? "Profile upsert failed");
     return mapProfile(data);
   }
@@ -163,7 +173,7 @@ export class SupabaseStoreRepository implements StoreRepository {
       }
       if (error.message.toLowerCase().includes("theme_overrides")) {
         fail(
-          "Missing theme_overrides column. Run migration 20260908000007_theme_overrides.sql in the Supabase SQL Editor, then try again.",
+          "Missing theme_overrides column. Apply supabase/migrations/20260908000000_init.sql in the Supabase SQL Editor, then try again.",
         );
       }
       fail(error.message);
@@ -183,7 +193,7 @@ export class SupabaseStoreRepository implements StoreRepository {
     if (error || !data) {
       if (error?.message.toLowerCase().includes("theme_overrides")) {
         fail(
-          "Missing theme_overrides column. Run migration 20260908000007_theme_overrides.sql in the Supabase SQL Editor, then try again.",
+          "Missing theme_overrides column. Apply supabase/migrations/20260908000000_init.sql in the Supabase SQL Editor, then try again.",
         );
       }
       fail(error?.message ?? "Store update failed");
@@ -239,7 +249,7 @@ export class SupabaseStoreMemberRepository implements StoreMemberRepository {
     if (error) {
       if (error.message.toLowerCase().includes("row-level security")) {
         fail(
-          "Could not add store membership (RLS). Apply migration 20260908000005_fix_store_members_rls.sql in Supabase SQL Editor, then try again.",
+          "Could not add store membership (RLS). Apply supabase/migrations/20260908000000_init.sql in the Supabase SQL Editor, then try again.",
         );
       }
       fail(error.message);
@@ -416,8 +426,9 @@ export class SupabaseProductRepository implements ProductRepository {
       }
     }
     if (query.search?.trim()) {
-      const q = `%${query.search.trim()}%`;
-      builder = builder.or(`name.ilike.${q},description.ilike.${q}`);
+      builder = builder.or(
+        postgrestOrIlike(["name", "description"], query.search.trim()),
+      );
     }
 
     const from = (page - 1) * pageSize;
@@ -463,6 +474,18 @@ export class SupabaseProductRepository implements ProductRepository {
     return item ?? null;
   }
 
+  async findByClientRequestId(storeId: string, requestId: string) {
+    const supabase = await db();
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("store_id", storeId)
+      .eq("client_request_id", requestId)
+      .maybeSingle();
+    if (error) fail(error.message);
+    return data ? mapProduct(data) : null;
+  }
+
   async countByStore(storeId: string, statuses?: ProductStatus[]) {
     const supabase = await db();
     let builder = supabase
@@ -480,14 +503,31 @@ export class SupabaseProductRepository implements ProductRepository {
       id?: string;
       publishedAt?: string | null;
     },
-  ) {
+  ): Promise<Product> {
     const supabase = await db();
     const { data, error } = await supabase
       .from("products")
       .insert(productToRow({ ...input, publishedAt: input.publishedAt ?? null }))
       .select("*")
       .single();
-    if (error || !data) fail(error?.message ?? "Product create failed");
+    if (error || !data) {
+      const message = error?.message ?? "Product create failed";
+      if (input.clientRequestId) {
+        const existing = await this.findByClientRequestId(
+          input.storeId,
+          input.clientRequestId,
+        ).catch(() => null);
+        if (existing) return existing;
+        if (
+          /client_request_id/i.test(message) &&
+          /does not exist|schema cache|could not find/i.test(message)
+        ) {
+          const { clientRequestId: _ignored, ...rest } = input;
+          return this.create(rest);
+        }
+      }
+      fail(message);
+    }
     return mapProduct(data);
   }
 

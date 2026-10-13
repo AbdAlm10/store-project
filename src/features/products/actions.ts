@@ -1,7 +1,10 @@
 "use server";
 
+import { after } from "next/server";
 import { getServices } from "@/infrastructure/container";
 import { toUserMessage } from "@/domain/errors";
+
+const MAX_BULK_PRODUCTS = 100;
 import {
   revalidateStorefrontProduct,
   revalidateStorefrontStore,
@@ -15,7 +18,9 @@ export async function createProductAction(
     const services = getServices();
     const store = await services.stores.getStoreForOwner(storeId);
     const product = await services.products.create(storeId, input);
-    revalidateStorefrontProduct(store, product.slug);
+    after(() => {
+      revalidateStorefrontProduct(store, product.slug);
+    });
     return { ok: true, id: product.id };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };
@@ -31,7 +36,9 @@ export async function updateProductAction(
     const services = getServices();
     const store = await services.stores.getStoreForOwner(storeId);
     const product = await services.products.update(storeId, productId, input);
-    revalidateStorefrontProduct(store, product.slug);
+    after(() => {
+      revalidateStorefrontProduct(store, product.slug);
+    });
     return { ok: true };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };
@@ -46,7 +53,9 @@ export async function deleteProductAction(
     const services = getServices();
     const store = await services.stores.getStoreForOwner(storeId);
     await services.products.delete(storeId, productId);
-    revalidateStorefrontStore(store);
+    after(() => {
+      revalidateStorefrontStore(store);
+    });
     return { ok: true };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };
@@ -61,7 +70,9 @@ export async function duplicateProductAction(
     const services = getServices();
     const store = await services.stores.getStoreForOwner(storeId);
     const product = await services.products.duplicate(storeId, productId);
-    revalidateStorefrontProduct(store, product.slug);
+    after(() => {
+      revalidateStorefrontProduct(store, product.slug);
+    });
     return { ok: true };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };
@@ -78,13 +89,18 @@ export async function bulkUpdateProductStatusAction(
     if (uniqueIds.length === 0) {
       return { ok: false, error: "No products selected." };
     }
+    if (uniqueIds.length > MAX_BULK_PRODUCTS) {
+      return { ok: false, error: "يمكن تحديد 100 منتج كحد أقصى." };
+    }
 
     const services = getServices();
     const store = await services.stores.getStoreForOwner(storeId);
     for (const productId of uniqueIds) {
       await services.products.update(storeId, productId, { status });
     }
-    revalidateStorefrontStore(store);
+    after(() => {
+      revalidateStorefrontStore(store);
+    });
     return { ok: true, count: uniqueIds.length };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };
@@ -100,13 +116,18 @@ export async function bulkDeleteProductsAction(
     if (uniqueIds.length === 0) {
       return { ok: false, error: "No products selected." };
     }
+    if (uniqueIds.length > MAX_BULK_PRODUCTS) {
+      return { ok: false, error: "يمكن تحديد 100 منتج كحد أقصى." };
+    }
 
     const services = getServices();
     const store = await services.stores.getStoreForOwner(storeId);
     for (const productId of uniqueIds) {
       await services.products.delete(storeId, productId);
     }
-    revalidateStorefrontStore(store);
+    after(() => {
+      revalidateStorefrontStore(store);
+    });
     return { ok: true, count: uniqueIds.length };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };

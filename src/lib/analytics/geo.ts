@@ -3,26 +3,41 @@ type GeoInfo = {
   city: string;
 };
 
+const GEO_CACHE_MAX = 500;
 const geoCache = new Map<string, GeoInfo | null>();
 
-function isPrivateIp(ip: string): boolean {
-  if (
-    ip === "127.0.0.1" ||
-    ip === "::1" ||
-    ip === "localhost" ||
-    ip === "0.0.0.0" ||
-    ip.startsWith("10.") ||
-    ip.startsWith("192.168.") ||
-    ip.startsWith("fc") ||
-    ip.startsWith("fd")
-  ) {
+function rememberGeo(ip: string, info: GeoInfo | null): void {
+  if (geoCache.size >= GEO_CACHE_MAX) {
+    const oldest = geoCache.keys().next().value;
+    if (oldest) geoCache.delete(oldest);
+  }
+  geoCache.set(ip, info);
+}
+
+function isPublicLookupIp(ip: string): boolean {
+  if (ip.includes(":")) {
+    if (!/^[0-9a-f:]+$/i.test(ip) || ip.length > 64) return false;
+    const lower = ip.toLowerCase();
+    if (
+      lower === "::1" ||
+      lower.startsWith("fe80") ||
+      lower.startsWith("fc") ||
+      lower.startsWith("fd")
+    ) {
+      return false;
+    }
     return true;
   }
-  if (ip.startsWith("172.")) {
-    const second = Number(ip.split(".")[1] ?? 0);
-    return second >= 16 && second <= 31;
-  }
-  return false;
+  if (!/^(?:\d{1,3}\.){3}\d{1,3}$/.test(ip)) return false;
+  const parts = ip.split(".").map(Number);
+  if (parts.some((part) => part > 255)) return false;
+  const [a, b] = parts;
+  if (a === 0 || a === 10 || a === 127) return false;
+  if (a === 169 && b === 254) return false;
+  if (a === 192 && b === 168) return false;
+  if (a === 172 && b >= 16 && b <= 31) return false;
+  if (a === 100 && b >= 64 && b <= 127) return false;
+  return true;
 }
 
 export function clientIpFromHeaders(headers: Headers): string | null {
@@ -36,7 +51,7 @@ export function clientIpFromHeaders(headers: Headers): string | null {
   for (const raw of candidates) {
     if (!raw) continue;
     const ip = raw.replace(/^::ffff:/, "").trim();
-    if (ip) return ip;
+    if (ip && ip.length <= 64) return ip;
   }
   return null;
 }
@@ -53,7 +68,7 @@ async function lookupCityByIp(ip: string): Promise<GeoInfo | null> {
     });
     clearTimeout(timer);
     if (!res.ok) {
-      geoCache.set(ip, null);
+      rememberGeo(ip, null);
       return null;
     }
     const data = (await res.json()) as {
@@ -62,17 +77,17 @@ async function lookupCityByIp(ip: string): Promise<GeoInfo | null> {
       city?: string;
     };
     if (!data.success || !data.city?.trim()) {
-      geoCache.set(ip, null);
+      rememberGeo(ip, null);
       return null;
     }
     const info: GeoInfo = {
       countryCode: data.country_code ?? "",
       city: data.city.trim(),
     };
-    geoCache.set(ip, info);
+    rememberGeo(ip, info);
     return info;
   } catch {
-    geoCache.set(ip, null);
+    rememberGeo(ip, null);
     return null;
   }
 }
@@ -108,12 +123,13 @@ export async function resolveRequestGeo(
   }
 
   const ip = clientIpFromHeaders(headers);
-  if (ip && !isPrivateIp(ip)) {
+  if (ip && isPublicLookupIp(ip)) {
     return lookupCityByIp(ip);
   }
 
-  // Local/dev or missing IP: discover this machine's public egress IP, then city.
-  // Useful for testing; in production visitor IP is usually in x-forwarded-for.
+  // Local/dev only: discover this machine's public egress IP, then city.
+  // In production a missing visitor IP must not be labeled with the server's city.
+  if (process.env.NODE_ENV === "production") return null;
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 2000);

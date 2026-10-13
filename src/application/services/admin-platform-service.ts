@@ -1,6 +1,9 @@
-import { TRIAL_DAYS, type BillingPeriod, type PlanId } from "@/config/plans";
+import type { BillingPeriod, PlanId } from "@/config/plans";
+import { extendFrom, nextPeriodEnd } from "@/domain/billing/period";
 import { AppError } from "@/domain/errors";
 import { isSubscriptionUsable } from "@/domain/rules/store-rules";
+import type { Store } from "@/domain/types/entities";
+import type { ReferralService } from "@/application/services/referral-service";
 import type {
   AdminStorePatch,
   AdminStoreRow,
@@ -43,6 +46,7 @@ export class AdminPlatformService {
   constructor(
     private readonly auth: AuthService,
     private readonly platform: PlatformAdminRepository,
+    private readonly referrals?: Pick<ReferralService, "grantOnFirstPaidActivation">,
   ) {}
 
   async getOverview(): Promise<AdminOverview> {
@@ -102,11 +106,16 @@ export class AdminPlatformService {
     return this.platform.updateSubscription(subscriptionId, patch);
   }
 
+  /**
+   * Manual Sham Cash activation. Choosing a plan and period starts or extends
+   * that period. The same plan and period again renews from the current end
+   * when that end is still in the future.
+   */
   async changeStorePlan(
     storeId: string,
     planId: PlanId,
     billingPeriod: BillingPeriod,
-  ) {
+  ): Promise<{ slug: string; storeId: string }> {
     await this.auth.requireAdmin();
     if (!PLAN_IDS.includes(planId)) {
       throw new AppError("VALIDATION", "خطة غير صالحة.");
@@ -119,36 +128,88 @@ export class AdminPlatformService {
     if (!row) {
       throw new AppError("NOT_FOUND", "المتجر غير موجود.");
     }
+    const now = new Date();
     const trial = planId === "trial";
-    if (
-      row.subscription?.planId === planId &&
-      row.subscription.billingPeriod === billingPeriod
-    ) {
-      return this.platform.updateSubscription(row.subscription.id, {
-        status: trial ? "trialing" : "active",
-      });
-    }
-    const endsAt = new Date();
-    endsAt.setDate(
-      endsAt.getDate() + (trial ? TRIAL_DAYS : billingPeriod === "yearly" ? 365 : 30),
-    );
-    const iso = endsAt.toISOString();
+    const iso = nextPeriodEnd({
+      now,
+      planId,
+      billingPeriod,
+      previous: row.subscription
+        ? {
+            planId: row.subscription.planId,
+            currentPeriodEnd: row.subscription.currentPeriodEnd,
+          }
+        : null,
+    }).toISOString();
     const patch = {
       planId,
       billingPeriod,
       status: trial ? ("trialing" as const) : ("active" as const),
       trialEndsAt: trial ? iso : null,
-      currentPeriodEnd: trial ? iso : iso,
+      currentPeriodEnd: iso,
     };
     if (!row.subscription) {
-      return this.platform.createSubscription({
+      await this.platform.createSubscription({
         storeId,
         ...patch,
         stripeCustomerId: null,
         stripeSubscriptionId: null,
       });
+    } else {
+      await this.platform.updateSubscription(row.subscription.id, patch);
     }
-    return this.platform.updateSubscription(row.subscription.id, patch);
+    await this.publishIfExpiryLocked(row.store);
+    if (!trial) {
+      try {
+        await this.referrals?.grantOnFirstPaidActivation({
+          referredUserId: row.store.ownerId,
+          storeId,
+        });
+      } catch (error) {
+        console.error("referral grant failed after plan activation", error);
+      }
+    }
+    return { slug: row.store.slug, storeId: row.store.id };
+  }
+
+  /** Extra days from the current end when it is still in the future. */
+  async extendSubscription(
+    subscriptionId: string,
+    days: number,
+  ): Promise<{ slug: string; storeId: string }> {
+    await this.auth.requireAdmin();
+    if (!Number.isInteger(days) || days < 1 || days > 365) {
+      throw new AppError("VALIDATION", "مدة التمديد غير صالحة.");
+    }
+    const rows = await this.platform.listStoresWithSubscriptions();
+    const row = rows.find((item) => item.subscription?.id === subscriptionId);
+    if (!row?.subscription) {
+      throw new AppError("NOT_FOUND", "الاشتراك غير موجود.");
+    }
+    const sub = row.subscription;
+    const trial = sub.planId === "trial" || sub.status === "trialing";
+    const iso = extendFrom(
+      trial ? sub.trialEndsAt : sub.currentPeriodEnd,
+      days,
+      new Date(),
+    ).toISOString();
+    await this.platform.updateSubscription(sub.id, {
+      status: trial ? "trialing" : "active",
+      trialEndsAt: trial ? iso : sub.trialEndsAt,
+      currentPeriodEnd: trial ? iso : iso,
+    });
+    await this.publishIfExpiryLocked(row.store);
+    return { slug: row.store.slug, storeId: row.store.id };
+  }
+
+  /** Reopen a store closed by expiry. An explicit admin suspension stays closed. */
+  private async publishIfExpiryLocked(store: Store): Promise<void> {
+    if (store.status === "restricted" && !store.suspendedAt) {
+      await this.platform.updateStore(store.id, {
+        status: "published",
+        suspended: false,
+      });
+    }
   }
 
   async setStoreStatus(storeId: string, status: StoreStatus) {

@@ -9,6 +9,7 @@ import {
   assertCanManageStore,
   assertStoreActive,
   isSubscriptionUsable,
+  publishNeedsWhatsapp,
   slugify,
 } from "@/domain/rules/store-rules";
 import type { Store } from "@/domain/types/entities";
@@ -154,6 +155,19 @@ export class StoreService {
     }
 
     if (data.status === "published" && store.status !== "published") {
+      if (
+        publishNeedsWhatsapp({
+          currentStatus: store.status,
+          currentWhatsapp: store.whatsapp,
+          nextStatus: data.status,
+          nextWhatsapp: data.whatsapp,
+        })
+      ) {
+        throw new AppError(
+          "VALIDATION",
+          "أضف رقم واتساب قبل نشر المتجر.",
+        );
+      }
       patch.publishedAt = new Date().toISOString();
     }
 

@@ -1,24 +1,28 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs/config";
+import { buildSecurityHeaders } from "./src/lib/content-security-policy";
 
 /**
- * Merchants paste product/logo URLs from any CDN or site.
- * Allow all http(s) hosts; rendering still fails softly via SafeImage if the URL is not a real image.
+ * Merchant photos render through SafeImage with `unoptimized`, so the browser
+ * loads those https URLs directly and the image optimizer never fetches them.
+ * The optimizer allowlist is https-only and names real hosts. A hostname of
+ * "**" would also match private IPs, so it is not used.
  */
 const nextConfig: NextConfig = {
-  // Allow LAN/dev-host HMR when opening the app via network IP (not only localhost).
-  allowedDevOrigins: ["192.168.5.8", "192.168.56.1"],
+  // localhost is allowed by Next itself. 127.0.0.1 is not, and a blocked dev
+  // websocket prevents the client runtime from hydrating.
+  allowedDevOrigins: ["127.0.0.1", "192.168.5.8", "192.168.56.1"],
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "placehold.co",
         pathname: "/**",
       },
       {
-        protocol: "http",
-        hostname: "**",
-        pathname: "/**",
+        protocol: "https",
+        hostname: "**.supabase.co",
+        pathname: "/storage/v1/object/public/**",
       },
     ],
   },
@@ -30,6 +34,14 @@ const nextConfig: NextConfig = {
       static: 86_400,
     },
     optimizePackageImports: ["lucide-react"],
+  },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: buildSecurityHeaders(process.env),
+      },
+    ];
   },
 };
 

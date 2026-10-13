@@ -1,4 +1,4 @@
-import { PoweredByBrand } from "@/components/brand/powered-by-brand";
+import { StorefrontPlanCredit } from "@/components/brand/storefront-plan-credit";
 import { ProductGallery } from "@/components/storefront/product-gallery";
 import { ProductPurchasePanel } from "@/components/storefront/product-purchase-panel";
 import { RelatedProductsSection } from "@/components/storefront/related-products";
@@ -22,6 +22,7 @@ import {
 } from "@/lib/social/sharing";
 import {
   getCachedStorefront,
+  getStorefrontPlanId,
   getStorefrontProduct,
 } from "@/lib/storefront-data";
 import type { Metadata } from "next";
@@ -74,6 +75,7 @@ export default async function ProductPage({ params }: Props) {
 
   const locale = await getRequestLocale(store.defaultLocale);
   const t = createTranslator(locale);
+  const planId = await getStorefrontPlanId(store.id);
   const themeTokens = resolveThemeTokens(
     DEFAULT_THEME_TOKENS,
     store.themeOverrides,
@@ -84,7 +86,7 @@ export default async function ProductPage({ params }: Props) {
   if (store.status === "restricted") {
     return (
       <div
-        className="min-h-dvh"
+        className="flex min-h-dvh flex-col"
         style={{
           ...cssVars,
           background: "var(--store-bg)",
@@ -92,11 +94,18 @@ export default async function ProductPage({ params }: Props) {
           fontFamily: "var(--store-font-body)",
         }}
       >
-        <SubscriptionLockedView
-          store={store}
-          title={t("subscriptionStoreLockedTitle")}
-          body={t("subscriptionStoreLockedBody")}
-        />
+        <div className="flex-1">
+          <SubscriptionLockedView
+            store={store}
+            title={t("subscriptionStoreLockedTitle")}
+            body={t("subscriptionStoreLockedBody")}
+          />
+        </div>
+        {planId !== "pro" ? (
+          <footer className="py-3 text-center">
+            <StorefrontPlanCredit planId={planId} />
+          </footer>
+        ) : null}
       </div>
     );
   }
@@ -269,7 +278,7 @@ export default async function ProductPage({ params }: Props) {
                 shareText={shareText}
               />
 
-              <PoweredByBrand className="mt-1" />
+              <StorefrontPlanCredit planId={planId} className="mt-1" />
             </div>
           </Suspense>
         </div>

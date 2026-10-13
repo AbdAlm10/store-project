@@ -19,6 +19,8 @@ type ImageUploadFieldProps = {
   onChange?: (url: string) => void;
   /** Hide the compression hint (useful in multi-slot UIs). URL paste stays visible. */
   compact?: boolean;
+  /** True while a chosen file is compressing or uploading. */
+  onBusyChange?: (busy: boolean) => void;
 };
 
 export function ImageUploadField({
@@ -29,6 +31,7 @@ export function ImageUploadField({
   defaultValue = "",
   onChange,
   compact = false,
+  onBusyChange,
 }: ImageUploadFieldProps) {
   const { t } = useI18n();
   const inputId = useId();
@@ -39,8 +42,10 @@ export function ImageUploadField({
   );
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const url = value !== undefined ? value : internalUrl;
+  const shown = url || previewUrl;
   const busy = status !== "idle";
   const replacesOwnedAsset =
     kind === "logo" || kind === "cover" || kind === "category";
@@ -53,8 +58,11 @@ export function ImageUploadField({
   async function handleFile(file: File | undefined) {
     if (!file) return;
     setError(null);
+    onBusyChange?.(true);
     setStatus("compressing");
     setProgress(0);
+    const localPreview = URL.createObjectURL(file);
+    setPreviewUrl(localPreview);
 
     try {
       const purpose = kind === "product" ? "product" : "logo";
@@ -78,8 +86,11 @@ export function ImageUploadField({
     } catch (err) {
       setError(err instanceof Error ? err.message : t("imageUploadFailed"));
     } finally {
+      URL.revokeObjectURL(localPreview);
+      setPreviewUrl(null);
       setStatus("idle");
       setProgress(0);
+      onBusyChange?.(false);
       if (fileRef.current) fileRef.current.value = "";
     }
   }
@@ -102,7 +113,7 @@ export function ImageUploadField({
           compact ? "items-center" : "flex-col",
         )}
       >
-        {url ? (
+        {shown ? (
           <div
             className={cn(
               "relative shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100",
@@ -111,13 +122,26 @@ export function ImageUploadField({
                 : "aspect-square max-w-[12rem] w-full",
             )}
           >
-            <SafeImage
-              src={url}
-              alt=""
-              fill
-              className={compact ? "object-contain p-1" : "object-cover"}
-              sizes={compact ? "56px" : "192px"}
-            />
+            {shown.startsWith("blob:") ? (
+              // Local preview while the file is still uploading.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={shown}
+                alt=""
+                className={cn(
+                  "h-full w-full",
+                  compact ? "object-contain p-1" : "object-cover",
+                )}
+              />
+            ) : (
+              <SafeImage
+                src={shown}
+                alt=""
+                fill
+                className={compact ? "object-contain p-1" : "object-cover"}
+                sizes={compact ? "56px" : "192px"}
+              />
+            )}
           </div>
         ) : compact ? (
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-[10px] font-medium text-slate-400">

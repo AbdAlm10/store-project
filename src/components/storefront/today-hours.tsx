@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
 import {
   formatOpeningHoursSummary,
+  hasOpeningHours,
+  isLegacyOpeningHoursText,
   parseOpeningHours,
   type Weekday,
 } from "@/lib/opening-hours";
@@ -29,6 +31,10 @@ export function TodayHours({
   const [line, setLine] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!hasOpeningHours(openingHours) || isLegacyOpeningHoursText(openingHours)) {
+      setLine(null);
+      return;
+    }
     const schedule = parseOpeningHours(openingHours);
     const hoursLines = formatOpeningHoursSummary(
       schedule,

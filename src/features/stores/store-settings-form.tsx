@@ -9,11 +9,7 @@ import { CopyStoreUrl } from "@/features/dashboard/copy-store-url";
 import { OpeningHoursEditor } from "@/features/stores/opening-hours-editor";
 import { updateStoreAction } from "@/features/stores/update-actions";
 import { useI18n } from "@/i18n/provider";
-import {
-  isLegacyOpeningHoursText,
-  parseOpeningHours,
-  serializeOpeningHours,
-} from "@/lib/opening-hours";
+import { isLegacyOpeningHoursText } from "@/lib/opening-hours";
 import {
   NAVBAR_ACTION_IDS,
   NAVBAR_ACTION_LABEL_KEY,
@@ -35,7 +31,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition, type ComponentType } from "react";
+import { useEffect, useMemo, useState, useTransition, type ComponentType } from "react";
 
 const CURRENCY_LABEL: Record<(typeof STORE_CURRENCIES)[number], string> = {
   USD: "دولار",
@@ -79,17 +75,31 @@ export function StoreSettingsForm({
   const [navActions, setNavActions] = useState<NavbarActionId[]>(() =>
     defaultNavbarSelection(store),
   );
-  const [openingHours, setOpeningHours] = useState(() =>
-    isLegacyOpeningHoursText(store.openingHours)
-      ? serializeOpeningHours(parseOpeningHours(null))
-      : (store.openingHours ??
-        serializeOpeningHours(parseOpeningHours(null))),
+  const [openingHours, setOpeningHours] = useState<string | null>(
+    store.openingHours?.trim() ? store.openingHours : null,
   );
   const legacyText = isLegacyOpeningHoursText(store.openingHours)
     ? store.openingHours
     : null;
   const url = storeUrl(store.slug);
   const isPublished = status === "published";
+
+  useEffect(() => {
+    setStatus(store.status === "published" ? "published" : "draft");
+  }, [store.status]);
+
+  function whatsappValue(form?: HTMLFormElement | null): string {
+    const field = form?.elements.namedItem("whatsapp");
+    if (field instanceof HTMLInputElement) return field.value.trim();
+    return store.whatsapp?.trim() ?? "";
+  }
+
+  function requireWhatsapp(form?: HTMLFormElement | null): boolean {
+    if (whatsappValue(form)) return true;
+    setError(t("whatsappRequiredToPublish"));
+    document.getElementById("whatsapp")?.focus();
+    return false;
+  }
 
   const fieldDefaults = useMemo(
     () => ({
@@ -126,6 +136,13 @@ export function StoreSettingsForm({
       onSubmit={(event) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
+        if (
+          status === "published" &&
+          store.status !== "published" &&
+          !requireWhatsapp(event.currentTarget)
+        ) {
+          return;
+        }
         setError(null);
         startTransition(async () => {
           const result = await updateStoreAction(store.id, {
@@ -167,7 +184,16 @@ export function StoreSettingsForm({
           <div className="grid gap-2 sm:grid-cols-2">
             <button
               type="button"
-              onClick={() => setStatus("published")}
+              onClick={(event) => {
+                if (
+                  store.status !== "published" &&
+                  !requireWhatsapp(event.currentTarget.form)
+                ) {
+                  return;
+                }
+                setError(null);
+                setStatus("published");
+              }}
               className={cn(
                 "flex items-start gap-2.5 rounded-xl border px-3 py-2.5 text-start transition",
                 isPublished

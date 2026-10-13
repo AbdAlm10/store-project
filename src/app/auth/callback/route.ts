@@ -1,5 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { resolveAllowedAppOrigin } from "@/lib/app-origin";
+import { getServices } from "@/infrastructure/container";
 import { isSupabaseConfigured } from "@/infrastructure/supabase/config";
+import { REFERRAL_COOKIE_NAME } from "@/lib/referrals/cookie";
 import {
   createSupabaseRouteHandlerClient,
   waitForAuthCookieFlush,
@@ -18,7 +21,9 @@ function metaString(
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const requestUrl = new URL(request.url);
+  const { searchParams } = requestUrl;
+  const origin = resolveAllowedAppOrigin(requestUrl.origin);
   const code = searchParams.get("code");
   const oauthError = searchParams.get("error");
   const flowId = searchParams.get("sb_flow_id");
@@ -44,18 +49,40 @@ export async function GET(request: NextRequest) {
     await signedIn;
 
     const user = data.session.user;
-    const { error: profileError } = await supabase.from("profiles").upsert(
-      {
-        id: user.id,
-        email: user.email ?? "",
-        full_name: metaString(user.user_metadata, "full_name", "name"),
-        avatar_url: metaString(user.user_metadata, "avatar_url", "picture"),
-        platform_role: "merchant",
-        locale: "ar",
-        suspended_at: null,
-      },
-      { onConflict: "id" },
-    );
+    const profilePatch = {
+      email: user.email ?? "",
+      full_name: metaString(user.user_metadata, "full_name", "name"),
+      avatar_url: metaString(user.user_metadata, "avatar_url", "picture"),
+    };
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id, suspended_at")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (existingProfile?.suspended_at) {
+      await supabase.auth.signOut();
+      return NextResponse.redirect(`${origin}/login?error=oauth`);
+    }
+
+    let profileError = existingProfile
+      ? (
+          await supabase.from("profiles").update(profilePatch).eq("id", user.id)
+        ).error
+      : (
+          await supabase.from("profiles").insert({
+            id: user.id,
+            ...profilePatch,
+            platform_role: "merchant",
+            locale: "ar",
+            suspended_at: null,
+          })
+        ).error;
+    if (profileError?.code === "23505") {
+      profileError = (
+        await supabase.from("profiles").update(profilePatch).eq("id", user.id)
+      ).error;
+    }
     if (profileError) {
       return NextResponse.redirect(`${origin}/login?error=oauth`);
     }
@@ -69,7 +96,18 @@ export async function GET(request: NextRequest) {
     const nextPath =
       memberships && memberships.length > 0 ? "/dashboard" : "/onboarding";
 
-    return redirectWithAuthCookies(`${origin}${nextPath}`);
+    const ref = request.cookies.get(REFERRAL_COOKIE_NAME)?.value;
+    if (ref) {
+      try {
+        await getServices().referrals.attachFromCode(user.id, ref);
+      } catch (error) {
+        console.error("referral attach failed", error);
+      }
+    }
+
+    const response = redirectWithAuthCookies(`${origin}${nextPath}`);
+    if (ref) response.cookies.delete(REFERRAL_COOKIE_NAME);
+    return response;
   } catch {
     return NextResponse.redirect(`${origin}/login?error=oauth`);
   }

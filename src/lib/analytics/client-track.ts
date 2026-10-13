@@ -1,5 +1,4 @@
 const VISITOR_KEY = "ys_vid";
-const CITY_KEY = "ys_city";
 
 function randomId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -21,34 +20,6 @@ export function getVisitorKey(): string {
     return next;
   } catch {
     return randomId();
-  }
-}
-
-/** Real visitor city from their public IP (cached in sessionStorage). */
-async function resolveVisitorCity(): Promise<string | null> {
-  if (typeof window === "undefined") return null;
-  try {
-    const cached = window.sessionStorage.getItem(CITY_KEY);
-    if (cached && cached.length >= 2 && cached.length <= 80) return cached;
-
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => controller.abort(), 2500);
-    const res = await fetch("https://ipwho.is/", {
-      signal: controller.signal,
-      cache: "no-store",
-    });
-    window.clearTimeout(timer);
-    if (!res.ok) return null;
-    const data = (await res.json()) as {
-      success?: boolean;
-      city?: string;
-    };
-    const city = data.success ? data.city?.trim() : null;
-    if (!city) return null;
-    window.sessionStorage.setItem(CITY_KEY, city);
-    return city;
-  } catch {
-    return null;
   }
 }
 
@@ -89,23 +60,15 @@ function sendTrackPayload(payload: Record<string, unknown>): void {
   });
 }
 
-/** Fire-and-forget analytics event from the storefront (includes real city). */
 export function trackAnalyticsEvent(input: ClientTrackInput): void {
   if (typeof window === "undefined") return;
-
-  void (async () => {
-    const city = await resolveVisitorCity();
-    sendTrackPayload({
-      storeId: input.storeId,
-      productId: input.productId ?? null,
-      eventType: input.eventType,
-      source: input.source ?? null,
-      path: input.path ?? window.location.pathname,
-      visitorKey: getVisitorKey(),
-      metadata: {
-        ...(city ? { city, location: city } : {}),
-        ...(input.metadata ?? {}),
-      },
-    });
-  })();
+  sendTrackPayload({
+    storeId: input.storeId,
+    productId: input.productId ?? null,
+    eventType: input.eventType,
+    source: input.source ?? null,
+    path: input.path ?? window.location.pathname,
+    visitorKey: getVisitorKey(),
+    metadata: input.metadata ?? {},
+  });
 }

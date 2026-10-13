@@ -171,6 +171,9 @@ export function productToRow(product: Partial<Product> & { id?: string }) {
   }
   if (product.featured !== undefined) row.featured = product.featured;
   if (product.publishedAt !== undefined) row.published_at = product.publishedAt;
+  if (product.clientRequestId !== undefined) {
+    row.client_request_id = product.clientRequestId;
+  }
   return row;
 }
 

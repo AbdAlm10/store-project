@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { getServices } from "@/infrastructure/container";
 import { toUserMessage } from "@/domain/errors";
 import type { Category } from "@/domain/types/entities";
@@ -16,7 +17,9 @@ export async function createCategoryAction(
   try {
     const store = await storeRef(storeId);
     const category = await getServices().categories.create(storeId, input);
-    revalidateStorefrontStore(store);
+    after(() => {
+      revalidateStorefrontStore(store);
+    });
     return { ok: true, category };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };
@@ -35,7 +38,9 @@ export async function updateCategoryAction(
       categoryId,
       input,
     );
-    revalidateStorefrontStore(store);
+    after(() => {
+      revalidateStorefrontStore(store);
+    });
     return { ok: true, category };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };
@@ -49,7 +54,9 @@ export async function deleteCategoryAction(
   try {
     const store = await storeRef(storeId);
     await getServices().categories.delete(storeId, categoryId);
-    revalidateStorefrontStore(store);
+    after(() => {
+      revalidateStorefrontStore(store);
+    });
     return { ok: true };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };

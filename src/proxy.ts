@@ -1,6 +1,26 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseEnv, isSupabaseConfigured } from "@/infrastructure/supabase/config";
+import {
+  REFERRAL_CODE_PATTERN,
+  REFERRAL_COOKIE_NAME,
+} from "@/lib/referrals/cookie";
+
+function withReferralCookie(request: NextRequest, response: NextResponse): NextResponse {
+  if (request.nextUrl.pathname !== "/register") return response;
+  const ref = request.nextUrl.searchParams.get("ref") ?? "";
+  if (!REFERRAL_CODE_PATTERN.test(ref)) return response;
+  response.cookies.set({
+    name: REFERRAL_COOKIE_NAME,
+    value: ref,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+  return response;
+}
 
 /**
  * Only refresh auth on merchant/admin routes.
@@ -17,7 +37,7 @@ export async function proxy(request: NextRequest) {
   ) {
     const callbackUrl = request.nextUrl.clone();
     callbackUrl.pathname = "/auth/callback";
-    return NextResponse.redirect(callbackUrl);
+    return withReferralCookie(request, NextResponse.redirect(callbackUrl));
   }
 
   let response = NextResponse.next({
@@ -25,7 +45,7 @@ export async function proxy(request: NextRequest) {
   });
 
   if (!isSupabaseConfigured()) {
-    return response;
+    return withReferralCookie(request, response);
   }
 
   const { url, anonKey } = getSupabaseEnv();
@@ -77,12 +97,12 @@ export async function proxy(request: NextRequest) {
         const redirectUrl = request.nextUrl.clone();
         redirectUrl.pathname = "/dashboard/subscription";
         redirectUrl.search = "locked=1";
-        return NextResponse.redirect(redirectUrl);
+        return withReferralCookie(request, NextResponse.redirect(redirectUrl));
       }
     }
   }
 
-  return response;
+  return withReferralCookie(request, response);
 }
 
 export const config = {

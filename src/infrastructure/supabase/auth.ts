@@ -9,11 +9,10 @@ import { AppError } from "@/domain/errors";
 import { AUTH_AR, localizeAuthMessage } from "@/lib/auth-messages";
 import { createSupabaseServerClient } from "@/infrastructure/supabase/server";
 import { appConfig } from "@/config/app";
-import { normalizePublicAppOrigin } from "@/lib/app-origin";
+import { resolveAllowedAppOrigin } from "@/lib/app-origin";
 
 function appUrl(override?: string) {
-  if (override?.trim()) return normalizePublicAppOrigin(override);
-  return appConfig.url;
+  return resolveAllowedAppOrigin(override?.trim() ? override : appConfig.url);
 }
 
 function metadataString(

@@ -1,4 +1,5 @@
 import { appConfig } from "@/config/app";
+import { PLANS } from "@/config/plans";
 import { discountPercent } from "@/domain/rules/store-rules";
 import type { Product, Store } from "@/domain/types/entities";
 
@@ -77,17 +78,32 @@ export function socialShareLinks(url: string, text: string) {
 
 export type SubscriptionIntent = "basic" | "pro";
 
-/** WhatsApp chat with Dukkan sales for plan subscribe / Pro upgrade. */
+/** WhatsApp chat with دكّان sales for Sham Cash subscribe / renew. */
 export function buildSubscriptionWhatsAppUrl(input: {
   storeName: string;
   storeSlug: string;
   intent: SubscriptionIntent;
+  mode?: "subscribe" | "renew";
 }): string {
   const identity = `${input.storeName} (${input.storeSlug})`;
-  const message =
+  const prices =
     input.intent === "pro"
-      ? `أنا المستخدم: ${identity}\nأريد الترقية لخطة Pro في دكّان.`
-      : `أنا المستخدم: ${identity}\nأريد الاشتراك في خدمة دكّان الأساسية.`;
+      ? `السعر: ${PLANS.pro.priceMonthlyUsd}$ شهريًا أو ${PLANS.pro.priceYearlyUsd}$ سنويًا.`
+      : `السعر: ${PLANS.basic.priceMonthlyUsd}$ شهريًا أو ${PLANS.basic.priceYearlyUsd}$ سنويًا.`;
+  const ask =
+    input.intent === "pro"
+      ? input.mode === "renew"
+        ? "أريد تجديد خطة Pro في دكّان."
+        : "أريد الاشتراك في خطة Pro في دكّان."
+      : input.mode === "renew"
+        ? "أريد تجديد الخطة الأساسية في دكّان."
+        : "أريد الاشتراك في الخطة الأساسية في دكّان.";
+  const message = [
+    `أنا التاجر: ${identity}`,
+    ask,
+    prices,
+    "سأدفع عبر شام كاش على واتساب. بعد استلام المبلغ يرجى تفعيل الخطة للمدة التي أدفعها (شهر أو سنة).",
+  ].join("\n");
 
   const phone = appConfig.supportWhatsApp.replace(/[^\d]/g, "");
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;

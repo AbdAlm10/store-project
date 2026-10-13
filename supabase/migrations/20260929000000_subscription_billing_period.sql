@@ -1,3 +1,5 @@
+-- Safe to run again. Init already adds the column; this remains for databases
+-- that applied an older init file.
 alter table public.subscriptions
   add column if not exists billing_period text not null default 'monthly';
 
@@ -6,4 +8,4 @@ alter table public.subscriptions
 
 alter table public.subscriptions
   add constraint subscriptions_billing_period_check
-  check (billing_period in ('monthly', 'yearly'));
+  check (billing_period::text in ('monthly', 'yearly'));

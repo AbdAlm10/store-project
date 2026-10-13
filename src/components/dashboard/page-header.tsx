@@ -36,11 +36,13 @@ export function QuickAction({
   label,
   description,
   icon,
+  reload = false,
 }: {
   href: string;
   label: string;
   description: string;
   icon?: ComponentType<{ className?: string; strokeWidth?: number }>;
+  reload?: boolean;
 }) {
   return (
     <ActionTile
@@ -48,6 +50,7 @@ export function QuickAction({
       label={label}
       description={description}
       icon={icon}
+      reload={reload}
     />
   );
 }

@@ -1,6 +1,6 @@
-# YourStore
+# دكّان
 
-Production-oriented multi-tenant SaaS for social-first merchant storefronts.
+Production-oriented multi-tenant SaaS for social-first merchant storefronts. The product name is دكّان.
 
 **Value proposition:** All your store products in one link.
 
@@ -60,7 +60,7 @@ The UI is **Arabic-only** (RTL). Message catalog: `src/i18n/messages.ts`.
 ## Supabase (production path)
 
 1. Create a Supabase project.
-2. Apply `supabase/migrations/20260908000000_init.sql` (schema + RLS).
+2. Apply every file in `supabase/migrations/` in timestamp order (schema + RLS). Deploying the Next.js app does not run these files.
 3. Set env vars from `.env.example`.
 4. Implement/wire `Supabase*Adapter` repositories in `src/infrastructure/supabase/` and select them from `createServices()` when `SUPABASE_URL` is present.
 

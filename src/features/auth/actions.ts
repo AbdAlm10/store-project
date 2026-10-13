@@ -1,8 +1,13 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies } from "next/headers";
 import { getServices } from "@/infrastructure/container";
-import { getRequestAppOrigin } from "@/lib/app-origin";
+import { REFERRAL_COOKIE_NAME } from "@/lib/referrals/cookie";
+import {
+  enforceRateLimit,
+  requestClientIp,
+} from "@/infrastructure/rate-limit/enforce";
+import { resolveAllowedAppOrigin } from "@/lib/app-origin";
 import { toUserMessage } from "@/domain/errors";
 import { revalidateDashboard } from "@/lib/revalidate-dashboard";
 import { revalidateStorefrontStore } from "@/lib/revalidate-storefront";
@@ -12,6 +17,10 @@ export async function loginAction(input: {
   password: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
+    const email = String(input.email ?? "").trim().toLowerCase().slice(0, 320);
+    await enforceRateLimit("login", `email:${email}`);
+    const ip = await requestClientIp();
+    if (ip) await enforceRateLimit("login", `ip:${ip}`);
     const services = getServices();
     await services.auth.login(input);
     return { ok: true };
@@ -26,8 +35,22 @@ export async function registerAction(input: {
   fullName?: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
+    const email = String(input.email ?? "").trim().toLowerCase().slice(0, 320);
+    await enforceRateLimit("register", `email:${email}`);
+    const ip = await requestClientIp();
+    if (ip) await enforceRateLimit("register", `ip:${ip}`);
     const services = getServices();
-    await services.auth.register(input);
+    const registered = await services.auth.register(input);
+    try {
+      const jar = await cookies();
+      const code = jar.get(REFERRAL_COOKIE_NAME)?.value;
+      if (code) {
+        await services.referrals.attachFromCode(registered.profile.id, code);
+        jar.delete(REFERRAL_COOKIE_NAME);
+      }
+    } catch (error) {
+      console.error("referral attach failed", error);
+    }
     return { ok: true };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };
@@ -39,9 +62,9 @@ export async function googleAuthAction(): Promise<
 > {
   try {
     const services = getServices();
-    const headerStore = await headers();
-    const appOrigin = getRequestAppOrigin(headerStore) ?? undefined;
-    const { url } = await services.auth.startGoogleSignIn({ appOrigin });
+    const { url } = await services.auth.startGoogleSignIn({
+      appOrigin: resolveAllowedAppOrigin(),
+    });
     return { ok: true, url };
   } catch (error) {
     return { ok: false, error: toUserMessage(error) };

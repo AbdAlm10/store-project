@@ -18,6 +18,7 @@ import type { Store } from "@/domain/types/entities";
 import { updateStoreAction } from "@/features/stores/update-actions";
 import type { MessageKey } from "@/i18n/messages";
 import { useI18n } from "@/i18n/provider";
+import { storeInitials } from "@/lib/store-initials";
 import { cn } from "@/lib/utils/cn";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
@@ -148,7 +149,7 @@ export function StoreDesignForm({
               />
             ) : (
               <div
-                className="flex items-center justify-center text-sm font-bold"
+                className="flex items-center justify-center text-xs font-bold leading-none"
                 style={{
                   height: preview.logoSize,
                   width: preview.logoSize,
@@ -157,7 +158,7 @@ export function StoreDesignForm({
                   borderRadius: `calc(${preview.radius} * 0.55)`,
                 }}
               >
-                {store.name.slice(0, 1)}
+                {storeInitials(store.name)}
               </div>
             )}
             <span style={{ fontFamily: preview.fontDisplay }}>{store.name}</span>

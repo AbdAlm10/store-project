@@ -91,8 +91,9 @@ export function isColorOptionName(name: string): boolean {
 }
 
 export function isSizeOptionName(name: string): boolean {
-  return /^(size|sizes|مقاس|مقاسات|beden|taille)$/i.test(name.trim()) ||
-    /\b(size|مقاس|beden)\b/i.test(name.trim());
+  const normalized = name.trim().replace(/^ال(?=\p{L})/u, "");
+  return /^(size|sizes|مقاس|مقاسات|beden|taille)$/i.test(normalized) ||
+    /\b(size|beden)\b/i.test(normalized);
 }
 
 export function guessHexFromLabel(label: string): string | null {

@@ -58,9 +58,49 @@ describe("auth + tenant isolation", () => {
       services.products.create(storeId, {
         name: "Duplicate Clear Case",
         slug: "clear-magsafe-case",
+        description:
+          "A duplicate clear case used only to assert the slug conflict check.",
         price: 20,
         status: "draft",
       }),
     ).rejects.toMatchObject({ code: "CONFLICT" });
+  });
+
+  it("returns the same product when a create is retried with the same request id", async () => {
+    await services.auth.login({
+      email: "merchant@alnoor.demo",
+      password: "password123",
+    });
+    const storeId = "00000000-0000-4000-8000-000000000010";
+    const before = await services.products.listForMerchant(storeId, {
+      pageSize: 100,
+    });
+    const input = {
+      name: "Idempotent Case",
+      description:
+        "A retried save must not insert a second copy of this published product.",
+      price: 18,
+      status: "published" as const,
+      images: [
+        {
+          url: "https://placehold.co/600x600/png?text=case",
+          alt: "case",
+          sortOrder: 0,
+        },
+      ],
+      clientRequestId: "req-idempotent-001",
+    };
+
+    const first = await services.products.create(storeId, input);
+    const second = await services.products.create(storeId, {
+      ...input,
+      name: "Idempotent Case retry",
+    });
+    const after = await services.products.listForMerchant(storeId, {
+      pageSize: 100,
+    });
+
+    expect(second.id).toBe(first.id);
+    expect(after.total).toBe(before.total + 1);
   });
 });

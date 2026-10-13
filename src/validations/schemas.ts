@@ -1,9 +1,26 @@
+import { LOGO_SIZE_OPTIONS, THEME_TOKEN_KEYS } from "@/config/themes";
+import { isAllowedImageUrl } from "@/lib/http-url";
 import {
   isColorOptionName,
   parseOptionValueInput,
 } from "@/lib/option-colors";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
+
+const moneySchema = z.number().finite().nonnegative();
+
+const imageUrlSchema = z
+  .string()
+  .trim()
+  .refine(isAllowedImageUrl, "رابط الصورة غير صالح.");
+
+const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
+const LOGO_SIZES = new Set<string>(LOGO_SIZE_OPTIONS.map((option) => option.value));
+const THEME_COLOR_KEYS = new Set<string>([
+  ...THEME_TOKEN_KEYS,
+  "qrStandColor",
+  "qrLogoBg",
+]);
 
 export const emailSchema = z
   .string()
@@ -88,8 +105,8 @@ export const createStoreSchema = z.object({
 export const updateStoreSchema = z.object({
   name: z.string().trim().min(2).max(80).optional(),
   description: z.string().trim().max(1000).nullable().optional(),
-  logoUrl: z.string().url().nullable().optional(),
-  coverUrl: z.string().url().nullable().optional(),
+  logoUrl: imageUrlSchema.nullable().optional(),
+  coverUrl: imageUrlSchema.nullable().optional(),
   phone: internationalPhoneSchema.nullable().optional(),
   whatsapp: internationalPhoneSchema.nullable().optional(),
   email: z.string().email().nullable().optional(),
@@ -112,27 +129,14 @@ export const updateStoreSchema = z.object({
     .optional()
     .transform((value) => {
       if (!value) return value;
-      const allowed = new Set([
-        "background",
-        "surface",
-        "card",
-        "text",
-        "muted",
-        "border",
-        "accent",
-        "navBg",
-        "navText",
-        "buttonText",
-        "logoSize",
-        "radius",
-        "fontDisplay",
-        "fontBody",
-        "navbarActions",
-        "qrStandColor",
-        "qrLogoBg",
-      ]);
       return Object.fromEntries(
-        Object.entries(value).filter(([key]) => allowed.has(key)),
+        Object.entries(value).filter(([key, raw]) => {
+          if (key === "navbarActions") return /^[a-z,]+$/.test(raw);
+          if (key === "logoSize") return LOGO_SIZES.has(raw);
+          if (key === "radius") return /^\d+(\.\d+)?(rem|px)$/.test(raw);
+          if (THEME_COLOR_KEYS.has(key)) return HEX_COLOR.test(raw);
+          return false;
+        }),
       );
     }),
   currency: z.enum(["USD", "EUR", "SYP", "TRY"]).optional(),
@@ -143,7 +147,7 @@ export const updateStoreSchema = z.object({
 export const categorySchema = z.object({
   name: z.string().trim().min(1).max(80),
   slug: slugSchema.optional(),
-  imageUrl: z.string().url().nullable().optional(),
+  imageUrl: imageUrlSchema.nullable().optional(),
   icon: z
     .string()
     .trim()
@@ -235,18 +239,28 @@ export const productSchema = z.object({
       `الوصف قصير جدًا. اكتب على الأقل ${MIN_PRODUCT_DESCRIPTION_WORDS} كلمات.`,
     )
     .max(10000),
-  price: z.number().nonnegative(),
-  compareAtPrice: z.number().nonnegative().nullable().optional(),
+  price: moneySchema,
+  compareAtPrice: moneySchema.nullable().optional(),
   stock: z.number().int().nonnegative().nullable().optional(),
   categoryId: z.string().uuid().nullable().optional(),
   status: z.enum(["draft", "published", "archived", "hidden"]).optional(),
   tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
-  specifications: z.record(z.string(), z.string()).optional(),
+  specifications: z
+    .record(z.string().trim().min(1).max(80), z.string().trim().max(500))
+    .refine((value) => Object.keys(value).length <= 40, "عدد المواصفات كبير جدًا.")
+    .optional(),
   featured: z.boolean().optional(),
+  clientRequestId: z
+    .string()
+    .trim()
+    .min(8)
+    .max(80)
+    .regex(/^[A-Za-z0-9_-]+$/)
+    .optional(),
   images: z
     .array(
       z.object({
-        url: z.string().url(),
+        url: imageUrlSchema,
         alt: z.string().max(200).nullable().optional(),
         sortOrder: z.number().int().nonnegative(),
       }),
@@ -259,7 +273,7 @@ export const productSchema = z.object({
       z.object({
         name: z.string().min(1).max(80),
         options: z.record(z.string(), z.string()),
-        price: z.number().nonnegative().nullable().optional(),
+        price: moneySchema.nullable().optional(),
         stock: z.number().int().nonnegative().nullable().optional(),
         sku: z.string().max(64).nullable().optional(),
       }),
@@ -267,6 +281,22 @@ export const productSchema = z.object({
     .max(50)
     .optional(),
 });
+
+function boundAnalyticsMetadata(
+  value: unknown,
+): Record<string, string | number | boolean | null> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const out: Record<string, string | number | boolean | null> = {};
+  for (const [key, raw] of Object.entries(value)) {
+    if (Object.keys(out).length >= 20) break;
+    const safeKey = key.trim().slice(0, 40);
+    if (!safeKey) continue;
+    if (typeof raw === "string") out[safeKey] = raw.slice(0, 200);
+    else if (typeof raw === "number" && Number.isFinite(raw)) out[safeKey] = raw;
+    else if (typeof raw === "boolean" || raw === null) out[safeKey] = raw;
+  }
+  return out;
+}
 
 export const analyticsTrackSchema = z.object({
   storeId: z.string().uuid(),
@@ -282,7 +312,7 @@ export const analyticsTrackSchema = z.object({
   source: z.string().max(120).nullable().optional(),
   path: z.string().max(500).nullable().optional(),
   visitorKey: z.string().max(80).nullable().optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
+  metadata: z.unknown().optional().transform(boundAnalyticsMetadata),
 });
 
 export const supportMessageSchema = z.object({

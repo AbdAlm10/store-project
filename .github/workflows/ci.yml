@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx next typegen
+      - run: npm run typecheck
+      - run: npm test
+      # Production dependencies must be free of high/critical advisories.
+      # The full tree still reports braces@3.0.3 via eslint-config-next; that
+      # package has no patched release, and the audit "fix" downgrades Next's
+      # eslint config off 16.x.
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm audit --audit-level=critical

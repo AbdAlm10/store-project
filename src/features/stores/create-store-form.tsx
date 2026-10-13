@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Input, Label, Select, Textarea } from "@/components/ui/forms";
 import { STORE_CURRENCIES } from "@/domain/types/enums";
+import { appConfig } from "@/config/app";
 import { createStoreAction } from "@/features/stores/actions";
 import { useI18n } from "@/i18n/provider";
+import { publicStorePathPrefix } from "@/lib/public-store-prefix";
 
 const CURRENCY_LABEL: Record<(typeof STORE_CURRENCIES)[number], string> = {
   USD: "دولار",
@@ -96,7 +98,9 @@ export function CreateStoreForm({
       <div>
         <Label htmlFor="slug">{t("storeUrl")}</Label>
         <div className="flex items-center gap-2">
-          <span className="shrink-0 text-sm text-slate-500">dukkan.app/</span>
+          <span className="shrink-0 text-sm text-slate-500">
+            {publicStorePathPrefix(appConfig.url)}
+          </span>
           <Input
             id="slug"
             name="slug"

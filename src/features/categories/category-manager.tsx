@@ -24,7 +24,8 @@ import {
 } from "@/lib/option-colors";
 import { cn } from "@/lib/utils/cn";
 import { Pencil, Plus, Trash2, X } from "lucide-react";
-import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 function cleanOptionSchema(options: CategoryOptionDef[]): CategoryOptionDef[] {
   return options
@@ -47,17 +48,30 @@ export function CategoryManager({
   maxOptionsPerProduct?: number;
 }) {
   const { t } = useI18n();
+  const router = useRouter();
   const [categories, setCategories] = useState(initial);
   const [name, setName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [icon, setIcon] = useState<string | null>(null);
   const [options, setOptions] = useState<CategoryOptionDef[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [saving, setSaving] = useState<"create" | "edit" | "delete" | null>(
+    null,
+  );
   const [editingId, setEditingId] = useState<string | null>(null);
+  const pending = saving !== null;
 
   useEffect(() => {
-    setCategories(initial);
+    setCategories((current) => {
+      const serverIds = new Set(initial.map((item) => item.id));
+      if (current.some((item) => !serverIds.has(item.id))) return current;
+      const localById = new Map(current.map((item) => [item.id, item]));
+      return initial.map((item) => {
+        const local = localById.get(item.id);
+        if (local && local.updatedAt > item.updatedAt) return local;
+        return item;
+      });
+    });
   }, [initial]);
 
   const editing = categories.find((c) => c.id === editingId) ?? null;
@@ -115,22 +129,28 @@ export function CategoryManager({
           className="space-y-5"
           onSubmit={(event) => {
             event.preventDefault();
-            if (isEditing || atCategoryLimit) return;
+            if (isEditing || atCategoryLimit || saving) return;
             setError(null);
-            startTransition(async () => {
-              const result = await createCategoryAction(storeId, {
-                name,
-                imageUrl: imageUrl || null,
-                icon,
-                optionSchema: cleanOptionSchema(options),
-              });
-              if (!result.ok) {
-                setError(result.error);
-                return;
+            setSaving("create");
+            void (async () => {
+              try {
+                const result = await createCategoryAction(storeId, {
+                  name,
+                  imageUrl: imageUrl || null,
+                  icon,
+                  optionSchema: cleanOptionSchema(options),
+                });
+                if (!result.ok) {
+                  setError(result.error);
+                  return;
+                }
+                resetCreateForm();
+                setCategories((list) => [...list, result.category]);
+                router.refresh();
+              } finally {
+                setSaving(null);
               }
-              resetCreateForm();
-              setCategories((list) => [...list, result.category]);
-            });
+            })();
           }}
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -147,12 +167,12 @@ export function CategoryManager({
               disabled={pending || isEditing || atCategoryLimit}
               className="sm:shrink-0"
             >
-              {pending && !isEditing ? (
+              {saving === "create" ? (
                 <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
               ) : (
                 <Plus className="h-4 w-4" strokeWidth={2} />
               )}
-              {pending && !isEditing ? t("saving") : t("add")}
+              {saving === "create" ? t("saving") : t("add")}
             </Button>
           </div>
 
@@ -277,23 +297,30 @@ export function CategoryManager({
                         type="button"
                         className="inline-flex h-8 items-center gap-1.5 rounded-full bg-red-50 px-2.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
                         disabled={pending || (isEditing && !isThisEditing)}
-                        onClick={() =>
-                          startTransition(async () => {
-                            if (!confirm(t("deleteCategoryConfirm"))) return;
-                            const result = await deleteCategoryAction(
-                              storeId,
-                              category.id,
-                            );
-                            if (!result.ok) {
-                              setError(result.error);
-                              return;
+                        onClick={() => {
+                          if (saving) return;
+                          if (!confirm(t("deleteCategoryConfirm"))) return;
+                          setSaving("delete");
+                          void (async () => {
+                            try {
+                              const result = await deleteCategoryAction(
+                                storeId,
+                                category.id,
+                              );
+                              if (!result.ok) {
+                                setError(result.error);
+                                return;
+                              }
+                              if (editingId === category.id) setEditingId(null);
+                              setCategories((list) =>
+                                list.filter((item) => item.id !== category.id),
+                              );
+                              router.refresh();
+                            } finally {
+                              setSaving(null);
                             }
-                            if (editingId === category.id) setEditingId(null);
-                            setCategories((list) =>
-                              list.filter((item) => item.id !== category.id),
-                            );
-                          })
-                        }
+                          })();
+                        }}
                       >
                         <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
                         {t("delete")}
@@ -306,16 +333,32 @@ export function CategoryManager({
                       key={`${editing.id}-${editing.updatedAt}`}
                       storeId={storeId}
                       category={editing}
-                      pending={pending}
+                      pending={saving === "edit"}
                       maxOptionsPerProduct={maxOptionsPerProduct}
-                      startTransition={startTransition}
-                      onSaved={(next) => {
-                        setCategories((list) =>
-                          list.map((item) =>
-                            item.id === next.id ? next : item,
-                          ),
-                        );
-                        setEditingId(null);
+                      onSave={async (payload) => {
+                        setSaving("edit");
+                        try {
+                          const result = await updateCategoryAction(
+                            storeId,
+                            editing.id,
+                            payload,
+                          );
+                          if (!result.ok) {
+                            setError(result.error);
+                            return;
+                          }
+                          setCategories((list) =>
+                            list.map((item) =>
+                              item.id === result.category.id
+                                ? result.category
+                                : item,
+                            ),
+                          );
+                          setEditingId(null);
+                          router.refresh();
+                        } finally {
+                          setSaving(null);
+                        }
                       }}
                       onCancel={cancelEdit}
                       onError={setError}
@@ -567,8 +610,7 @@ function CategoryEditPanel({
   category,
   pending,
   maxOptionsPerProduct = 3,
-  startTransition,
-  onSaved,
+  onSave,
   onCancel,
   onError,
 }: {
@@ -576,8 +618,12 @@ function CategoryEditPanel({
   category: Category;
   pending: boolean;
   maxOptionsPerProduct?: number;
-  startTransition: (fn: () => void) => void;
-  onSaved: (category: Category) => void;
+  onSave: (payload: {
+    name: string;
+    imageUrl: string | null;
+    icon: string | null;
+    optionSchema: CategoryOptionDef[];
+  }) => Promise<void>;
   onCancel: () => void;
   onError: (message: string | null) => void;
 }) {
@@ -634,18 +680,11 @@ function CategoryEditPanel({
           disabled={pending}
           onClick={() => {
             onError(null);
-            startTransition(async () => {
-              const result = await updateCategoryAction(storeId, category.id, {
-                name,
-                imageUrl: imageUrl || null,
-                icon,
-                optionSchema: cleanOptionSchema(options),
-              });
-              if (!result.ok) {
-                onError(result.error);
-                return;
-              }
-              onSaved(result.category);
+            void onSave({
+              name,
+              imageUrl: imageUrl || null,
+              icon,
+              optionSchema: cleanOptionSchema(options),
             });
           }}
         >

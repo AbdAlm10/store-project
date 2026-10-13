@@ -150,20 +150,21 @@ export function ActionTile({
   label,
   description,
   icon: Icon,
+  reload = false,
 }: {
   href: string;
   label: string;
   description: string;
   icon?: IconType;
+  /** Full document load so a published storefront is not the cached preview. */
+  reload?: boolean;
 }) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        "group flex gap-3 rounded-[1.25rem] border border-slate-100/80 bg-white p-4 transition hover:-translate-y-0.5 hover:border-brand-200/60 hover:shadow-[0_14px_34px_-22px_rgba(58,122,86,0.35)]",
-        cardShadow,
-      )}
-    >
+  const className = cn(
+    "group flex gap-3 rounded-[1.25rem] border border-slate-100/80 bg-white p-4 transition hover:-translate-y-0.5 hover:border-brand-200/60 hover:shadow-[0_14px_34px_-22px_rgba(58,122,86,0.35)]",
+    cardShadow,
+  );
+  const body = (
+    <>
       {Icon ? (
         <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-700 transition group-hover:bg-brand-100">
           <Icon className="h-5 w-5" strokeWidth={1.75} />
@@ -173,6 +174,18 @@ export function ActionTile({
         <span className="block font-semibold text-slate-900">{label}</span>
         <span className="mt-1 block text-sm text-slate-400">{description}</span>
       </span>
+    </>
+  );
+  if (reload) {
+    return (
+      <a href={href} className={className}>
+        {body}
+      </a>
+    );
+  }
+  return (
+    <Link href={href} className={className}>
+      {body}
     </Link>
   );
 }
