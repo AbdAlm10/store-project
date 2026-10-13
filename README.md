@@ -53,6 +53,10 @@ Open [http://localhost:3000](http://localhost:3000)
 | `npm run lint` | ESLint |
 | `npm test` | Vitest unit/integration tests |
 
+## Marketing photos
+
+The homepage phone story uses CC0 product photos. Credits and source pages: [docs/marketing-image-sources.md](docs/marketing-image-sources.md).
+
 ## Internationalization
 
 The UI is **Arabic-only** (RTL). Message catalog: `src/i18n/messages.ts`.
