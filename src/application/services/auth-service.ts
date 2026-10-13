@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { AppError } from "@/domain/errors";
 import type { Profile } from "@/domain/types/entities";
-import type { AuthProvider, AuthSession } from "@/application/ports/providers";
+import type { AuthProvider, AuthSession, SignUpResult } from "@/application/ports/providers";
 import type { UserRepository } from "@/application/ports/repositories";
 import {
   signInSchema,
@@ -42,19 +42,41 @@ export class AuthService {
     private readonly users: UserRepository,
   ) {}
 
-  async register(input: unknown): Promise<{ session: AuthSession; profile: Profile }> {
+  async register(
+    input: unknown,
+  ): Promise<
+    | { status: "authenticated"; session: AuthSession; profile: Profile }
+    | { status: "verify_email"; email: string }
+  > {
     const data = signUpSchema.parse(input);
-    const session = await this.auth.signUp(data);
+    const outcome: SignUpResult = await this.auth.signUp(data);
+    if (outcome.status === "verify_email") {
+      return outcome;
+    }
     const profile = await this.users.upsertProfile({
-      id: session.user.id,
-      email: session.user.email,
+      id: outcome.session.user.id,
+      email: outcome.session.user.email,
       fullName: data.fullName ?? null,
       avatarUrl: null,
       platformRole: "merchant",
       locale: "ar",
       suspendedAt: null,
     });
-    return { session, profile };
+    return { status: "authenticated", session: outcome.session, profile };
+  }
+
+  async verifySignupCode(email: string, token: string): Promise<AuthSession> {
+    const session = await this.auth.verifySignupOtp({ email, token });
+    try {
+      await this.ensureProfile();
+    } catch (error) {
+      console.error("profile create after email code failed", error);
+    }
+    return session;
+  }
+
+  async resendSignupCode(email: string): Promise<void> {
+    await this.auth.resendSignupOtp(email);
   }
 
   async login(input: unknown): Promise<AuthSession> {

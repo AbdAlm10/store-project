@@ -25,10 +25,16 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  let dashboardAuth: Awaited<ReturnType<typeof getDashboardProfile>>;
   try {
-    await getDashboardProfile();
+    dashboardAuth = await getDashboardProfile();
   } catch {
     redirect("/login");
+  }
+  if (!dashboardAuth.session.user.emailConfirmed) {
+    redirect(
+      `/auth/verify?email=${encodeURIComponent(dashboardAuth.session.user.email)}`,
+    );
   }
 
   const locale = await getRequestLocale();

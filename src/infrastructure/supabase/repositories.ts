@@ -166,6 +166,9 @@ export class SupabaseStoreRepository implements StoreRepository {
 
     if (error) {
       // Surface a clearer message for the common draft RETURNING RLS miss.
+      if (error.message.toLowerCase().includes("email not confirmed")) {
+        fail("أكّد بريدك بالرمز المرسل قبل إنشاء المتجر.");
+      }
       if (error.message.toLowerCase().includes("row-level security")) {
         fail(
           "Could not create store (RLS). Apply migration 20260908000004_fix_stores_rls.sql in Supabase SQL Editor, then try again.",

@@ -6,6 +6,8 @@
 export type RateLimitKey =
   | "login"
   | "register"
+  | "otp_verify"
+  | "otp_resend"
   | "product_create"
   | "upload"
   | "public_api"
@@ -27,6 +29,8 @@ type Bucket = { count: number; resetAt: number };
 export const RATE_LIMITS: Record<RateLimitKey, { limit: number; windowMs: number }> = {
   login: { limit: 10, windowMs: 60_000 },
   register: { limit: 5, windowMs: 60_000 },
+  otp_verify: { limit: 5, windowMs: 10 * 60_000 },
+  otp_resend: { limit: 1, windowMs: 60_000 },
   product_create: { limit: 60, windowMs: 60_000 },
   upload: { limit: 30, windowMs: 60_000 },
   public_api: { limit: 120, windowMs: 60_000 },

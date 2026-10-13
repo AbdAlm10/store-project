@@ -11,10 +11,17 @@ export const metadata = {
 
 export default async function OnboardingPage() {
   const services = getServices();
+  let sessionEmail = "";
+  let emailConfirmed = false;
   try {
-    await services.auth.ensureProfile();
+    const ensured = await services.auth.ensureProfile();
+    sessionEmail = ensured.session.user.email;
+    emailConfirmed = ensured.session.user.emailConfirmed;
   } catch {
     redirect("/login");
+  }
+  if (!emailConfirmed) {
+    redirect(`/auth/verify?email=${encodeURIComponent(sessionEmail)}`);
   }
 
   const stores = await services.stores.listMyStores();

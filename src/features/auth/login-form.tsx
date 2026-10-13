@@ -37,7 +37,18 @@ export function LoginForm() {
               password: String(formData.get("password") ?? ""),
             });
             if (!result.ok) {
+              if (result.verifyEmail) {
+                router.push(
+                  `/auth/verify?email=${encodeURIComponent(result.verifyEmail)}`,
+                );
+                return;
+              }
               setError(result.error);
+              return;
+            }
+            if (result.next === "verify") {
+              router.push(`/auth/verify?email=${encodeURIComponent(result.email)}`);
+              router.refresh();
               return;
             }
             router.push("/dashboard");

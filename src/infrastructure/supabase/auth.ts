@@ -4,9 +4,11 @@ import type {
   OAuthProviderId,
   SignInInput,
   SignUpInput,
+  SignUpResult,
 } from "@/application/ports/providers";
 import { AppError } from "@/domain/errors";
 import { AUTH_AR, localizeAuthMessage } from "@/lib/auth-messages";
+import { isAuthUserVerified, otpFailureMessage } from "@/lib/email-verification";
 import { createSupabaseServerClient } from "@/infrastructure/supabase/server";
 import { appConfig } from "@/config/app";
 import { resolveAllowedAppOrigin } from "@/lib/app-origin";
@@ -31,13 +33,15 @@ function toSession(user: {
   id: string;
   email?: string | null;
   email_confirmed_at?: string | null;
+  identities?: { provider?: string }[] | null;
+  app_metadata?: Record<string, unknown> | null;
   user_metadata?: Record<string, unknown>;
 }, accessToken: string): AuthSession {
   return {
     user: {
       id: user.id,
       email: user.email ?? "",
-      emailConfirmed: Boolean(user.email_confirmed_at),
+      emailConfirmed: isAuthUserVerified(user),
       fullName: metadataString(
         user.user_metadata,
         "full_name",
@@ -54,10 +58,11 @@ function toSession(user: {
 }
 
 export class SupabaseAuthProvider implements AuthProvider {
-  async signUp(input: SignUpInput): Promise<AuthSession> {
+  async signUp(input: SignUpInput): Promise<SignUpResult> {
     const supabase = await createSupabaseServerClient();
+    const email = input.email.trim().toLowerCase();
     const { data, error } = await supabase.auth.signUp({
-      email: input.email,
+      email,
       password: input.password,
       options: {
         data: {
@@ -68,15 +73,52 @@ export class SupabaseAuthProvider implements AuthProvider {
     if (error) {
       throw new AppError("VALIDATION", localizeAuthMessage(error.message));
     }
-    if (!data.user || !data.session) {
+    if (!data.user) {
+      throw new AppError("VALIDATION", AUTH_AR.generic);
+    }
+    if (!data.session || !isAuthUserVerified(data.user)) {
+      return { status: "verify_email", email };
+    }
+    return {
+      status: "authenticated",
+      session: toSession(data.user, data.session.access_token),
+    };
+  }
+
+  async verifySignupOtp(input: { email: string; token: string }): Promise<AuthSession> {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: input.email.trim().toLowerCase(),
+      token: input.token,
+      type: "signup",
+    });
+    if (error || !data.user || !data.session) {
       throw new AppError(
         "VALIDATION",
-        localizeAuthMessage(
-          "Check your email to confirm the account, then sign in.",
-        ),
+        otpFailureMessage({
+          message: error?.message,
+          code: error && "code" in error ? String(error.code) : null,
+        }),
       );
     }
     return toSession(data.user, data.session.access_token);
+  }
+
+  async resendSignupOtp(email: string): Promise<void> {
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: email.trim().toLowerCase(),
+    });
+    if (error) {
+      throw new AppError(
+        "VALIDATION",
+        otpFailureMessage({
+          message: error.message,
+          code: "code" in error ? String(error.code) : null,
+        }),
+      );
+    }
   }
 
   async signIn(input: SignInInput): Promise<AuthSession> {
@@ -86,9 +128,14 @@ export class SupabaseAuthProvider implements AuthProvider {
       password: input.password,
     });
     if (error || !data.user || !data.session) {
+      const raw = error?.message ?? "";
+      const unconfirmed = raw.toLowerCase().includes("not confirmed");
       throw new AppError(
         "UNAUTHORIZED",
-        localizeAuthMessage("Invalid email or password."),
+        localizeAuthMessage(
+          unconfirmed ? "Email not confirmed" : "Invalid email or password.",
+        ),
+        unconfirmed ? { details: { code: "email_not_confirmed" } } : undefined,
       );
     }
     return toSession(data.user, data.session.access_token);

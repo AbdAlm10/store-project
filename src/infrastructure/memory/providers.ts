@@ -11,6 +11,7 @@ import type {
   EmailProvider,
   OAuthProviderId,
   PaymentProvider,
+  SignUpResult,
   StorageProvider,
   UploadedObject,
 } from "@/application/ports/providers";
@@ -106,7 +107,7 @@ export class MemoryAuthProvider implements AuthProvider {
     email: string;
     password: string;
     fullName?: string;
-  }): Promise<AuthSession> {
+  }): Promise<SignUpResult> {
     assertPasswordLength(input.password);
     const email = input.email.toLowerCase();
     if (getPasswordRecord(email)) {
@@ -123,7 +124,21 @@ export class MemoryAuthProvider implements AuthProvider {
       accessToken: "memory-access-token",
     };
     await writeSessionCookie(this.session);
-    return this.session;
+    return { status: "authenticated", session: this.session };
+  }
+
+  async verifySignupOtp(): Promise<AuthSession> {
+    throw new AppError(
+      "VALIDATION",
+      "تأكيد البريد بالرمز يعمل بعد ربط Supabase.",
+    );
+  }
+
+  async resendSignupOtp(): Promise<void> {
+    throw new AppError(
+      "VALIDATION",
+      "إعادة إرسال الرمز تعمل بعد ربط Supabase.",
+    );
   }
 
   async signIn(input: { email: string; password: string }): Promise<AuthSession> {

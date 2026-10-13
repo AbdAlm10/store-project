@@ -38,6 +38,12 @@ export function RegisterForm() {
               setError(result.error);
               return;
             }
+            if (result.next === "verify") {
+              const email = encodeURIComponent(result.email);
+              router.push(`/auth/verify?email=${email}&sent=1`);
+              router.refresh();
+              return;
+            }
             router.push("/onboarding");
             router.refresh();
           });

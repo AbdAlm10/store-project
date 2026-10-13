@@ -24,9 +24,15 @@ export type SignInInput = {
 
 export type OAuthProviderId = "google";
 
+export type SignUpResult =
+  | { status: "authenticated"; session: AuthSession }
+  | { status: "verify_email"; email: string };
+
 export interface AuthProvider {
-  signUp(input: SignUpInput): Promise<AuthSession>;
+  signUp(input: SignUpInput): Promise<SignUpResult>;
   signIn(input: SignInInput): Promise<AuthSession>;
+  verifySignupOtp(input: { email: string; token: string }): Promise<AuthSession>;
+  resendSignupOtp(email: string): Promise<void>;
   signInWithOAuth(
     provider: OAuthProviderId,
     options?: { appOrigin?: string },

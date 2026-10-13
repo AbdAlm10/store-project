@@ -17,10 +17,14 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  let adminAuth: Awaited<ReturnType<ReturnType<typeof getServices>["auth"]["requireAdmin"]>>;
   try {
-    await getServices().auth.requireAdmin();
+    adminAuth = await getServices().auth.requireAdmin();
   } catch {
     redirect("/login");
+  }
+  if (!adminAuth.session.user.emailConfirmed) {
+    redirect(`/auth/verify?email=${encodeURIComponent(adminAuth.session.user.email)}`);
   }
 
   return (
