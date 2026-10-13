@@ -5,6 +5,7 @@ import { LoginForm } from "@/features/auth/login-form";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
+import { loginForwardsOAuthCode } from "@/lib/auth-callback";
 
 export const metadata = {
   title: "تسجيل الدخول",
@@ -17,9 +18,9 @@ type LoginPageProps = {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const query = await searchParams;
-  const code = typeof query.code === "string" ? query.code : undefined;
-  const oauthError = typeof query.error === "string" ? query.error : undefined;
-  if (code && !oauthError) {
+  const code = typeof query.code === "string" ? query.code : null;
+  const oauthError = typeof query.error === "string" ? query.error : null;
+  if (loginForwardsOAuthCode({ code, error: oauthError })) {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(query)) {
       if (typeof value === "string") params.set(key, value);

@@ -7,6 +7,7 @@ import type {
 } from "@/application/ports/providers";
 import { AppError } from "@/domain/errors";
 import { AUTH_AR, localizeAuthMessage } from "@/lib/auth-messages";
+import { isEmailVerifiedAuthUser } from "@/lib/auth-callback";
 import { createSupabaseServerClient } from "@/infrastructure/supabase/server";
 import { appConfig } from "@/config/app";
 import { resolveAllowedAppOrigin } from "@/lib/app-origin";
@@ -31,13 +32,15 @@ function toSession(user: {
   id: string;
   email?: string | null;
   email_confirmed_at?: string | null;
+  app_metadata?: unknown;
+  identities?: unknown;
   user_metadata?: Record<string, unknown>;
 }, accessToken: string): AuthSession {
   return {
     user: {
       id: user.id,
       email: user.email ?? "",
-      emailConfirmed: Boolean(user.email_confirmed_at),
+      emailConfirmed: isEmailVerifiedAuthUser(user),
       fullName: metadataString(
         user.user_metadata,
         "full_name",
