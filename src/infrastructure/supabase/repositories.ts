@@ -166,6 +166,12 @@ export class SupabaseStoreRepository implements StoreRepository {
 
     if (error) {
       // Surface a clearer message for the common draft RETURNING RLS miss.
+      if (error.message.toLowerCase().includes("one free store per verified email")) {
+        fail("يمكن إنشاء متجر مجاني واحد لكل بريد مؤكَّد.");
+      }
+      if (error.message.toLowerCase().includes("one free store per whatsapp")) {
+        fail("رقم واتساب هذا مستخدم في متجر مجاني آخر.");
+      }
       if (error.message.toLowerCase().includes("email not confirmed")) {
         fail("أكّد بريدك بالرمز المرسل قبل إنشاء المتجر.");
       }

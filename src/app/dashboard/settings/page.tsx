@@ -15,6 +15,7 @@ export const metadata = {
 };
 
 const PLAN_LABEL_KEY: Record<PlanId, MessageKey> = {
+  free: "planFree",
   trial: "planTrial",
   basic: "planBasic",
   pro: "planPro",

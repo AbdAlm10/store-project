@@ -18,6 +18,7 @@ import type {
   StoreRepository,
   SubscriptionRepository,
 } from "@/application/ports/repositories";
+import { occupiesFreeSlot } from "@/domain/plans/access";
 import { assertEmailConfirmed } from "@/lib/email-verification";
 import { isHiddenFromCustomers } from "@/lib/store-storefront-access";
 import { parseNavbarActions } from "@/lib/navbar-actions";
@@ -45,6 +46,16 @@ export class StoreService {
   async createStore(input: unknown): Promise<Store> {
     const { session } = await this.auth.requireProfile();
     assertEmailConfirmed(session.user);
+    const owned = await this.stores.listByUserId(session.user.id);
+    for (const existing of owned) {
+      const current = await this.subscriptions.findByStoreId(existing.id).catch(() => null);
+      if (occupiesFreeSlot(current)) {
+        throw new AppError(
+          "CONFLICT",
+          "يمكن إنشاء متجر مجاني واحد لكل بريد مؤكَّد.",
+        );
+      }
+    }
     const raw =
       input && typeof input === "object"
         ? (input as Record<string, unknown>)
@@ -281,6 +292,9 @@ export class StoreService {
     storeId: string,
     overrides: ThemeOverrides | null,
   ): Promise<ThemeOverrides | null> {
+    if ((await this.entitlements.themeAccess(storeId)) === "none") {
+      throw new AppError("LIMIT_REACHED", "الثيمات غير متاحة في الخطة المجانية.");
+    }
     if (!overrides) return null;
 
     const navRaw = overrides.navbarActions;

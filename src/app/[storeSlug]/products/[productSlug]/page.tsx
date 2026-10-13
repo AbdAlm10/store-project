@@ -10,6 +10,7 @@ import {
   resolveThemeTokens,
   storefrontCssVars,
 } from "@/config/themes";
+import { publicThemeOverrides } from "@/domain/plans/access";
 import { discountPercent } from "@/domain/rules/store-rules";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
@@ -84,7 +85,7 @@ export default async function ProductPage({ params }: Props) {
   const planId = await getStorefrontPlanId(store.id);
   const themeTokens = resolveThemeTokens(
     DEFAULT_THEME_TOKENS,
-    store.themeOverrides,
+    publicThemeOverrides(planId, store.themeOverrides),
     store.primaryColor,
   );
   const cssVars = storefrontCssVars(themeTokens);

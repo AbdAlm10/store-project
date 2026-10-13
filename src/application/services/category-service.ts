@@ -10,6 +10,8 @@ import type {
   StoreMemberRepository,
   StoreRepository,
 } from "@/application/ports/repositories";
+import { getPlan } from "@/config/plans";
+import { oldestVisible } from "@/domain/plans/access";
 import { categorySchema } from "@/validations/schemas";
 import type { AuthService } from "./auth-service";
 import type { EntitlementService } from "./entitlement-service";
@@ -24,7 +26,14 @@ export class CategoryService {
   ) {}
 
   async listPublic(storeId: string): Promise<Category[]> {
-    return this.categories.listByStore(storeId);
+    const categories = await this.categories.listByStore(storeId);
+    let limit = getPlan("free").limits.maxCategories;
+    try {
+      limit = (await this.entitlements.getLimits(storeId)).maxCategories;
+    } catch {
+      limit = getPlan("free").limits.maxCategories;
+    }
+    return oldestVisible(categories, limit, (item) => `${item.createdAt}\u0000${item.id}`);
   }
 
   async listForMerchant(storeId: string): Promise<Category[]> {

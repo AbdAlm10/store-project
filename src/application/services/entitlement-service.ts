@@ -3,11 +3,15 @@ import {
   getPlan,
   isUnlimited,
   type PlanId,
+  type PlanLimits,
 } from "@/config/plans";
 import type { ThemeColorKey } from "@/config/themes";
 import { AppError } from "@/domain/errors";
 import type { Subscription } from "@/domain/types/entities";
-import { isSubscriptionUsable } from "@/domain/rules/store-rules";
+import {
+  effectivePlanId as resolveEffectivePlanId,
+  limitsForSubscription,
+} from "@/domain/plans/access";
 import type { SubscriptionRepository } from "@/application/ports/repositories";
 
 export class EntitlementService {
@@ -24,18 +28,16 @@ export class EntitlementService {
     return sub;
   }
 
+  limitsOf(sub: Subscription): PlanLimits {
+    return limitsForSubscription(sub);
+  }
+
   async assertCanCreateProduct(
     storeId: string,
     currentProductCount: number,
   ): Promise<void> {
     const sub = await this.getSubscription(storeId);
-    if (!isSubscriptionUsable(sub)) {
-      throw new AppError(
-        "SUBSCRIPTION_REQUIRED",
-        "Your subscription is inactive.",
-      );
-    }
-    const plan = getPlan(sub.planId);
+    const plan = getPlan(resolveEffectivePlanId(sub));
     if (currentProductCount >= plan.limits.maxProducts) {
       throw new AppError(
         "LIMIT_REACHED",
@@ -50,13 +52,7 @@ export class EntitlementService {
     currentCategoryCount: number,
   ): Promise<void> {
     const sub = await this.getSubscription(storeId);
-    if (!isSubscriptionUsable(sub)) {
-      throw new AppError(
-        "SUBSCRIPTION_REQUIRED",
-        "Your subscription is inactive.",
-      );
-    }
-    const plan = getPlan(sub.planId);
+    const plan = getPlan(resolveEffectivePlanId(sub));
     const limit = plan.limits.maxCategories;
     if (!isUnlimited(limit) && currentCategoryCount >= limit) {
       throw new AppError(
@@ -72,7 +68,7 @@ export class EntitlementService {
     optionCount: number,
   ): Promise<void> {
     const sub = await this.getSubscription(storeId);
-    const plan = getPlan(sub.planId);
+    const plan = getPlan(resolveEffectivePlanId(sub));
     const limit = plan.limits.maxOptionsPerProduct;
     if (!isUnlimited(limit) && optionCount > limit) {
       throw new AppError(
@@ -88,7 +84,7 @@ export class EntitlementService {
     actionCount: number,
   ): Promise<void> {
     const sub = await this.getSubscription(storeId);
-    const plan = getPlan(sub.planId);
+    const plan = getPlan(resolveEffectivePlanId(sub));
     const limit = plan.limits.maxNavActions;
     if (!isUnlimited(limit) && actionCount > limit) {
       throw new AppError(
@@ -101,25 +97,38 @@ export class EntitlementService {
 
   async canUseAdvancedAnalytics(storeId: string): Promise<boolean> {
     const sub = await this.getSubscription(storeId);
-    if (!isSubscriptionUsable(sub)) return false;
-    return getPlan(sub.planId).limits.advancedAnalytics;
+    return this.limitsOf(sub).advancedAnalytics;
+  }
+
+  async analyticsLevel(storeId: string) {
+    const sub = await this.getSubscription(storeId);
+    return this.limitsOf(sub).analytics;
+  }
+
+  async canUseQr(storeId: string): Promise<boolean> {
+    const sub = await this.getSubscription(storeId);
+    return this.limitsOf(sub).qr;
   }
 
   async canUseCustomDomain(storeId: string): Promise<boolean> {
     const sub = await this.getSubscription(storeId);
-    if (!isSubscriptionUsable(sub)) return false;
-    return getPlan(sub.planId).limits.customDomain;
+    return this.limitsOf(sub).customDomain;
   }
 
   async canCustomizeAllThemeColors(storeId: string): Promise<boolean> {
     const sub = await this.getSubscription(storeId);
-    if (!isSubscriptionUsable(sub)) return false;
-    return getPlan(sub.planId).limits.fullThemeCustomization;
+    return this.limitsOf(sub).themeAccess === "full";
+  }
+
+  async themeAccess(storeId: string) {
+    const sub = await this.getSubscription(storeId);
+    return this.limitsOf(sub).themeAccess;
   }
 
   async editableThemeColorKeys(storeId: string): Promise<ThemeColorKey[]> {
-    const full = await this.canCustomizeAllThemeColors(storeId);
-    if (full) {
+    const access = await this.themeAccess(storeId);
+    if (access === "none") return [];
+    if (access === "full") {
       return [
         "background",
         "surface",
@@ -138,21 +147,21 @@ export class EntitlementService {
 
   async maxImagesPerProduct(storeId: string): Promise<number> {
     const sub = await this.getSubscription(storeId);
-    return getPlan(sub.planId).limits.maxImagesPerProduct;
+    return this.limitsOf(sub).maxImagesPerProduct;
   }
 
   async maxNavActions(storeId: string): Promise<number> {
     const sub = await this.getSubscription(storeId);
-    return getPlan(sub.planId).limits.maxNavActions;
+    return this.limitsOf(sub).maxNavActions;
   }
 
   async getLimits(storeId: string) {
     const sub = await this.getSubscription(storeId);
-    return getPlan(sub.planId).limits;
+    return this.limitsOf(sub);
   }
 
   effectivePlanId(sub: Subscription): PlanId {
-    return sub.planId;
+    return resolveEffectivePlanId(sub);
   }
 
   async simulateExpiredPlan(storeId: string, planId: PlanId): Promise<Subscription> {

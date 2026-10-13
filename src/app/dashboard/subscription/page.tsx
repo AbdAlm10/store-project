@@ -2,7 +2,8 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { DashboardCard } from "@/components/dashboard/ui";
 import { buttonVariants } from "@/components/ui/button";
 import { appConfig } from "@/config/app";
-import { earlyBirdPrice, formatUsd, PLANS, type PlanId } from "@/config/plans";
+import { earlyBirdPrice, formatUsd, getPlan, type PlanId } from "@/config/plans";
+import { effectivePlanId } from "@/domain/plans/access";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator, type MessageKey } from "@/i18n/messages";
 import { getServices } from "@/infrastructure/container";
@@ -20,6 +21,7 @@ export const metadata = {
 };
 
 const PLAN_LABEL_KEY: Record<PlanId, MessageKey> = {
+  free: "planFree",
   trial: "planTrial",
   basic: "planBasic",
   pro: "planPro",
@@ -33,8 +35,9 @@ export default async function SubscriptionPage() {
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
   const subscription = await services.entitlements.getSubscription(store.id);
-  const plan = PLANS[subscription.planId];
-  const planLabel = t(PLAN_LABEL_KEY[subscription.planId]);
+  const shownPlanId = effectivePlanId(subscription);
+  const plan = getPlan(shownPlanId);
+  const planLabel = t(PLAN_LABEL_KEY[shownPlanId]);
   const productCount = await services.products
     .listForMerchant(store.id, { pageSize: 1 })
     .then((result) => result.total);
@@ -127,7 +130,13 @@ export default async function SubscriptionPage() {
           />
           <UsageCard
             label={t("advancedAnalytics")}
-            value={plan.limits.advancedAnalytics ? t("included") : t("basicOnly")}
+            value={
+              plan.limits.analytics === "advanced"
+                ? t("included")
+                : plan.limits.analytics === "engagement"
+                  ? t("planFeatEngagementAnalytics")
+                  : t("planFeatVisitsOnly")
+            }
           />
         </div>
         {plan.priceYearlyUsd > 0 ? (

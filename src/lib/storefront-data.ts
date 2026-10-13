@@ -6,7 +6,8 @@ import type {
   ProductWithMedia,
   Store,
 } from "@/domain/types/entities";
-import type { PlanId } from "@/config/plans";
+import { getPlan, isUnlimited, type PlanId, type PlanLimits } from "@/config/plans";
+import { effectivePlanId } from "@/domain/plans/access";
 import { isSupabaseConfigured } from "@/infrastructure/supabase/config";
 import { createSupabasePublicClient } from "@/infrastructure/supabase/public-client";
 import {
@@ -87,40 +88,55 @@ async function loadPublishedStore(slug: string): Promise<Store> {
 }
 
 function isPlanId(value: unknown): value is PlanId {
-  return value === "trial" || value === "basic" || value === "pro";
+  return value === "free" || value === "trial" || value === "basic" || value === "pro";
 }
 
-/** Plan shown on the public storefront. Pro hides the دكّان badge. */
+/** Effective plan. An ended trial or paid period is Free, which keeps the badge. */
 export const getStorefrontPlanId = cache(async (storeId: string): Promise<PlanId | null> => {
   if (!isSupabaseConfigured()) {
     try {
       const subscription = await getServices().entitlements.getSubscription(storeId);
-      return subscription.planId;
+      return effectivePlanId(subscription);
     } catch {
-      return null;
+      return "free";
     }
   }
 
   const supabase = createSupabasePublicClient();
   const { data } = await supabase
     .from("subscriptions")
-    .select("plan_id")
+    .select("plan_id, status, trial_ends_at, current_period_end")
     .eq("store_id", storeId)
     .maybeSingle();
-  return isPlanId(data?.plan_id) ? data.plan_id : null;
+  if (!data || !isPlanId(data.plan_id)) return "free";
+  return effectivePlanId({
+    planId: data.plan_id,
+    status: data.status,
+    trialEndsAt: data.trial_ends_at,
+    currentPeriodEnd: data.current_period_end,
+  });
 });
+
+async function publicLimits(storeId: string): Promise<PlanLimits> {
+  const planId = await getStorefrontPlanId(storeId);
+  return getPlan(planId ?? "free").limits;
+}
 
 async function loadPublicCategories(storeId: string): Promise<Category[]> {
   if (!isSupabaseConfigured()) {
     return getServices().categories.listPublic(storeId);
   }
 
+  const limits = await publicLimits(storeId);
   const supabase = createSupabasePublicClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("categories")
     .select("*")
     .eq("store_id", storeId)
-    .order("sort_order", { ascending: true });
+    .order("created_at", { ascending: true });
+  if (!isUnlimited(limits.maxCategories)) query = query.limit(limits.maxCategories);
+
+  const { data, error } = await query;
 
   if (error) throw new AppError("INTERNAL", error.message);
   return (data ?? []).map(mapCategory);
@@ -138,14 +154,16 @@ async function loadPublicProducts(
     return result.items;
   }
 
+  const limits = await publicLimits(storeId);
   const supabase = createSupabasePublicClient();
+  const capped = !isUnlimited(limits.maxProducts);
   let query = supabase
     .from("products")
     .select("*")
     .eq("store_id", storeId)
     .eq("status", "published")
-    .order("updated_at", { ascending: false })
-    .limit(options?.pageSize ?? 96);
+    .order(capped ? "created_at" : "updated_at", { ascending: capped })
+    .limit(capped ? limits.maxProducts : (options?.pageSize ?? 96));
 
   if (options?.featured) {
     query = query.eq("featured", true);
@@ -154,7 +172,7 @@ async function loadPublicProducts(
   const { data, error } = await query;
   if (error) throw new AppError("INTERNAL", error.message);
   const products = (data ?? []).map(mapProduct);
-  return attachPublicMediaMany(products);
+  return attachPublicMediaMany(products, limits);
 }
 
 async function loadPublicProductBySlug(
@@ -176,12 +194,35 @@ async function loadPublicProductBySlug(
 
   if (error) throw new AppError("INTERNAL", error.message);
   if (!data) throw new AppError("NOT_FOUND", "Product not found.");
-  const [product] = await attachPublicMediaMany([mapProduct(data)]);
+  const limits = await publicLimits(storeId);
+  if (!(await productWithinPublicCap(supabase, storeId, data.id as string, limits))) {
+    throw new AppError("NOT_FOUND", "Product not found.");
+  }
+  const [product] = await attachPublicMediaMany([mapProduct(data)], limits);
   return product;
+}
+
+async function productWithinPublicCap(
+  supabase: ReturnType<typeof createSupabasePublicClient>,
+  storeId: string,
+  productId: string,
+  limits: PlanLimits,
+): Promise<boolean> {
+  if (isUnlimited(limits.maxProducts)) return true;
+  const { data, error } = await supabase
+    .from("products")
+    .select("id")
+    .eq("store_id", storeId)
+    .eq("status", "published")
+    .order("created_at", { ascending: true })
+    .limit(limits.maxProducts);
+  if (error) throw new AppError("INTERNAL", error.message);
+  return (data ?? []).some((row) => row.id === productId);
 }
 
 async function attachPublicMediaMany(
   products: ReturnType<typeof mapProduct>[],
+  limits: PlanLimits = getPlan("pro").limits,
 ): Promise<ProductWithMedia[]> {
   if (products.length === 0) return [];
 
@@ -217,11 +258,19 @@ async function attachPublicMediaMany(
     }),
   );
 
+  const imageLimit = Number.isFinite(limits.maxImagesPerProduct)
+    ? limits.maxImagesPerProduct
+    : Number.POSITIVE_INFINITY;
   return products.map((product) =>
     withMedia(
       product,
-      imageRows.filter((image) => image.productId === product.id),
-      variantRows.filter((variant) => variant.productId === product.id),
+      imageRows
+        .filter((image) => image.productId === product.id)
+        .sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id))
+        .slice(0, imageLimit),
+      limits.maxOptionsPerProduct === 0
+        ? []
+        : variantRows.filter((variant) => variant.productId === product.id),
       product.categoryId ? (categoryMap.get(product.categoryId) ?? null) : null,
     ),
   );

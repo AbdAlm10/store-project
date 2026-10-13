@@ -34,6 +34,7 @@ type ProductFormProps = {
   productId?: string;
   /** Plan limit for product images (defaults fail-closed to Basic). */
   maxImagesPerProduct?: number;
+  variantsEnabled?: boolean;
   initial?: {
     name: string;
     description: string;
@@ -83,6 +84,7 @@ export function ProductForm({
   categories,
   productId,
   maxImagesPerProduct = 3,
+  variantsEnabled = true,
   initial,
 }: ProductFormProps) {
   const imageSlots = Math.max(1, maxImagesPerProduct);
@@ -181,15 +183,15 @@ export function ProductForm({
       tags,
       featured: formData.get("featured") === "on",
       images,
-      variants: pruneVariantsToSchema(variants, optionSchema).map(
-        (variant) => ({
-          name: variant.name,
-          options: variant.options,
-          price: variant.price ? Number(variant.price) : null,
-          stock: variant.stock ? Number(variant.stock) : null,
-          sku: null,
-        }),
-      ),
+      variants: variantsEnabled
+        ? pruneVariantsToSchema(variants, optionSchema).map((variant) => ({
+            name: variant.name,
+            options: variant.options,
+            price: variant.price ? Number(variant.price) : null,
+            stock: variant.stock ? Number(variant.stock) : null,
+            sku: null,
+          }))
+        : undefined,
     };
   }
 
@@ -355,6 +357,7 @@ export function ProductForm({
         </label>
       </Section>
 
+      {variantsEnabled ? (
       <Section title={t("variantsSection")} description={t("variantsHint")}>
         {optionSchema.length > 0 ? (
           <div className="flex flex-wrap gap-2">
@@ -516,6 +519,11 @@ export function ProductForm({
           </ul>
         ) : null}
       </Section>
+      ) : (
+        <p className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          {t("freeVariantsLocked")}
+        </p>
+      )}
 
       <Section
         title={t("sectionImages")}

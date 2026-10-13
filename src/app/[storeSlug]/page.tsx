@@ -12,6 +12,7 @@ import {
   resolveThemeTokens,
   storefrontCssVars,
 } from "@/config/themes";
+import { publicThemeOverrides } from "@/domain/plans/access";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
 import { getServices } from "@/infrastructure/container";
@@ -81,9 +82,10 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
   const t = createTranslator(locale);
   const isPreview = store.status !== "published";
   const isSubscriptionPreview = store.status === "restricted";
+  const planIdForTheme = await getStorefrontPlanId(store.id);
   const themeTokens = resolveThemeTokens(
     DEFAULT_THEME_TOKENS,
-    store.themeOverrides,
+    publicThemeOverrides(planIdForTheme, store.themeOverrides),
     store.primaryColor,
   );
   const cssVars = storefrontCssVars(themeTokens);

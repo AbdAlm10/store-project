@@ -5,6 +5,7 @@ import type { Subscription } from "@/domain/types/entities";
 import type { PlatformRole, StoreStatus, SubscriptionStatus } from "@/domain/types/enums";
 
 export const PLAN_LABEL_AR: Record<PlanId, string> = {
+  free: "مجاني",
   trial: "تجربة مجانية",
   basic: "أساسي",
   pro: "برو",

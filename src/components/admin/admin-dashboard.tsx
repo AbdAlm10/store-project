@@ -47,6 +47,7 @@ import { useFormStatus } from "react-dom";
 import { createPortal } from "react-dom";
 
 const PLAN_SELECTOR_LABELS: Record<PlanId, string> = {
+  free: "مجاني",
   trial: "تجربة",
   basic: "أساسي",
   pro: "برو",
@@ -329,7 +330,7 @@ function PlanMenu({
                 : "اختر الخطة"
           }
           value={
-            currentPlanId && currentPlanId !== "trial"
+            currentPlanId === "basic" || currentPlanId === "pro"
               ? `$${formatUsd(
                   firstYear
                     ? earlyBirdPrice(currentPlanId, currentBillingPeriod ?? "monthly")
@@ -380,7 +381,7 @@ function PlanMenu({
                   بعد استلام شام كاش، اختيار الخطة يفعّل المدة. إعادة اختيار الخطة الحالية تمدّدها من تاريخ الانتهاء إذا لم تنتهِ بعد.
                 </p>
                 {open === "plan"
-                    ? (["trial", "basic", "pro"] as const).map((planId) => (
+                    ? (["free", "trial", "basic", "pro"] as const).map((planId) => (
                       <PlanMenuItem
                         key={planId}
                         storeId={storeId}
