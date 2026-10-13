@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { getServices } from "@/infrastructure/container";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,9 @@ export default async function AuthFinishPage() {
     await services.auth.ensureProfile();
     const stores = await services.stores.listMyStores();
     redirect(stores.length > 0 ? "/dashboard" : "/onboarding");
-  } catch {
+  } catch (error) {
+    // redirect() throws. Swallowing it used to send every success to /login.
+    unstable_rethrow(error);
     redirect("/login?error=oauth");
   }
 }

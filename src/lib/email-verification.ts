@@ -1,20 +1,19 @@
 import { AppError } from "@/domain/errors";
+import { isEmailVerifiedAuthUser } from "@/lib/auth-callback";
 
 type Identity = { provider?: string | null };
 
 /**
  * Confirmed email, or a Google sign-in. Google accounts are verified by the
  * provider even when a project still has email confirmation turned on.
+ * The check itself lives in the OAuth callback helper so providers[] is included.
  */
 export function isAuthUserVerified(user: {
   email_confirmed_at?: string | null;
   identities?: Identity[] | null;
   app_metadata?: Record<string, unknown> | null;
 }): boolean {
-  if (user.email_confirmed_at) return true;
-  const provider = user.app_metadata?.provider;
-  if (provider === "google") return true;
-  return (user.identities ?? []).some((identity) => identity.provider === "google");
+  return isEmailVerifiedAuthUser(user);
 }
 
 const GUARDED_PREFIXES = ["/dashboard", "/admin", "/onboarding"] as const;
