@@ -18,16 +18,10 @@ import {
 } from "@/components/marketing/shell";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { Reveal } from "@/components/marketing/reveal";
-import { MarketingShot } from "@/components/marketing/product-frame";
+import { CustomerViewSection } from "@/components/marketing/customer-view-section";
 import { StoreModelsHero } from "@/components/marketing/store-models-hero";
 import { LandingAmbient } from "@/components/marketing/landing-ambient";
 import { PricingSection } from "@/components/marketing/pricing-section";
-import {
-  MockAnalytics,
-  MockDashboard,
-  MockProduct,
-  MockStorefront,
-} from "@/components/marketing/product-mocks";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator, type MessageKey } from "@/i18n/messages";
 import { publicSupportWhatsAppUrl } from "@/lib/support-contact";
@@ -43,10 +37,6 @@ export default async function HomePage() {
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
 
-  const dashboardShot =
-    marketingShot("shot-dashboard.png") ?? marketingShot("dashboard.png");
-  const analyticsShot =
-    marketingShot("shot-analytics.png") ?? marketingShot("analytics.png");
   const storefrontShot = marketingShot("alnoor-store.webp");
   const productShot = marketingShot("alnoor-product.webp");
   const supportWhatsApp = publicSupportWhatsAppUrl();
@@ -224,52 +214,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Product showcase */}
-        <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6" id="product">
-          <Reveal>
-            <div className="mx-auto max-w-2xl text-center">
-              <h2 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-                {t("showcaseTitle")}
-              </h2>
-              <p className="mt-4 text-lg text-slate-500">{t("showcaseBody")}</p>
-            </div>
-          </Reveal>
-
-          <div className="mt-14 grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-2">
-            <Reveal className="min-w-0">
-              <MarketingShot
-                src={dashboardShot}
-                alt={t("showcaseDashboard")}
-                label={t("showcaseDashboard")}
-                fallback={<MockDashboard />}
-              />
-            </Reveal>
-            <Reveal delayMs={90} className="min-w-0">
-              <MarketingShot
-                src={storefrontShot}
-                alt={t("showcaseStorefront")}
-                label={t("showcaseStorefront")}
-                fallback={<MockStorefront />}
-              />
-            </Reveal>
-            <Reveal delayMs={120} className="min-w-0">
-              <MarketingShot
-                src={analyticsShot}
-                alt={t("showcaseAnalytics")}
-                label={t("showcaseAnalytics")}
-                fallback={<MockAnalytics />}
-              />
-            </Reveal>
-            <Reveal delayMs={150} className="min-w-0">
-              <MarketingShot
-                src={productShot}
-                alt={t("showcaseProduct")}
-                label={t("showcaseProduct")}
-                fallback={<MockProduct />}
-              />
-            </Reveal>
-          </div>
-        </section>
+        <CustomerViewSection />
 
         {/* Features */}
         <section className="px-4 py-10 sm:px-6" id="features">

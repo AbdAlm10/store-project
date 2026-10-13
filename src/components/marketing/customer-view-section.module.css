@@ -1,0 +1,43 @@
+/* Visible unless JS has armed the section and it is still below the fold. */
+.rise [data-rise] {
+  opacity: 1;
+  transform: none;
+}
+
+.rise.is-armed:not(.is-in) [data-rise] {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.rise.is-armed.is-in [data-rise] {
+  animation: customer-view-rise 700ms ease both;
+  animation-delay: var(--rise-delay, 0ms);
+}
+
+@keyframes customer-view-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise.is-armed:not(.is-in) [data-rise],
+  .rise.is-armed.is-in [data-rise] {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (scripting: none) {
+  .rise [data-rise] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
