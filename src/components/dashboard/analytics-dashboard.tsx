@@ -337,7 +337,6 @@ export function AnalyticsDashboard({
   }, [initial]);
 
   const refresh = useCallback(async () => {
-    if (!initial.isPro) return;
     setRefreshing(true);
     try {
       const result = await getDashboardStatsAction(storeId, rangeDays, true);
@@ -345,10 +344,9 @@ export function AnalyticsDashboard({
     } finally {
       window.setTimeout(() => setRefreshing(false), 280);
     }
-  }, [initial.isPro, storeId, rangeDays]);
+  }, [storeId, rangeDays]);
 
   useEffect(() => {
-    if (!initial.isPro) return;
     let cancelled = false;
     const id = window.setInterval(() => {
       void getDashboardStatsAction(storeId, rangeDays, true).then((result) => {
@@ -359,7 +357,7 @@ export function AnalyticsDashboard({
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [initial.isPro, storeId, rangeDays]);
+  }, [storeId, rangeDays]);
 
   const daySeries = useMemo(
     () =>
@@ -386,6 +384,7 @@ export function AnalyticsDashboard({
   );
 
   const locked = !initial.isPro;
+  const visitsOnly = stats.analyticsLevel === "visits";
   const shared =
     stats.pro.topShared.length > 0
       ? stats.pro.topShared
@@ -402,11 +401,6 @@ export function AnalyticsDashboard({
         ];
 
   return (
-    <FullPageLock
-      locked={locked}
-      hint={labels.upgradeHint}
-      cta={labels.upgradeCta}
-    >
       <div className="space-y-6">
         <div className="flex flex-wrap items-center gap-3" dir="ltr">
           <div className="flex flex-wrap gap-2">
@@ -479,6 +473,8 @@ export function AnalyticsDashboard({
                   />
                 }
               />
+              {visitsOnly ? null : (
+              <>
               <MetricTile
                 label={labels.productViews}
                 value={formatNum(stats.productViews)}
@@ -526,6 +522,8 @@ export function AnalyticsDashboard({
                   />
                 }
               />
+              </>
+              )}
             </section>
 
             <SoftCard tint="sand" className="p-5 sm:p-6">
@@ -534,7 +532,9 @@ export function AnalyticsDashboard({
                   {labels.visitsByDay}
                 </h2>
                 <span className="text-[11px] text-slate-400">
-                  {labels.galleryVisits} · {labels.whatsappClicks}
+                  {visitsOnly
+                    ? labels.galleryVisits
+                    : `${labels.galleryVisits} · ${labels.whatsappClicks}`}
                 </span>
               </div>
               <div className="h-64 w-full" dir="ltr">
@@ -570,6 +570,7 @@ export function AnalyticsDashboard({
                       dot={false}
                       activeDot={{ r: 6, stroke: "#fff", strokeWidth: 2 }}
                     />
+                    {visitsOnly ? null : (
                     <Line
                       type="monotone"
                       dataKey="whatsappClicks"
@@ -579,11 +580,13 @@ export function AnalyticsDashboard({
                       dot={false}
                       activeDot={{ r: 6, stroke: "#fff", strokeWidth: 2 }}
                     />
+                    )}
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </SoftCard>
 
+            {visitsOnly ? null : (
             <SoftCard tint="lilac" className="p-5 sm:p-6">
               <h2 className="mb-4 text-sm font-semibold text-slate-800">
                 {labels.topViewed}
@@ -615,7 +618,13 @@ export function AnalyticsDashboard({
                 </ul>
               )}
             </SoftCard>
+            )}
 
+            <FullPageLock
+              locked={locked}
+              hint={labels.upgradeHint}
+              cta={labels.upgradeCta}
+            >
             <section className="grid gap-4 lg:grid-cols-2">
               <SoftCard tint="sky" className="p-5">
                 <div className="mb-3 flex items-center gap-2">
@@ -713,9 +722,9 @@ export function AnalyticsDashboard({
                 </div>
               </SoftCard>
             </section>
+            </FullPageLock>
           </div>
         )}
       </div>
-    </FullPageLock>
   );
 }

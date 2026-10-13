@@ -1,4 +1,8 @@
-export type PlanId = "trial" | "basic" | "pro";
+export type PlanId = "free" | "trial" | "basic" | "pro";
+
+/** visits = totals only. engagement adds product views and WhatsApp clicks. */
+export type AnalyticsLevel = "visits" | "engagement" | "advanced";
+export type ThemeAccess = "none" | "basic" | "full";
 
 /** Use Number.POSITIVE_INFINITY for unlimited entitlements. */
 export type PlanLimits = {
@@ -12,6 +16,11 @@ export type PlanLimits = {
   fullThemeCustomization: boolean;
   customDomain: boolean;
   dedicatedSupport: boolean;
+  analytics: AnalyticsLevel;
+  themeAccess: ThemeAccess;
+  qr: boolean;
+  /** Free storefronts always show «متجري على دكّان». */
+  showPlatformBadge: boolean;
 };
 
 export type BillingPeriod = "monthly" | "yearly";
@@ -39,9 +48,25 @@ export const BASIC_THEME_COLOR_KEYS = [
  * never hardcode limits in UI or random services.
  * The SQL trigger in supabase/apply_pricing.sql must use the same counts.
  */
+const FREE_LIMITS: PlanLimits = {
+  maxProducts: 10,
+  maxImagesPerProduct: 1,
+  maxCategories: 3,
+  maxOptionsPerProduct: 0,
+  maxNavActions: 1,
+  advancedAnalytics: false,
+  fullThemeCustomization: false,
+  customDomain: false,
+  dedicatedSupport: false,
+  analytics: "visits",
+  themeAccess: "none",
+  qr: false,
+  showPlatformBadge: true,
+};
+
 const BASIC_LIMITS: PlanLimits = {
   maxProducts: 150,
-  maxImagesPerProduct: 3,
+  maxImagesPerProduct: 5,
   maxCategories: 10,
   maxOptionsPerProduct: 3,
   maxNavActions: 1,
@@ -49,6 +74,10 @@ const BASIC_LIMITS: PlanLimits = {
   fullThemeCustomization: false,
   customDomain: false,
   dedicatedSupport: false,
+  analytics: "engagement",
+  themeAccess: "basic",
+  qr: true,
+  showPlatformBadge: false,
 };
 
 const PRO_LIMITS: PlanLimits = {
@@ -61,9 +90,21 @@ const PRO_LIMITS: PlanLimits = {
   fullThemeCustomization: true,
   customDomain: true,
   dedicatedSupport: true,
+  analytics: "advanced",
+  themeAccess: "full",
+  qr: true,
+  showPlatformBadge: false,
 };
 
 export const PLANS: Record<PlanId, PlanDefinition> = {
+  free: {
+    id: "free",
+    name: "Free",
+    description: "A small catalog with the Dukkan badge and visit counts.",
+    priceMonthlyUsd: 0,
+    priceYearlyUsd: 0,
+    limits: { ...FREE_LIMITS },
+  },
   trial: {
     id: "trial",
     name: "Free Trial",

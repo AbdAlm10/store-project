@@ -16,6 +16,8 @@ import type {
   StoreMemberRepository,
   StoreRepository,
 } from "@/application/ports/repositories";
+import { getPlan, type PlanLimits } from "@/config/plans";
+import { visibleProductIds } from "@/domain/plans/access";
 import { productSchema } from "@/validations/schemas";
 import type { AuthService } from "./auth-service";
 import type { EntitlementService } from "./entitlement-service";
@@ -39,15 +41,22 @@ export class ProductService {
       featured?: boolean;
     },
   ): Promise<Paginated<ProductWithMedia>> {
-    return this.products.list({
+    const limits = await this.publicLimits(storeId);
+    const page = await this.products.list({
       storeId,
-      page: options?.page ?? 1,
-      pageSize: options?.pageSize ?? 24,
-      categoryId: options?.categoryId,
-      search: options?.search,
-      featured: options?.featured,
+      page: 1,
+      pageSize: 1000,
       status: "published",
     });
+    const allowed = visibleProductIds(page.items, limits.maxProducts);
+    const query = options?.search?.trim().toLowerCase();
+    const items = page.items
+      .filter((item) => allowed.has(item.id))
+      .filter((item) => !options?.categoryId || item.categoryId === options.categoryId)
+      .filter((item) => !options?.featured || item.featured)
+      .filter((item) => !query || item.name.toLowerCase().includes(query))
+      .map((item) => this.presentPublic(item, limits));
+    return { items, total: items.length, page: 1, pageSize: items.length, hasMore: false };
   }
 
   async getPublicBySlug(
@@ -58,7 +67,10 @@ export class ProductService {
     if (!product || product.status !== "published") {
       throw new AppError("NOT_FOUND", "Product not found.");
     }
-    return product;
+    if (!(await this.isPubliclyListed(storeId, product.id))) {
+      throw new AppError("NOT_FOUND", "Product not found.");
+    }
+    return this.presentPublic(product, await this.publicLimits(storeId));
   }
 
   /**
@@ -76,7 +88,11 @@ export class ProductService {
 
     if (product.status === "published") {
       const store = await this.stores.findById(storeId);
-      if (store?.status === "published") return product;
+      if (store?.status === "published") {
+        if (await this.isPubliclyListed(storeId, product.id)) {
+          return this.presentPublic(product, await this.publicLimits(storeId));
+        }
+      }
     }
 
     try {
@@ -191,6 +207,7 @@ export class ProductService {
     }
 
     if (data.variants?.length) {
+      await this.entitlements.assertOptionSchemaAllowed(storeId, data.variants.length);
       await this.products.replaceVariants(
         product.id,
         storeId,
@@ -276,6 +293,9 @@ export class ProductService {
     }
 
     if (data.variants) {
+      if (data.variants.length > 0) {
+        await this.entitlements.assertOptionSchemaAllowed(storeId, data.variants.length);
+      }
       await this.products.replaceVariants(
         productId,
         storeId,
@@ -336,6 +356,36 @@ export class ProductService {
         sku: variant.sku,
       })),
     });
+  }
+
+  private async publicLimits(storeId: string): Promise<PlanLimits> {
+    try {
+      return await this.entitlements.getLimits(storeId);
+    } catch {
+      return getPlan("free").limits;
+    }
+  }
+
+  private async isPubliclyListed(storeId: string, productId: string): Promise<boolean> {
+    const limits = await this.publicLimits(storeId);
+    const page = await this.products.list({
+      storeId,
+      page: 1,
+      pageSize: 1000,
+      status: "published",
+    });
+    return visibleProductIds(page.items, limits.maxProducts).has(productId);
+  }
+
+  private presentPublic(product: ProductWithMedia, limits: PlanLimits): ProductWithMedia {
+    const imageLimit = Number.isFinite(limits.maxImagesPerProduct)
+      ? limits.maxImagesPerProduct
+      : product.images.length;
+    const images = [...product.images]
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id))
+      .slice(0, imageLimit);
+    const variants = limits.maxOptionsPerProduct === 0 ? [] : product.variants;
+    return { ...product, images, variants };
   }
 
   private async requireStaff(storeId: string): Promise<Store> {

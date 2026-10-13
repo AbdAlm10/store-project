@@ -95,44 +95,6 @@ export async function proxy(request: NextRequest) {
     return withReferralCookie(request, NextResponse.redirect(redirectUrl));
   }
 
-  const dashboardPath = pathname.startsWith("/dashboard");
-  const allowedWhenExpired =
-    pathname === "/dashboard" ||
-    pathname === "/dashboard/subscription" ||
-    pathname === "/dashboard/settings";
-
-  if (user && dashboardPath && !allowedWhenExpired) {
-    const membership = await withTimeout(
-      supabase
-        .from("store_members")
-        .select("store_id")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle(),
-      AUTH_STEP_TIMEOUT_MS,
-      null,
-      "proxy membership",
-    );
-
-    if (membership?.data?.store_id) {
-      const subscriptionUsable = await withTimeout(
-        supabase.rpc("is_store_subscription_usable", {
-          target_store_id: membership.data.store_id,
-        }),
-        AUTH_STEP_TIMEOUT_MS,
-        null,
-        "proxy subscription",
-      );
-
-      if (subscriptionUsable?.data === false) {
-        const redirectUrl = request.nextUrl.clone();
-        redirectUrl.pathname = "/dashboard/subscription";
-        redirectUrl.search = "locked=1";
-        return withReferralCookie(request, NextResponse.redirect(redirectUrl));
-      }
-    }
-  }
-
   return withReferralCookie(request, response);
 }
 

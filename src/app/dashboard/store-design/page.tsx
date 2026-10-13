@@ -19,8 +19,8 @@ export default async function StoreDesignPage() {
   const store = stores[0];
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
-  const fullThemeCustomization =
-    await services.entitlements.canCustomizeAllThemeColors(store.id);
+  const themeAccess = await services.entitlements.themeAccess(store.id);
+  const fullThemeCustomization = themeAccess === "full";
 
   return (
     <div className="min-w-0 max-w-full space-y-4">
@@ -33,10 +33,16 @@ export default async function StoreDesignPage() {
           </Link>
         }
       />
+      {themeAccess === "none" ? (
+        <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {t("freeThemesLocked")}
+        </p>
+      ) : (
       <StoreDesignForm
         store={store}
         fullThemeCustomization={fullThemeCustomization}
       />
+      )}
     </div>
   );
 }

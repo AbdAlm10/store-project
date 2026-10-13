@@ -1,6 +1,7 @@
-import type { PlanId } from "@/config/plans";
+import { getPlan, type PlanId } from "@/config/plans";
 
-/** Basic and trial storefronts carry the homepage credit. Pro does not. */
+/** Free storefronts always show «متجري على دكّان». Basic and Pro do not. */
 export function showsDukkanStorefrontBadge(planId: PlanId | null): boolean {
-  return planId !== "pro";
+  if (!planId || planId === "free") return true;
+  return getPlan(planId).limits.showPlatformBadge;
 }

@@ -6,7 +6,8 @@ import { StoreQrButton } from "@/features/dashboard/store-qr-button";
 import { SupportWidget } from "@/features/support/support-widget";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
-import { EARLY_BIRD_DISCOUNT } from "@/config/plans";
+import { EARLY_BIRD_DISCOUNT, getPlan } from "@/config/plans";
+import { effectivePlanId } from "@/domain/plans/access";
 import { isSubscriptionUsable } from "@/domain/rules/store-rules";
 import type { Subscription } from "@/domain/types/entities";
 import { getServices } from "@/infrastructure/container";
@@ -45,17 +46,9 @@ export default async function DashboardLayout({
   const subscription = activeStore
     ? await services.entitlements.getSubscription(activeStore.id).catch(() => null)
     : null;
-  if (
-    activeStore &&
-    subscription &&
-    !isSubscriptionUsable(subscription) &&
-    activeStore.status === "published" &&
-    !activeStore.suspendedAt
-  ) {
-    await services.stores.ensureFrozenIfExpired(activeStore.id).catch((error) => {
-      console.error("freeze expired store failed", error);
-    });
-  }
+  const planLimits = subscription ? getPlan(effectivePlanId(subscription)).limits : null;
+  const navLocked =
+    activeStore?.status === "restricted" || activeStore?.status === "suspended";
 
   return (
     <div className="dashboard-shell grid h-dvh w-full overflow-hidden bg-white lg:grid-cols-[248px_minmax(0,1fr)]">
@@ -83,7 +76,7 @@ export default async function DashboardLayout({
               storeName={activeStore?.name}
               locale={locale}
               embedded
-              locked={Boolean(subscription && !isSubscriptionUsable(subscription))}
+              locked={navLocked}
             />
           </div>
 
@@ -131,13 +124,13 @@ export default async function DashboardLayout({
                 <MerchantNav
                   locale={locale}
                   compact
-                  locked={Boolean(subscription && !isSubscriptionUsable(subscription))}
+                  locked={navLocked}
                 />
               </div>
             </div>
           </div>
 
-          {activeStore ? (
+          {activeStore && planLimits?.qr ? (
             <div className="absolute left-3 top-1/2 z-[70] -translate-y-1/2 sm:left-4 lg:left-6">
               <StoreQrButton
                 storeId={activeStore.id}
@@ -186,7 +179,7 @@ function PlanOfferBadge({
       }
     >
       {expired
-        ? t("offerBadgeExpired")
+        ? t("offerBadgeFree")
         : subscription.planId === "trial"
           ? t("offerBadge", { discount, days })
           : t("offerBadgeDays", { days })}

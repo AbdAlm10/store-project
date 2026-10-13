@@ -26,6 +26,28 @@ type FeatureLine = {
   included: boolean;
 };
 
+function freeFeatures(): FeatureLine[] {
+  const free = PLANS.free.limits;
+  return [
+    {
+      key: "planFeatProductsImages",
+      vars: { products: free.maxProducts, images: free.maxImagesPerProduct },
+      included: true,
+    },
+    {
+      key: "planFeatCategories",
+      vars: { count: free.maxCategories },
+      included: true,
+    },
+    { key: "planFeatVisitsOnly", included: true },
+    { key: "planFeatBadge", included: true },
+    { key: "planFeatNoQr", included: false },
+    { key: "planFeatNoThemes", included: false },
+    { key: "planFeatNoVariants", included: false },
+    { key: "planFeatCustomDomain", included: false },
+  ];
+}
+
 function basicFeatures(): FeatureLine[] {
   const basic = PLANS.basic.limits;
   return [
@@ -37,7 +59,7 @@ function basicFeatures(): FeatureLine[] {
       },
       included: true,
     },
-    { key: "planFeatBasicAnalytics", included: true },
+    { key: "planFeatEngagementAnalytics", included: true },
     {
       key: "planFeatCategories",
       vars: { count: basic.maxCategories },
@@ -48,10 +70,10 @@ function basicFeatures(): FeatureLine[] {
       vars: { count: basic.maxOptionsPerProduct },
       included: true,
     },
-    { key: "planFeatOneNavAction", included: true },
-    { key: "planFeatLimitedColors", included: true },
+    { key: "planFeatQr", included: true },
+    { key: "planFeatThemes", included: true },
+    { key: "planFeatNoBadge", included: true },
     { key: "planFeatCustomDomain", included: false },
-    { key: "planFeatSupport", included: true },
   ];
 }
 
@@ -59,6 +81,8 @@ function featuresFor(planId: PlanId): FeatureLine[] {
   const pro = PLANS.pro.limits;
 
   switch (planId) {
+    case "free":
+      return freeFeatures();
     case "trial":
     case "basic":
       return basicFeatures();
@@ -84,18 +108,20 @@ function featuresFor(planId: PlanId): FeatureLine[] {
 }
 
 const PLAN_NAME_KEY: Record<PlanId, MessageKey> = {
+  free: "planFree",
   trial: "planTrial",
   basic: "planBasic",
   pro: "planPro",
 };
 
 const PLAN_DESC_KEY: Record<PlanId, MessageKey> = {
+  free: "planFreeDesc",
   trial: "planTrialDesc",
   basic: "planBasicDesc",
   pro: "planProDesc",
 };
 
-const PLAN_ORDER: PlanId[] = ["trial", "pro", "basic"];
+const PLAN_ORDER: PlanId[] = ["free", "pro", "basic"];
 
 export function PricingSection() {
   const { t } = useI18n();

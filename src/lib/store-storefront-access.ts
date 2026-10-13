@@ -1,18 +1,16 @@
 import { AppError } from "@/domain/errors";
-import { isSubscriptionUsable } from "@/domain/rules/store-rules";
 import type { Store, Subscription } from "@/domain/types/entities";
 
 /**
- * Customers must not see a frozen store. Data stays; members can still open
- * the lock screen. Admin activation republishes an expiry lock.
+ * Customers must not see a suspended store or one frozen after 60 quiet days.
+ * An ended trial stays public on the Free catalog. Data is kept either way.
  */
 export function isHiddenFromCustomers(
   store: Store,
-  subscription: Subscription | null | undefined,
+  _subscription?: Subscription | null | undefined,
 ): boolean {
   if (store.status === "suspended" || store.suspendedAt) return true;
   if (store.status === "restricted") return true;
-  if (subscription && !isSubscriptionUsable(subscription)) return true;
   return false;
 }
 
@@ -30,19 +28,17 @@ export function toLockedStore(store: Store): Store {
 
 /**
  * Normalize store for public catalog / storefront page.
- * Admin lock (suspended_at), DB restricted status, or inactive subscription → locked.
+ * Admin lock (suspended_at) or a restricted freeze hides the store.
+ * An ended subscription stays published and is served with Free limits.
  */
 export function resolveStorefrontAccess(
   store: Store,
-  subscription: Subscription | null | undefined,
+  _subscription: Subscription | null | undefined,
 ): Store {
   if (store.status === "suspended") {
     throw new AppError("NOT_FOUND", "Store not found.");
   }
   if (isStorefrontLocked(store)) {
-    return toLockedStore(store);
-  }
-  if (subscription && !isSubscriptionUsable(subscription)) {
     return toLockedStore(store);
   }
   return store;

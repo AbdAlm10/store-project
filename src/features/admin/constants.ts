@@ -1,7 +1,7 @@
 import type { PlanId } from "@/config/plans";
 import type { StoreStatus, SubscriptionStatus } from "@/domain/types/enums";
 
-export const ADMIN_PLAN_IDS: PlanId[] = ["trial", "basic", "pro"];
+export const ADMIN_PLAN_IDS: PlanId[] = ["free", "trial", "basic", "pro"];
 
 export const ADMIN_STORE_STATUSES: StoreStatus[] = [
   "draft",

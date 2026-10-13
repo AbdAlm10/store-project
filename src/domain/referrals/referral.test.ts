@@ -242,8 +242,9 @@ describe("referral migration", () => {
 
 describe("storefront badge", () => {
   it("shows on basic and trial and stays off Pro", () => {
-    expect(showsDukkanStorefrontBadge("basic")).toBe(true);
-    expect(showsDukkanStorefrontBadge("trial")).toBe(true);
+    expect(showsDukkanStorefrontBadge("free")).toBe(true);
+    expect(showsDukkanStorefrontBadge("basic")).toBe(false);
+    expect(showsDukkanStorefrontBadge("trial")).toBe(false);
     expect(showsDukkanStorefrontBadge(null)).toBe(true);
     expect(showsDukkanStorefrontBadge("pro")).toBe(false);
   });

@@ -16,7 +16,7 @@ import type { Profile } from "@/domain/types/entities";
 import type { StoreStatus, SubscriptionStatus } from "@/domain/types/enums";
 import type { AuthService } from "@/application/services/auth-service";
 
-const PLAN_IDS: PlanId[] = ["trial", "basic", "pro"];
+const PLAN_IDS: PlanId[] = ["free", "trial", "basic", "pro"];
 const STORE_STATUSES: StoreStatus[] = [
   "draft",
   "published",
@@ -133,23 +133,26 @@ export class AdminPlatformService {
     }
     const now = new Date();
     const trial = planId === "trial";
-    const iso = nextPeriodEnd({
-      now,
-      planId,
-      billingPeriod,
-      previous: row.subscription
-        ? {
-            planId: row.subscription.planId,
-            currentPeriodEnd: row.subscription.currentPeriodEnd,
-          }
-        : null,
-    }).toISOString();
+    const free = planId === "free";
+    const iso = free
+      ? null
+      : nextPeriodEnd({
+          now,
+          planId,
+          billingPeriod,
+          previous: row.subscription
+            ? {
+                planId: row.subscription.planId,
+                currentPeriodEnd: row.subscription.currentPeriodEnd,
+              }
+            : null,
+        }).toISOString();
     const patch = {
       planId,
       billingPeriod,
       status: trial ? ("trialing" as const) : ("active" as const),
       trialEndsAt: trial ? iso : null,
-      currentPeriodEnd: iso,
+      currentPeriodEnd: free ? null : iso,
     };
     if (!row.subscription) {
       await this.platform.createSubscription({

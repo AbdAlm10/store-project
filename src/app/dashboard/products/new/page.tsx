@@ -18,9 +18,7 @@ export default async function NewProductPage() {
   const locale = await getRequestLocale();
   const t = createTranslator(locale);
   const categories = await services.categories.listForMerchant(store.id);
-  const maxImagesPerProduct = await services.entitlements.maxImagesPerProduct(
-    store.id,
-  );
+  const limits = await services.entitlements.getLimits(store.id);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -28,7 +26,8 @@ export default async function NewProductPage() {
       <ProductForm
         storeId={store.id}
         categories={categories}
-        maxImagesPerProduct={maxImagesPerProduct}
+        maxImagesPerProduct={limits.maxImagesPerProduct}
+        variantsEnabled={limits.maxOptionsPerProduct !== 0}
       />
     </div>
   );

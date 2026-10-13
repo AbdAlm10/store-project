@@ -85,7 +85,7 @@ describe("auth proxy", () => {
     expect(response.headers.get("location")).toBeNull();
   });
 
-  it("still sends an expired store to the subscription page", async () => {
+  it("does not lock the dashboard when the subscription is no longer usable", async () => {
     createServerClient.mockReturnValue({
       auth: {
         getUser: async () => ({
@@ -111,9 +111,7 @@ describe("auth proxy", () => {
     const response = await proxy(
       new NextRequest("http://localhost:3000/dashboard/products"),
     );
-    expect(response.headers.get("location")).toBe(
-      "http://localhost:3000/dashboard/subscription?locked=1",
-    );
+    expect(response.headers.get("location")).toBeNull();
   });
 
   it("does not lock the dashboard when the subscription check hangs", async () => {

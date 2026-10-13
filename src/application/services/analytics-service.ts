@@ -56,6 +56,7 @@ export type DashboardStats = {
   visitsByDay: DayBucket[];
   devices: DeviceStat[];
   isPro: boolean;
+  analyticsLevel: "visits" | "engagement" | "advanced";
   pro: {
     locations: Array<{ label: string; count: number }>;
     peakHours: Array<{ hour: number; count: number }>;
@@ -123,6 +124,7 @@ export function buildDemoDashboardStats(
     visitsByDay,
     devices: [],
     isPro: false,
+    analyticsLevel: "engagement",
     pro: {
       locations: [
         { label: "الرياض", count: Math.round(storeViews * 0.34) },
@@ -206,7 +208,8 @@ export class AnalyticsService {
     const membership = await this.members.findMembership(storeId, session.user.id);
     assertCanManageStore(membership, "staff");
 
-    const isPro = await this.entitlements.canUseAdvancedAnalytics(storeId);
+    const analyticsLevel = await this.entitlements.analyticsLevel(storeId);
+    const isPro = analyticsLevel === "advanced";
 
     const since = new Date();
     since.setDate(since.getDate() - rangeDays);
@@ -421,19 +424,23 @@ export class AnalyticsService {
       .sort((a, b) => b.count - a.count)
       .slice(0, 8);
 
+    const visitsOnly = analyticsLevel === "visits";
     return {
       storeViews,
-      productViews,
-      whatsappClicks,
-      shares,
+      productViews: visitsOnly ? 0 : productViews,
+      whatsappClicks: visitsOnly ? 0 : whatsappClicks,
+      shares: visitsOnly ? 0 : shares,
       uniqueVisitors: storeViews,
-      engagementRate,
-      topProducts,
+      engagementRate: visitsOnly ? 0 : engagementRate,
+      topProducts: visitsOnly ? [] : topProducts,
       topWhatsappProducts: [],
       zeroViewProducts: [],
-      visitsByDay,
+      visitsByDay: visitsOnly
+        ? visitsByDay.map((day) => ({ ...day, productViews: 0, whatsappClicks: 0 }))
+        : visitsByDay,
       devices,
       isPro,
+      analyticsLevel,
       pro: {
         locations,
         peakHours,

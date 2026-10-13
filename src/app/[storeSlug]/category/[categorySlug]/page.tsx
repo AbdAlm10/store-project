@@ -10,10 +10,12 @@ import {
   resolveThemeTokens,
   storefrontCssVars,
 } from "@/config/themes";
+import { publicThemeOverrides } from "@/domain/plans/access";
 import {
   getCachedPublicCatalog,
   getCachedPublicCategories,
   getCachedStorefront,
+  getStorefrontPlanId,
 } from "@/lib/storefront-data";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
@@ -59,9 +61,10 @@ export default async function CategoryPage({ params }: Props) {
 
   const locale = await getRequestLocale(store.defaultLocale);
   const t = createTranslator(locale);
+  const planIdForTheme = await getStorefrontPlanId(store.id);
   const themeTokens = resolveThemeTokens(
     DEFAULT_THEME_TOKENS,
-    store.themeOverrides,
+    publicThemeOverrides(planIdForTheme, store.themeOverrides),
     store.primaryColor,
   );
   const cssVars = storefrontCssVars(themeTokens);
