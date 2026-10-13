@@ -101,20 +101,25 @@ export function CustomerViewSection() {
     riseObserver.observe(root);
 
     phone.classList.add(styles["story-armed"]);
-    const storyObserver = new IntersectionObserver(
-      (entries) => {
-        phone.classList.toggle(
-          styles["story-playing"],
-          entries.some((entry) => entry.isIntersecting),
-        );
-      },
-      { threshold: 0.35 },
-    );
+    const syncStory = () => {
+      const box = phone.getBoundingClientRect();
+      const viewport = window.innerHeight || 0;
+      const visible = Math.min(box.bottom, viewport) - Math.max(box.top, 0);
+      phone.classList.toggle(styles["story-playing"], visible > 72);
+    };
+    syncStory();
+    const storyObserver = new IntersectionObserver(syncStory, {
+      threshold: [0, 0.2, 0.6],
+    });
     storyObserver.observe(phone);
+    document.addEventListener("scroll", syncStory, { passive: true, capture: true });
+    window.addEventListener("resize", syncStory);
 
     return () => {
       riseObserver.disconnect();
       storyObserver.disconnect();
+      document.removeEventListener("scroll", syncStory, true);
+      window.removeEventListener("resize", syncStory);
     };
   }, []);
 
