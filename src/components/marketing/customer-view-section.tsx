@@ -45,28 +45,77 @@ const FEATURES = [
   },
 ] as const;
 
+function LinenShirt() {
+  return (
+    <svg viewBox="0 0 160 180" aria-hidden className="h-[78%] w-auto">
+      <path
+        d="M46 34 80 52 114 34l28 22-20 24-10-8v92H48V72l-10 8L18 56Z"
+        fill="#f4e7d4"
+        stroke="#c9b498"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M68 46c4 10 20 10 24 0"
+        fill="none"
+        stroke="#c9b498"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path d="M80 56v96" stroke="#ddcbb4" strokeWidth="1.5" />
+      <circle cx="80" cy="74" r="1.6" fill="#c9b498" />
+      <circle cx="80" cy="90" r="1.6" fill="#c9b498" />
+      <circle cx="80" cy="106" r="1.6" fill="#c9b498" />
+    </svg>
+  );
+}
+
+const ORDER_MESSAGE = `مرحبًا! أود الطلب من النور:
+
+المنتج: قميص كتان
+الكمية: 1
+السعر: 120,000 ل.س`;
+
 export function CustomerViewSection() {
   const rootRef = useRef<HTMLDivElement>(null);
+  const phoneRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const root = rootRef.current;
-    if (!root) return;
+    const phone = phoneRef.current;
+    if (!root || !phone) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const rect = root.getBoundingClientRect();
     const alreadyVisible = rect.top < window.innerHeight * 0.88 && rect.bottom > 80;
     if (!alreadyVisible) root.classList.add(styles["is-armed"]);
 
-    const observer = new IntersectionObserver(
+    const riseObserver = new IntersectionObserver(
       (entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return;
         root.classList.add(styles["is-in"]);
-        observer.disconnect();
+        riseObserver.disconnect();
       },
       { threshold: 0.12 },
     );
-    observer.observe(root);
-    return () => observer.disconnect();
+    riseObserver.observe(root);
+
+    phone.classList.add(styles["story-armed"]);
+    const storyObserver = new IntersectionObserver(
+      (entries) => {
+        phone.classList.toggle(
+          styles["story-playing"],
+          entries.some((entry) => entry.isIntersecting),
+        );
+      },
+      { threshold: 0.35 },
+    );
+    storyObserver.observe(phone);
+
+    return () => {
+      riseObserver.disconnect();
+      storyObserver.disconnect();
+    };
   }, []);
 
   return (
@@ -76,26 +125,70 @@ export function CustomerViewSection() {
         className={`${styles.rise} mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-16`}
         dir="ltr"
       >
-        <div className="relative mx-auto w-[272px] lg:mx-0 lg:w-[320px]">
+        <div
+          ref={phoneRef}
+          className="relative mx-auto w-[272px] lg:mx-0 lg:w-[320px]"
+        >
           <div data-rise>
             <div
               aria-hidden
               className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[130%] w-[150%] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(ellipse_at_center,rgb(227_210_173/0.72),transparent_68%)]"
             />
             <div className="rounded-[44px] bg-[#1c241e] p-2.5 shadow-[0_28px_60px_-36px_rgba(28,36,30,0.55)]">
-              <div className="relative overflow-hidden rounded-[34px] bg-white">
+              <div className="relative h-[520px] overflow-hidden rounded-[34px] bg-[#f7f4ef] lg:h-[620px]">
                 <div
                   aria-hidden
                   className="absolute left-1/2 top-2.5 z-10 h-5 w-24 -translate-x-1/2 rounded-full bg-[#1c241e]"
                 />
-                <Image
-                  src="/marketing/alnoor-phone.webp"
-                  alt="واجهة متجر النور على الموبايل: الشعار، البحث، تصنيفات المنتجات، وشبكة الحقائب"
-                  width={780}
-                  height={1688}
-                  sizes="(max-width: 1024px) 272px, 320px"
-                  className="h-[520px] w-full object-cover object-top lg:h-[620px]"
-                />
+                <div
+                  data-story
+                  className={`${styles["scene-catalog"]} absolute inset-0`}
+                >
+                  <Image
+                    src="/marketing/alnoor-phone.webp"
+                    alt="واجهة متجر النور على الموبايل: الشعار، البحث، تصنيفات المنتجات، وشبكة الحقائب"
+                    width={780}
+                    height={1688}
+                    sizes="(max-width: 1024px) 272px, 320px"
+                    className="h-full w-full object-cover object-top"
+                  />
+                </div>
+                <div
+                  aria-hidden
+                  data-story
+                  dir="rtl"
+                  className={styles["scene-product"]}
+                >
+                  <div className={styles["store-bar"]}>
+                    <span className={styles["store-mark"]}>ن</span>
+                    <span>النور</span>
+                  </div>
+                  <div className={styles["shirt-stage"]}>
+                    <LinenShirt />
+                  </div>
+                  <p className={styles["product-name"]}>قميص كتان</p>
+                  <p className={styles["product-price"]}>120,000 ل.س</p>
+                  <p className={styles["product-stock"]}>متوفر</p>
+                  <div className={styles["order-slot"]}>
+                    <div className={styles["order-button"]}>اطلب عبر واتساب</div>
+                    <span data-story className={styles["scene-tap"]} />
+                  </div>
+                </div>
+                <div aria-hidden data-story dir="rtl" className={styles["scene-chat"]}>
+                  <div className={styles["wa-header"]}>
+                    <span className={styles["wa-avatar"]}>ن</span>
+                    <div>
+                      <p className={styles["wa-name"]}>النور</p>
+                      <p className={styles["wa-status"]}>متصل</p>
+                    </div>
+                  </div>
+                  <div className={styles["wa-thread"]}>
+                    <div className={styles["wa-bubble"]}>
+                      {ORDER_MESSAGE}
+                      <span className={styles["wa-time"]}>12:04</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -104,7 +197,7 @@ export function CustomerViewSection() {
             aria-hidden
             className="absolute bottom-3 left-0 right-0 z-20 mx-auto w-[232px] lg:bottom-6 lg:left-[42%] lg:right-auto lg:mx-0 lg:w-[248px]"
           >
-            <div data-rise style={{ ["--rise-delay" as string]: "140ms" }}>
+            <div data-story className={styles["scene-bubble"]}>
               <div
                 dir="rtl"
                 className="animate-ys-soft-float relative rounded-[20px] bg-white px-3.5 py-3 shadow-[0_18px_44px_-22px_rgba(28,36,30,0.45)]"
@@ -112,7 +205,7 @@ export function CustomerViewSection() {
                 <span className="absolute -top-2.5 end-3 rounded-full bg-brand-600 px-2 py-0.5 text-[11px] font-semibold text-white">
                   جديد
                 </span>
-                <div className="flex items-center gap-3" dir="rtl">
+                <div className="flex items-center gap-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white">
                     <WhatsAppLineIcon className="h-5 w-5" />
                   </span>
@@ -121,7 +214,7 @@ export function CustomerViewSection() {
                       طلب جديد على واتساب
                     </p>
                     <p className="mt-0.5 text-xs text-muted">
-                      حقيبة يد جلدية · 160,000 ل.س
+                      قميص كتان · 120,000 ل.س
                     </p>
                   </div>
                 </div>
