@@ -66,18 +66,10 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
   trial: {
     id: "trial",
     name: "Free Trial",
-    description:
-      "Basic catalog limits plus Pro analytics, options, theming, and support.",
+    description: "Basic features for 10 days.",
     priceMonthlyUsd: 0,
     priceYearlyUsd: 0,
-    // Basic quotas — only these four upgrade to Pro during the trial.
-    limits: {
-      ...BASIC_LIMITS,
-      advancedAnalytics: true,
-      maxOptionsPerProduct: Number.POSITIVE_INFINITY,
-      fullThemeCustomization: true,
-      dedicatedSupport: true,
-    },
+    limits: { ...BASIC_LIMITS },
   },
   basic: {
     id: "basic",

@@ -31,6 +31,16 @@ describe("plan prices", () => {
     expect(yearlySavingsPercent(PLANS.basic)).toBe(40);
     expect(yearlySavingsPercent(PLANS.pro)).toBe(17);
   });
+
+  it("gives the free trial exactly the Basic entitlements", () => {
+    expect(PLANS.trial.limits).toEqual(PLANS.basic.limits);
+    expect(PLANS.trial.priceMonthlyUsd).toBe(0);
+    expect(PLANS.trial.priceYearlyUsd).toBe(0);
+    expect(t("ar", "pricingBody")).toContain("الأساسية فقط");
+    expect(t("ar", "faq4A")).toContain("الأساسية فقط");
+    expect(t("ar", "pricingBody")).not.toContain("تحليلات وتخصيص");
+    expect(t("ar", "faq4A")).not.toContain("تحليلات Pro");
+  });
 });
 
 describe("subscription period end", () => {

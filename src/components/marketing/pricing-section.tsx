@@ -25,56 +25,41 @@ type FeatureLine = {
   included: boolean;
 };
 
-function featuresFor(planId: PlanId): FeatureLine[] {
+function basicFeatures(): FeatureLine[] {
   const basic = PLANS.basic.limits;
+  return [
+    {
+      key: "planFeatProductsImages",
+      vars: {
+        products: basic.maxProducts,
+        images: basic.maxImagesPerProduct,
+      },
+      included: true,
+    },
+    { key: "planFeatNoAnalytics", included: false },
+    {
+      key: "planFeatCategories",
+      vars: { count: basic.maxCategories },
+      included: true,
+    },
+    {
+      key: "planFeatOptions",
+      vars: { count: basic.maxOptionsPerProduct },
+      included: true,
+    },
+    { key: "planFeatOneNavAction", included: true },
+    { key: "planFeatLimitedColors", included: true },
+    { key: "planFeatSupport", included: true },
+  ];
+}
+
+function featuresFor(planId: PlanId): FeatureLine[] {
   const pro = PLANS.pro.limits;
 
   switch (planId) {
     case "trial":
-      return [
-        {
-          key: "planFeatProductsImages",
-          vars: {
-            products: basic.maxProducts,
-            images: basic.maxImagesPerProduct,
-          },
-          included: true,
-        },
-        { key: "planFeatNoAnalytics", included: false },
-        {
-          key: "planFeatCategories",
-          vars: { count: basic.maxCategories },
-          included: true,
-        },
-        { key: "planFeatUnlimitedOptions", included: true },
-        { key: "planFeatOneNavAction", included: true },
-        { key: "planFeatSupport", included: true },
-      ];
     case "basic":
-      return [
-        {
-          key: "planFeatProductsImages",
-          vars: {
-            products: basic.maxProducts,
-            images: basic.maxImagesPerProduct,
-          },
-          included: true,
-        },
-        { key: "planFeatNoAnalytics", included: false },
-        {
-          key: "planFeatCategories",
-          vars: { count: basic.maxCategories },
-          included: true,
-        },
-        {
-          key: "planFeatOptions",
-          vars: { count: basic.maxOptionsPerProduct },
-          included: true,
-        },
-        { key: "planFeatOneNavAction", included: true },
-        { key: "planFeatLimitedColors", included: true },
-        { key: "planFeatSupport", included: true },
-      ];
+      return basicFeatures();
     case "pro":
       return [
         {

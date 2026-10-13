@@ -114,11 +114,7 @@ export default async function SubscriptionPage() {
           />
           <UsageCard
             label={t("advancedAnalytics")}
-            value={
-              plan.limits.advancedAnalytics && subscription.planId !== "trial"
-                ? t("included")
-                : t("basicOnly")
-            }
+            value={plan.limits.advancedAnalytics ? t("included") : t("basicOnly")}
           />
         </div>
         {plan.priceYearlyUsd > 0 ? (

@@ -102,7 +102,6 @@ export class EntitlementService {
   async canUseAdvancedAnalytics(storeId: string): Promise<boolean> {
     const sub = await this.getSubscription(storeId);
     if (!isSubscriptionUsable(sub)) return false;
-    if (sub.planId === "trial") return false;
     return getPlan(sub.planId).limits.advancedAnalytics;
   }
 
