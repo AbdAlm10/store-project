@@ -9,8 +9,9 @@ import { buildSecurityHeaders } from "./src/lib/content-security-policy";
  * "**" would also match private IPs, so it is not used.
  */
 const nextConfig: NextConfig = {
-  // Allow LAN/dev-host HMR when opening the app via network IP (not only localhost).
-  allowedDevOrigins: ["192.168.5.8", "192.168.56.1"],
+  // localhost is allowed by Next itself. 127.0.0.1 is not, and a blocked dev
+  // websocket prevents the client runtime from hydrating.
+  allowedDevOrigins: ["127.0.0.1", "192.168.5.8", "192.168.56.1"],
   images: {
     remotePatterns: [
       {

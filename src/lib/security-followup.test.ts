@@ -164,9 +164,15 @@ describe("response headers", () => {
     expect(
       prod.find((header) => header.key === "Strict-Transport-Security")?.value,
     ).toContain("max-age=");
-    expect(
-      prod.find((header) => header.key === "Content-Security-Policy")?.value,
-    ).toContain("script-src 'self'");
+    const prodCsp = prod.find(
+      (header) => header.key === "Content-Security-Policy",
+    )?.value;
+    expect(prodCsp).toContain("script-src 'self' 'unsafe-inline'");
+    expect(prodCsp).not.toContain("unsafe-eval");
+    const devCsp = dev.find(
+      (header) => header.key === "Content-Security-Policy",
+    )?.value;
+    expect(devCsp).toContain("unsafe-eval");
   });
 });
 

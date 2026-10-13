@@ -4,22 +4,28 @@ type HeaderEnv = {
 };
 
 /**
- * Compatible with the Next.js App Router runtime (inline bootstrap scripts)
- * and the bundled Sentry SDK (connects to ingest over HTTPS).
- * Merchant images are https (or demo data URLs) and are not rewritten by the optimizer.
+ * Next.js writes inline bootstrap scripts into every page. A nonce has to be
+ * generated per request, which forces the whole app to render dynamically, so
+ * production keeps 'unsafe-inline' for those framework scripts and does not
+ * allow 'unsafe-eval'. React's dev refresh runtime still needs 'unsafe-eval'.
+ * Sentry ingest is HTTPS. Merchant images are https or demo data URLs.
  */
 export function buildContentSecurityPolicy(nodeEnv: string | undefined): string {
   const connectSrc =
     nodeEnv === "production"
       ? "connect-src 'self' https: wss:"
       : "connect-src 'self' https: http: wss: ws:";
+  const scriptSrc =
+    nodeEnv === "development"
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+      : "script-src 'self' 'unsafe-inline'";
   return [
     "default-src 'self'",
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'self'",
     "form-action 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    scriptSrc,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
