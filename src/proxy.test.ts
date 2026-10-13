@@ -88,7 +88,10 @@ describe("auth proxy", () => {
   it("still sends an expired store to the subscription page", async () => {
     createServerClient.mockReturnValue({
       auth: {
-        getUser: async () => ({ data: { user: { id: "user-1" } }, error: null }),
+        getUser: async () => ({
+          data: { user: { id: "user-1", email_confirmed_at: "2026-01-01T00:00:00Z" } },
+          error: null,
+        }),
       },
       from: () => ({
         select: () => ({
@@ -118,7 +121,10 @@ describe("auth proxy", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     createServerClient.mockReturnValue({
       auth: {
-        getUser: async () => ({ data: { user: { id: "user-1" } }, error: null }),
+        getUser: async () => ({
+          data: { user: { id: "user-1", email_confirmed_at: "2026-01-01T00:00:00Z" } },
+          error: null,
+        }),
       },
       from: () => hanging(),
       rpc: () => new Promise(() => {}),

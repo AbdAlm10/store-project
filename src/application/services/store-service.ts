@@ -18,6 +18,7 @@ import type {
   StoreRepository,
   SubscriptionRepository,
 } from "@/application/ports/repositories";
+import { assertEmailConfirmed } from "@/lib/email-verification";
 import { isHiddenFromCustomers } from "@/lib/store-storefront-access";
 import { parseNavbarActions } from "@/lib/navbar-actions";
 import { createStoreSchema, updateStoreSchema } from "@/validations/schemas";
@@ -43,6 +44,7 @@ export class StoreService {
 
   async createStore(input: unknown): Promise<Store> {
     const { session } = await this.auth.requireProfile();
+    assertEmailConfirmed(session.user);
     const raw =
       input && typeof input === "object"
         ? (input as Record<string, unknown>)

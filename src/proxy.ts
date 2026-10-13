@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseEnv, isSupabaseConfigured } from "@/infrastructure/supabase/config";
+import { isAuthUserVerified, needsEmailVerificationRedirect } from "@/lib/email-verification";
 import {
   AUTH_STEP_TIMEOUT_MS,
   loginForwardsOAuthCode,
@@ -86,6 +87,14 @@ export async function proxy(request: NextRequest) {
   );
   const user = userResult?.data.user ?? null;
 
+  if (user && needsEmailVerificationRedirect(pathname, isAuthUserVerified(user))) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/auth/verify";
+    redirectUrl.search = "";
+    if (user.email) redirectUrl.searchParams.set("email", user.email);
+    return withReferralCookie(request, NextResponse.redirect(redirectUrl));
+  }
+
   const dashboardPath = pathname.startsWith("/dashboard");
   const allowedWhenExpired =
     pathname === "/dashboard" ||
@@ -138,5 +147,6 @@ export const config = {
     "/auth/google",
     "/auth/callback",
     "/auth/finish",
+    "/auth/verify",
   ],
 };
