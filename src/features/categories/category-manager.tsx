@@ -4,6 +4,7 @@ import { CategoryIcon } from "@/components/categories/category-icon-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/forms";
 import { SafeImage } from "@/components/ui/safe-image";
+import { PLANS } from "@/config/plans";
 import type {
   Category,
   CategoryOptionDef,
@@ -39,7 +40,7 @@ function cleanOptionSchema(options: CategoryOptionDef[]): CategoryOptionDef[] {
 export function CategoryManager({
   storeId,
   initial,
-  maxCategories = 4,
+  maxCategories = PLANS.basic.limits.maxCategories,
   maxOptionsPerProduct = 3,
 }: {
   storeId: string;

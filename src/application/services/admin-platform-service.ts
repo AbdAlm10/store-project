@@ -1,5 +1,7 @@
 import type { BillingPeriod, PlanId } from "@/config/plans";
+import { activationCharge } from "@/domain/billing/early-bird";
 import { extendFrom, nextPeriodEnd } from "@/domain/billing/period";
+import type { EarlyBirdLedger } from "@/infrastructure/billing/early-bird-ledger";
 import { AppError } from "@/domain/errors";
 import { isSubscriptionUsable } from "@/domain/rules/store-rules";
 import type { Store } from "@/domain/types/entities";
@@ -47,6 +49,7 @@ export class AdminPlatformService {
     private readonly auth: AuthService,
     private readonly platform: PlatformAdminRepository,
     private readonly referrals?: Pick<ReferralService, "grantOnFirstPaidActivation">,
+    private readonly earlyBird?: EarlyBirdLedger,
   ) {}
 
   async getOverview(): Promise<AdminOverview> {
@@ -159,7 +162,14 @@ export class AdminPlatformService {
       await this.platform.updateSubscription(row.subscription.id, patch);
     }
     await this.publishIfExpiryLocked(row.store);
-    if (!trial) {
+    if (planId === "basic" || planId === "pro") {
+      await this.recordEarlyBirdCharge({
+        userId: row.store.ownerId,
+        storeId,
+        planId,
+        billingPeriod,
+        now,
+      });
       try {
         await this.referrals?.grantOnFirstPaidActivation({
           referredUserId: row.store.ownerId,
@@ -200,6 +210,38 @@ export class AdminPlatformService {
     });
     await this.publishIfExpiryLocked(row.store);
     return { slug: row.store.slug, storeId: row.store.id };
+  }
+
+  /** Writes the Sham Cash amount for the first paid year. Trial does not consume it. */
+  private async recordEarlyBirdCharge(input: {
+    userId: string;
+    storeId: string;
+    planId: "basic" | "pro";
+    billingPeriod: BillingPeriod;
+    now: Date;
+  }): Promise<void> {
+    if (!this.earlyBird) return;
+    try {
+      const grant = await this.earlyBird.findByUserId(input.userId);
+      const charge = activationCharge({
+        grant,
+        planId: input.planId,
+        billingPeriod: input.billingPeriod,
+        now: input.now,
+      });
+      if (!charge.earlyBird || !charge.discountUntil) return;
+      await this.earlyBird.recordActivation({
+        userId: input.userId,
+        storeId: input.storeId,
+        planId: input.planId,
+        billingPeriod: input.billingPeriod,
+        chargedAmountUsd: charge.amountUsd,
+        discountUntil: charge.discountUntil,
+        appliedAt: input.now.toISOString(),
+      });
+    } catch (error) {
+      console.error("early bird charge record failed", error);
+    }
   }
 
   /** Reopen a store closed by expiry. An explicit admin suspension stays closed. */

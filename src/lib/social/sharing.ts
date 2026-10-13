@@ -1,5 +1,5 @@
 import { appConfig } from "@/config/app";
-import { PLANS } from "@/config/plans";
+import { earlyBirdPrice, formatUsd, PLANS } from "@/config/plans";
 import { discountPercent } from "@/domain/rules/store-rules";
 import type { Product, Store } from "@/domain/types/entities";
 
@@ -84,12 +84,20 @@ export function buildSubscriptionWhatsAppUrl(input: {
   storeSlug: string;
   intent: SubscriptionIntent;
   mode?: "subscribe" | "renew";
+  /** First-year 25% rate for a merchant who holds one of the first 100 slots. */
+  earlyBird?: boolean;
 }): string {
   const identity = `${input.storeName} (${input.storeSlug})`;
-  const prices =
-    input.intent === "pro"
-      ? `السعر: ${PLANS.pro.priceMonthlyUsd}$ شهريًا أو ${PLANS.pro.priceYearlyUsd}$ سنويًا.`
-      : `السعر: ${PLANS.basic.priceMonthlyUsd}$ شهريًا أو ${PLANS.basic.priceYearlyUsd}$ سنويًا.`;
+  const monthly = input.earlyBird
+    ? earlyBirdPrice(input.intent, "monthly")
+    : PLANS[input.intent].priceMonthlyUsd;
+  const yearly = input.earlyBird
+    ? earlyBirdPrice(input.intent, "yearly")
+    : PLANS[input.intent].priceYearlyUsd;
+  const prices = `السعر: ${formatUsd(monthly)}$ شهريًا أو ${formatUsd(yearly)}$ سنويًا.`;
+  const earlyBirdNote = input.earlyBird
+    ? "خصم 25% على السنة الأولى (ضمن أول 100 تاجر). بعد السنة الأولى يعود السعر الكامل."
+    : null;
   const ask =
     input.intent === "pro"
       ? input.mode === "renew"
@@ -102,8 +110,11 @@ export function buildSubscriptionWhatsAppUrl(input: {
     `أنا التاجر: ${identity}`,
     ask,
     prices,
+    earlyBirdNote,
     "سأدفع عبر شام كاش على واتساب. بعد استلام المبلغ يرجى تفعيل الخطة للمدة التي أدفعها (شهر أو سنة).",
-  ].join("\n");
+  ]
+    .filter((line): line is string => Boolean(line))
+    .join("\n");
 
   const phone = appConfig.supportWhatsApp.replace(/[^\d]/g, "");
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;

@@ -1,4 +1,5 @@
--- Local tenant-isolation checks for the schema produced by supabase/apply_live.sql.
+-- Local tenant-isolation checks for the schema produced by supabase/apply_live.sql
+-- and, when present, supabase/apply_pricing.sql.
 -- Run with psql against the recreated database. Do not paste this on production.
 -- Roles anon, authenticated, service_role, and authenticator must already exist,
 -- and auth.uid()/auth.jwt() must read request.jwt.claim.sub and request.jwt.claims.
@@ -177,7 +178,8 @@ $fn$;
 grant execute on function public._rls_expect(boolean, text) to anon, authenticated, authenticator;
 grant execute on function public._rls_updated_products(uuid, text) to anon, authenticated, authenticator;
 
--- Visitor: published and restricted storefronts only.
+-- Visitor: published stores with a usable subscription.
+-- After apply_pricing.sql a restricted (frozen) store is hidden from anon.
 set session authorization authenticator;
 set role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
@@ -188,8 +190,13 @@ select public._rls_expect(
   'anon should read the published store'
 );
 select public._rls_expect(
-  (select count(*) = 1 from public.stores where id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
-  'anon should read the restricted store'
+  (
+    select count(*) = (
+      case when to_regclass('public.early_bird_slots') is null then 1 else 0 end
+    )
+    from public.stores where id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'
+  ),
+  'anon reads a restricted store only before the pricing freeze'
 );
 select public._rls_expect(
   (select count(*) = 0 from public.stores where id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
@@ -208,8 +215,13 @@ select public._rls_expect(
   'anon should not read a product from a draft store'
 );
 select public._rls_expect(
-  (select count(*) = 1 from public.products where id = 'c1111111-1111-4111-8111-111111111111'),
-  'anon should read a published product on a restricted store'
+  (
+    select count(*) = (
+      case when to_regclass('public.early_bird_slots') is null then 1 else 0 end
+    )
+    from public.products where id = 'c1111111-1111-4111-8111-111111111111'
+  ),
+  'anon reads a product on a restricted store only before the pricing freeze'
 );
 select public._rls_expect(
   (select count(*) = 1 from public.subscriptions where store_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),

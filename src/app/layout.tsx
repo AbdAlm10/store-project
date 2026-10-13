@@ -10,7 +10,7 @@ import "./globals.css";
 const arabic = IBM_Plex_Sans_Arabic({
   variable: "--font-arabic",
   subsets: ["arabic", "latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -29,13 +29,13 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       url: appConfig.url,
       locale: "ar_AR",
-      images: [{ url: "/brand/dukkan-vertical.png" }],
+      images: [{ url: "/brand/dukkan-vertical.webp" }],
     },
     twitter: {
       card: "summary_large_image",
       title: appConfig.name,
       description: t(locale, "tagline"),
-      images: ["/brand/dukkan-vertical.png"],
+      images: ["/brand/dukkan-vertical.webp"],
     },
     robots: {
       index: true,

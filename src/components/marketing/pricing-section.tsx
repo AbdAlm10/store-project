@@ -4,10 +4,12 @@ import { Reveal } from "@/components/marketing/reveal";
 import { Button } from "@/components/ui/button";
 import {
   EARLY_BIRD_DISCOUNT,
+  EARLY_BIRD_SLOT_LIMIT,
   PLANS,
-  TRIAL_DAYS,
   earlyBirdPrice,
+  formatUsd,
   planPrice,
+  yearlySavingsPercent,
   type BillingPeriod,
   type PlanId,
 } from "@/config/plans";
@@ -16,7 +18,7 @@ import { useI18n } from "@/i18n/provider";
 import { cn } from "@/lib/utils/cn";
 import { Check, X } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 type FeatureLine = {
   key: MessageKey;
@@ -24,57 +26,42 @@ type FeatureLine = {
   included: boolean;
 };
 
-function featuresFor(planId: PlanId): FeatureLine[] {
+function basicFeatures(): FeatureLine[] {
   const basic = PLANS.basic.limits;
+  return [
+    {
+      key: "planFeatProductsImages",
+      vars: {
+        products: basic.maxProducts,
+        images: basic.maxImagesPerProduct,
+      },
+      included: true,
+    },
+    { key: "planFeatBasicAnalytics", included: true },
+    {
+      key: "planFeatCategories",
+      vars: { count: basic.maxCategories },
+      included: true,
+    },
+    {
+      key: "planFeatOptions",
+      vars: { count: basic.maxOptionsPerProduct },
+      included: true,
+    },
+    { key: "planFeatOneNavAction", included: true },
+    { key: "planFeatLimitedColors", included: true },
+    { key: "planFeatCustomDomain", included: false },
+    { key: "planFeatSupport", included: true },
+  ];
+}
+
+function featuresFor(planId: PlanId): FeatureLine[] {
   const pro = PLANS.pro.limits;
 
   switch (planId) {
     case "trial":
-      return [
-        {
-          key: "planFeatProductsImages",
-          vars: {
-            products: basic.maxProducts,
-            images: basic.maxImagesPerProduct,
-          },
-          included: true,
-        },
-        { key: "planFeatNoAnalytics", included: false },
-        {
-          key: "planFeatCategories",
-          vars: { count: basic.maxCategories },
-          included: true,
-        },
-        { key: "planFeatUnlimitedOptions", included: true },
-        { key: "planFeatOneNavAction", included: true },
-        { key: "planFeatFullCustomization", included: true },
-        { key: "planFeatSupport", included: true },
-      ];
     case "basic":
-      return [
-        {
-          key: "planFeatProductsImages",
-          vars: {
-            products: basic.maxProducts,
-            images: basic.maxImagesPerProduct,
-          },
-          included: true,
-        },
-        { key: "planFeatNoAnalytics", included: false },
-        {
-          key: "planFeatCategories",
-          vars: { count: basic.maxCategories },
-          included: true,
-        },
-        {
-          key: "planFeatOptions",
-          vars: { count: basic.maxOptionsPerProduct },
-          included: true,
-        },
-        { key: "planFeatOneNavAction", included: true },
-        { key: "planFeatLimitedColors", included: true },
-        { key: "planFeatSupport", included: true },
-      ];
+      return basicFeatures();
     case "pro":
       return [
         {
@@ -90,6 +77,7 @@ function featuresFor(planId: PlanId): FeatureLine[] {
         { key: "planFeatUnlimitedOptions", included: true },
         { key: "planFeatAllNavActions", included: true },
         { key: "planFeatFullCustomization", included: true },
+        { key: "planFeatCustomDomain", included: true },
         { key: "planFeatSupport", included: true },
       ];
   }
@@ -112,6 +100,10 @@ const PLAN_ORDER: PlanId[] = ["trial", "pro", "basic"];
 export function PricingSection() {
   const { t } = useI18n();
   const [period, setPeriod] = useState<BillingPeriod>("monthly");
+  const maxYearlySave = Math.max(
+    yearlySavingsPercent(PLANS.basic),
+    yearlySavingsPercent(PLANS.pro),
+  );
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6" id="pricing">
@@ -127,7 +119,7 @@ export function PricingSection() {
       <Reveal delayMs={40}>
         <div className="mt-8 flex justify-center">
           <div
-            className="inline-flex rounded-full bg-slate-100 p-1"
+            className="inline-flex min-h-11 items-center rounded-full bg-slate-100 p-1"
             role="group"
             aria-label={t("billingPeriod")}
           >
@@ -140,7 +132,12 @@ export function PricingSection() {
               active={period === "yearly"}
               onClick={() => setPeriod("yearly")}
               label={t("billingYearly")}
-              badge={t("billingYearlySave")}
+              badge={
+                <>
+                  {t("billingYearlySavePrefix")}{" "}
+                  <bdi dir="ltr">{maxYearlySave}%</bdi>
+                </>
+              }
             />
           </div>
         </div>
@@ -149,9 +146,8 @@ export function PricingSection() {
       <Reveal delayMs={80}>
         <p className="mx-auto mt-5 max-w-xl text-center text-sm text-slate-500">
           {t("earlyBirdBanner", {
-            trialDays: TRIAL_DAYS,
-            proPercent: Math.round(EARLY_BIRD_DISCOUNT.pro * 100),
-            basicPercent: Math.round(EARLY_BIRD_DISCOUNT.basic * 100),
+            slots: EARLY_BIRD_SLOT_LIMIT,
+            percent: Math.round(EARLY_BIRD_DISCOUNT * 100),
           })}
         </p>
       </Reveal>
@@ -196,12 +192,24 @@ export function PricingSection() {
                     </p>
                   ) : (
                     <>
-                      <p className="text-4xl font-semibold tracking-tight">
-                        ${formatPrice(price)}
+                      <p className="text-4xl font-semibold">
+                        <bdi dir="ltr">${formatUsd(price)}</bdi>
                         <span className="text-base font-medium opacity-60">
                           {period === "yearly" ? t("perYear") : t("perMonth")}
                         </span>
                       </p>
+                      {period === "yearly" ? (
+                        <p
+                          className={cn(
+                            "mt-2 text-sm font-medium",
+                            highlighted ? "text-sand-300" : "text-sand-700",
+                          )}
+                        >
+                          {t("yearlySaveWord")}{" "}
+                          <bdi dir="ltr">{yearlySavingsPercent(plan)}%</bdi>{" "}
+                          {t("yearlySavingsTail")}
+                        </p>
+                      ) : null}
                       {bird !== null && bird < price ? (
                         <p
                           className={cn(
@@ -209,17 +217,13 @@ export function PricingSection() {
                             highlighted ? "text-brand-300" : "text-brand-700",
                           )}
                         >
-                          {t("earlyBirdPrice", {
-                            price: formatPrice(bird),
-                            period:
-                              period === "yearly"
-                                ? t("perYear")
-                                : t("perMonth"),
-                            percent: Math.round(
-                              EARLY_BIRD_DISCOUNT[
-                                planId === "basic" ? "basic" : "pro"
-                              ] * 100,
-                            ),
+                          {t("earlyBirdLead")}{" "}
+                          <bdi dir="ltr">
+                            ${formatUsd(bird)}
+                            {period === "yearly" ? t("perYear") : t("perMonth")}
+                          </bdi>{" "}
+                          {t("earlyBirdOff", {
+                            percent: Math.round(EARLY_BIRD_DISCOUNT * 100),
                           })}
                         </p>
                       ) : null}
@@ -286,14 +290,14 @@ function PeriodButton({
   active: boolean;
   onClick: () => void;
   label: string;
-  badge?: string;
+  badge?: ReactNode;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold leading-none transition",
+        "inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 text-sm font-semibold leading-none transition",
         active
           ? "bg-white text-slate-900 shadow-sm"
           : "text-slate-500 hover:text-slate-800",
@@ -301,7 +305,7 @@ function PeriodButton({
     >
       <span className="leading-none">{label}</span>
       {badge ? (
-        <span className="inline-flex shrink-0 items-center rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold leading-none text-brand-800">
+        <span className="inline-flex shrink-0 items-center rounded-full bg-brand-100 px-2 py-0.5 text-sm font-bold leading-none text-brand-800">
           {badge}
         </span>
       ) : null}
@@ -309,6 +313,3 @@ function PeriodButton({
   );
 }
 
-function formatPrice(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(2);
-}

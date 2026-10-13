@@ -1,11 +1,15 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   BarChart3,
+  Check,
+  ChevronDown,
   Link2,
   MessageCircle,
   Smartphone,
   Store,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +30,7 @@ import {
 } from "@/components/marketing/product-mocks";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator, type MessageKey } from "@/i18n/messages";
+import { publicSupportWhatsAppUrl } from "@/lib/support-contact";
 import { existsSync } from "node:fs";
 import path from "node:path";
 
@@ -42,6 +47,11 @@ export default async function HomePage() {
     marketingShot("shot-dashboard.png") ?? marketingShot("dashboard.png");
   const analyticsShot =
     marketingShot("shot-analytics.png") ?? marketingShot("analytics.png");
+  const storefrontShot = marketingShot("alnoor-store.webp");
+  const productShot = marketingShot("alnoor-product.webp");
+  const supportWhatsApp = publicSupportWhatsAppUrl();
+  const beforePoints = ["valueBefore1", "valueBefore2", "valueBefore3"] as const;
+  const afterPoints = ["valueAfter1", "valueAfter2", "valueAfter3"] as const;
 
   const steps: Array<{ titleKey: MessageKey; bodyKey: MessageKey }> = [
     { titleKey: "step1Title", bodyKey: "step1Body" },
@@ -81,12 +91,7 @@ export default async function HomePage() {
         <section className="ys-landing-hero-glow relative -mt-[4.25rem] overflow-hidden pt-[4.25rem] sm:-mt-[5rem] sm:pt-[5rem]">
           <div className="relative mx-auto flex max-w-4xl flex-col items-center px-4 pb-10 pt-8 text-center sm:px-6 sm:pt-10 lg:pt-12">
             <div className="animate-ys-hero-copy flex flex-col items-center">
-              <BrandLogo
-                variant="vertical"
-                className="h-20 w-auto sm:h-24"
-                priority
-              />
-              <h1 className="mt-8 max-w-2xl text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl lg:leading-[1.15]">
+              <h1 className="max-w-2xl text-3xl font-semibold text-slate-900 sm:text-4xl lg:text-5xl">
                 {t("heroHeadline")}
               </h1>
               <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-500 sm:text-lg">
@@ -94,18 +99,18 @@ export default async function HomePage() {
               </p>
               <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
                 <Link href="/register">
-                  <Button size="lg" className="rounded-full px-7">
+                  <Button size="lg" className="h-12 min-h-11 rounded-full px-7">
                     {t("ctaCreate")}
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                 </Link>
-                <Link href="/login">
+                <Link href="/alnoor">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="rounded-full border-slate-200 bg-white px-7 text-slate-800 hover:bg-slate-50"
+                    className="h-12 min-h-11 rounded-full border-slate-200 bg-white px-7 text-slate-800 hover:bg-slate-50"
                   >
-                    {t("navSignIn")}
+                    {t("heroDemo")}
                   </Button>
                 </Link>
               </div>
@@ -118,14 +123,76 @@ export default async function HomePage() {
         </section>
 
         {/* Value */}
-        <section className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6" id="value">
+        <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6" id="value">
           <Reveal>
-            <h2 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-              {t("valueTitle")}
-            </h2>
-            <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-500">
-              {t("valueBody")}
-            </p>
+            <div className="mx-auto max-w-3xl text-center">
+              <h2 className="text-3xl font-semibold text-slate-900 sm:text-4xl">
+                {t("valueTitle")}
+              </h2>
+              <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-500">
+                {t("valueBody")}
+              </p>
+            </div>
+            <div className="mt-10 grid gap-4 rounded-[1.75rem] bg-white p-5 text-start shadow-[var(--ys-landing-shadow)] sm:p-8 lg:grid-cols-2">
+              <div className="rounded-[1.25rem] bg-[#f7f8f7] p-5">
+                <h3 className="text-lg font-semibold text-sand-800">
+                  {t("valueBefore")}
+                </h3>
+                <ul className="mt-4 space-y-3">
+                  {beforePoints.map((key) => (
+                    <li key={key} className="flex items-start gap-2 text-sm leading-relaxed text-slate-700 sm:text-base">
+                      <X className="mt-1 h-4 w-4 shrink-0 text-sand-700" aria-hidden />
+                      <span>{t(key)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rounded-[1.25rem] bg-brand-50/70 p-5">
+                <h3 className="text-lg font-semibold text-brand-800">
+                  {t("valueAfter")}
+                </h3>
+                <ul className="mt-4 space-y-3">
+                  {afterPoints.map((key) => (
+                    <li key={key} className="flex items-start gap-2 text-sm leading-relaxed text-slate-700 sm:text-base">
+                      <Check className="mt-1 h-4 w-4 shrink-0 text-brand-700" aria-hidden />
+                      <span>{t(key)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              {storefrontShot ? (
+                <figure className="overflow-hidden rounded-[1.35rem] bg-white shadow-[var(--ys-landing-shadow)]">
+                  <Image
+                    src={storefrontShot}
+                    alt={t("showcaseStorefront")}
+                    width={1024}
+                    height={733}
+                    className="h-auto w-full"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                  <figcaption className="px-4 py-3 text-sm font-medium text-slate-700">
+                    {t("showcaseStorefront")}
+                  </figcaption>
+                </figure>
+              ) : null}
+              {productShot ? (
+                <figure className="overflow-hidden rounded-[1.35rem] bg-white shadow-[var(--ys-landing-shadow)]">
+                  <Image
+                    src={productShot}
+                    alt={t("showcaseProduct")}
+                    width={1024}
+                    height={867}
+                    className="h-auto w-full"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                  <figcaption className="px-4 py-3 text-sm font-medium text-slate-700">
+                    {t("showcaseProduct")}
+                  </figcaption>
+                </figure>
+              ) : null}
+            </div>
           </Reveal>
         </section>
 
@@ -179,7 +246,7 @@ export default async function HomePage() {
             </Reveal>
             <Reveal delayMs={90} className="min-w-0">
               <MarketingShot
-                src={null}
+                src={storefrontShot}
                 alt={t("showcaseStorefront")}
                 label={t("showcaseStorefront")}
                 fallback={<MockStorefront />}
@@ -195,7 +262,7 @@ export default async function HomePage() {
             </Reveal>
             <Reveal delayMs={150} className="min-w-0">
               <MarketingShot
-                src={null}
+                src={productShot}
                 alt={t("showcaseProduct")}
                 label={t("showcaseProduct")}
                 fallback={<MockProduct />}
@@ -247,11 +314,15 @@ export default async function HomePage() {
             <div className="mt-8 space-y-3">
               {faqs.map((item, index) => (
                 <Reveal key={item.q} delayMs={index * 60}>
-                  <details className="group rounded-2xl bg-[#f7f8f7] px-5 py-4 open:bg-brand-50/50">
-                    <summary className="cursor-pointer list-none font-semibold text-slate-900">
-                      {t(item.q)}
+                  <details className="group rounded-2xl bg-[#f7f8f7] px-5 py-2 open:bg-brand-50/50">
+                    <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-semibold text-slate-900">
+                      <span>{t(item.q)}</span>
+                      <ChevronDown
+                        className="h-5 w-5 shrink-0 text-brand-700 transition group-open:-rotate-180"
+                        aria-hidden
+                      />
                     </summary>
-                    <p className="mt-3 text-sm leading-relaxed text-slate-500">
+                    <p className="pb-3 text-sm leading-relaxed text-slate-600">
                       {t(item.a)}
                     </p>
                   </details>
@@ -275,11 +346,21 @@ export default async function HomePage() {
                   {t("finalCtaBody")}
                 </p>
                 <Link href="/register" className="mt-8 inline-block">
-                  <Button size="lg" className="rounded-full px-8">
+                  <Button size="lg" className="h-12 min-h-11 rounded-full px-8">
                     {t("ctaCreate")}
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                 </Link>
+                {supportWhatsApp ? (
+                  <a
+                    href={supportWhatsApp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-brand-700"
+                  >
+                    {t("finalCtaWhatsApp")}
+                  </a>
+                ) : null}
               </div>
             </div>
           </Reveal>

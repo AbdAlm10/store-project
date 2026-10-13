@@ -7,6 +7,8 @@ import type {
 import { AppError } from "@/domain/errors";
 import type { Store, Subscription } from "@/domain/types/entities";
 import { createSupabaseAdminClient } from "@/infrastructure/supabase/admin-client";
+import type { EarlyBirdGrant } from "@/domain/billing/early-bird";
+import type { BillingPeriod } from "@/config/plans";
 import {
   mapProfile,
   mapStore,
@@ -43,10 +45,11 @@ export class SupabasePlatformAdminRepository implements PlatformAdminRepository 
     const storeIds = storeRows.map((s) => s.id);
     const ownerIds = [...new Set(storeRows.map((s) => s.ownerId))];
 
-    const [{ data: subs, error: subError }, { data: profiles, error: profileError }] =
+    const [{ data: subs, error: subError }, { data: profiles, error: profileError }, grants] =
       await Promise.all([
         supabase.from("subscriptions").select("*").in("store_id", storeIds),
         supabase.from("profiles").select("*").in("id", ownerIds),
+        loadEarlyBirdGrants(supabase, ownerIds),
       ]);
     if (subError) fail(subError.message);
     if (profileError) fail(profileError.message);
@@ -64,6 +67,7 @@ export class SupabasePlatformAdminRepository implements PlatformAdminRepository 
       store,
       subscription: subByStore.get(store.id) ?? null,
       owner: profileById.get(store.ownerId) ?? null,
+      earlyBird: grants.get(store.ownerId) ?? null,
     }));
   }
 
@@ -197,4 +201,47 @@ export class SupabasePlatformAdminRepository implements PlatformAdminRepository 
     if (error || !data) fail(error?.message ?? "Subscription create failed");
     return mapSubscription(data);
   }
+}
+
+function mapEarlyBirdGrant(row: Record<string, unknown>): EarlyBirdGrant {
+  const planId = row.plan_id === "basic" || row.plan_id === "pro" ? row.plan_id : null;
+  const billingPeriod: BillingPeriod | null =
+    row.billing_period === "yearly" || row.billing_period === "monthly"
+      ? row.billing_period
+      : null;
+  return {
+    userId: String(row.user_id),
+    storeId: String(row.store_id),
+    slotNumber: Number(row.slot_number),
+    claimedAt: String(row.claimed_at),
+    appliedAt: (row.applied_at as string | null) ?? null,
+    discountUntil: (row.discount_until as string | null) ?? null,
+    planId,
+    billingPeriod,
+    chargedAmountUsd:
+      row.charged_amount_usd == null ? null : Number(row.charged_amount_usd),
+  };
+}
+
+async function loadEarlyBirdGrants(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  ownerIds: string[],
+): Promise<Map<string, EarlyBirdGrant>> {
+  const grants = new Map<string, EarlyBirdGrant>();
+  if (ownerIds.length === 0) return grants;
+  const { data, error } = await supabase
+    .from("early_bird_grants")
+    .select("*")
+    .in("user_id", ownerIds);
+  if (error) {
+    if (/early_bird_|schema cache|does not exist|could not find/i.test(error.message)) {
+      return grants;
+    }
+    fail(error.message);
+  }
+  for (const row of data ?? []) {
+    const grant = mapEarlyBirdGrant(row as Record<string, unknown>);
+    grants.set(grant.userId, grant);
+  }
+  return grants;
 }

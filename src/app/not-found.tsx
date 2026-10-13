@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { appConfig } from "@/config/app";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
+
+export const metadata: Metadata = {
+  title: "الصفحة غير موجودة",
+};
 
 export default async function NotFound() {
   const locale = await getRequestLocale();

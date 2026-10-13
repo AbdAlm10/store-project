@@ -25,6 +25,7 @@ import {
   getStorefrontPlanId,
   getStorefrontProduct,
 } from "@/lib/storefront-data";
+import { isReservedStoreSlug } from "@/lib/reserved-slugs";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -35,6 +36,9 @@ export const revalidate = 60;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { storeSlug, productSlug } = await params;
+  if (isReservedStoreSlug(storeSlug)) {
+    return { title: "الصفحة غير موجودة" };
+  }
   try {
     const store = await getCachedStorefront(storeSlug);
     const product = await getStorefrontProduct(store, productSlug);
@@ -57,12 +61,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     };
   } catch {
-    return { title: "Product not found" };
+    const locale = await getRequestLocale();
+    return { title: createTranslator(locale)("productNotFound") };
   }
 }
 
 export default async function ProductPage({ params }: Props) {
   const { storeSlug, productSlug } = await params;
+  if (isReservedStoreSlug(storeSlug)) notFound();
 
   let store;
   let product;

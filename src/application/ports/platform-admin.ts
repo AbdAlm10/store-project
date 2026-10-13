@@ -1,4 +1,5 @@
 import type { BillingPeriod, PlanId } from "@/config/plans";
+import type { EarlyBirdGrant } from "@/domain/billing/early-bird";
 import type { Profile, Store, Subscription } from "@/domain/types/entities";
 import type { StoreStatus, SubscriptionStatus } from "@/domain/types/enums";
 
@@ -6,6 +7,8 @@ export type AdminStoreRow = {
   store: Store;
   subscription: Subscription | null;
   owner: Profile | null;
+  /** First-year slot, when this merchant claimed one. */
+  earlyBird?: EarlyBirdGrant | null;
 };
 
 export type AdminSubscriptionPatch = {

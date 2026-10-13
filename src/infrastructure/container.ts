@@ -39,6 +39,7 @@ import {
 } from "@/infrastructure/supabase/repositories";
 import { SupabasePlatformAdminRepository } from "@/infrastructure/supabase/platform-admin-repository";
 import { SupabaseReferralRepository } from "@/infrastructure/supabase/referral-repository";
+import { getEarlyBirdLedger } from "@/infrastructure/billing/early-bird-ledger";
 
 export type AppServices = {
   auth: AuthService;
@@ -100,7 +101,12 @@ export function createServices(): AppServices {
   const email = new NoopEmailProvider();
 
   const auth = new AuthService(authProvider, users);
-  const admin = new AdminPlatformService(auth, platformAdmin, referrals);
+  const admin = new AdminPlatformService(
+    auth,
+    platformAdmin,
+    referrals,
+    getEarlyBirdLedger(),
+  );
   const entitlements = new EntitlementService(subscriptions);
   const storeService = new StoreService(
     auth,

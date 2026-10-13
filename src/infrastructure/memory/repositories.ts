@@ -15,6 +15,7 @@ import type {
   UserRepository,
 } from "@/application/ports/repositories";
 import type { PlanId } from "@/config/plans";
+import { readMemoryEarlyBirdGrant } from "@/infrastructure/billing/early-bird-memory";
 import type { ReferralAccessPatch } from "@/domain/referrals/book";
 import { contactIdentity } from "@/domain/referrals/normalize";
 import type {
@@ -542,7 +543,12 @@ export class MemoryPlatformAdminRepository implements PlatformAdminRepository {
         [...db.subscriptions.values()].find((sub) => sub.storeId === store.id) ??
         null;
       const owner = db.profiles.get(store.ownerId) ?? null;
-      return { store, subscription, owner };
+      return {
+        store,
+        subscription,
+        owner,
+        earlyBird: readMemoryEarlyBirdGrant(store.ownerId),
+      };
     });
   }
 

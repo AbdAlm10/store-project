@@ -2,6 +2,20 @@ import { AppError } from "@/domain/errors";
 import { isSubscriptionUsable } from "@/domain/rules/store-rules";
 import type { Store, Subscription } from "@/domain/types/entities";
 
+/**
+ * Customers must not see a frozen store. Data stays; members can still open
+ * the lock screen. Admin activation republishes an expiry lock.
+ */
+export function isHiddenFromCustomers(
+  store: Store,
+  subscription: Subscription | null | undefined,
+): boolean {
+  if (store.status === "suspended" || store.suspendedAt) return true;
+  if (store.status === "restricted") return true;
+  if (subscription && !isSubscriptionUsable(subscription)) return true;
+  return false;
+}
+
 /** Whether the public storefront should show the subscription lock screen. */
 export function isStorefrontLocked(store: Store): boolean {
   if (store.status === "suspended") return true;

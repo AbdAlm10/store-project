@@ -15,7 +15,7 @@ export const QR_STAND_DEFAULT_LOGO_BG = appConfig.brand.sand;
 /** Layout matching the stand wireframe (headline → logo → QR → powered-by). */
 const HEADLINE = "امسح الباركود لرؤية المنتجات";
 const POWERED_BY = "مدعوم بواسطة";
-const DUKKAN_WORDMARK = "/brand/dukkan-wordmark.png";
+const DUKKAN_WORDMARK = "/brand/dukkan-wordmark.webp";
 
 const QR_PIXELS = 860;
 const LOGO_SIZE = 148;

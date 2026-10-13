@@ -25,6 +25,7 @@ import {
 } from "@/lib/storefront-data";
 import { isStorefrontLocked, toLockedStore } from "@/lib/store-storefront-access";
 import type { Metadata } from "next";
+import { isReservedStoreSlug } from "@/lib/reserved-slugs";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -35,26 +36,30 @@ export const revalidate = 60;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { storeSlug } = await params;
+  if (isReservedStoreSlug(storeSlug)) notFound();
+  let store;
   try {
-    const store = await getCachedStorefront(storeSlug);
-    return {
-      title: store.name,
-      description: store.description ?? `${store.name} on ${appConfig.name}`,
-      alternates: { canonical: storeUrl(store.slug) },
-      openGraph: {
-        title: store.name,
-        description: store.description ?? undefined,
-        url: storeUrl(store.slug),
-        images: store.logoUrl ? [store.logoUrl] : undefined,
-      },
-    };
+    store = await getCachedStorefront(storeSlug);
   } catch {
-    return { title: "Store not found" };
+    store = null;
   }
+  if (!store) notFound();
+  return {
+    title: store.name,
+    description: store.description ?? `${store.name} on ${appConfig.name}`,
+    alternates: { canonical: storeUrl(store.slug) },
+    openGraph: {
+      title: store.name,
+      description: store.description ?? undefined,
+      url: storeUrl(store.slug),
+      images: store.logoUrl ? [store.logoUrl] : undefined,
+    },
+  };
 }
 
 export default async function PublicStorePage({ params, searchParams }: Props) {
   const { storeSlug } = await params;
+  if (isReservedStoreSlug(storeSlug)) notFound();
   const query = await searchParams;
   const search = typeof query.q === "string" ? query.q : undefined;
   const categorySlug =
@@ -64,8 +69,9 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
   try {
     store = await getCachedStorefront(storeSlug);
   } catch {
-    notFound();
+    store = null;
   }
+  if (!store) notFound();
 
   if (isStorefrontLocked(store)) {
     store = toLockedStore(store);

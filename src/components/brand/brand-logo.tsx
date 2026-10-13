@@ -20,33 +20,33 @@ const ASSETS: Record<
   { src: string; width: number; height: number; defaultClass: string }
 > = {
   icon: {
-    src: "/brand/dukkan-icon.png",
-    width: 128,
-    height: 128,
+    src: "/brand/dukkan-icon.webp",
+    width: 420,
+    height: 459,
     defaultClass: "h-9 w-9",
   },
   wordmark: {
-    src: "/brand/dukkan-wordmark.png",
-    width: 320,
-    height: 120,
+    src: "/brand/dukkan-wordmark.webp",
+    width: 480,
+    height: 286,
     defaultClass: "h-8 w-auto",
   },
   horizontal: {
-    src: "/brand/dukkan-horizontal.png",
-    width: 1725,
-    height: 949,
+    src: "/brand/dukkan-horizontal.webp",
+    width: 640,
+    height: 322,
     defaultClass: "h-9 w-auto",
   },
   "horizontal-white": {
-    src: "/brand/dukkan-horizontal-white.png",
-    width: 1725,
-    height: 949,
+    src: "/brand/dukkan-horizontal-white.webp",
+    width: 640,
+    height: 322,
     defaultClass: "h-9 w-auto",
   },
   vertical: {
-    src: "/brand/dukkan-vertical.png",
+    src: "/brand/dukkan-vertical.webp",
     width: 320,
-    height: 360,
+    height: 509,
     defaultClass: "h-28 w-auto",
   },
 };
@@ -70,7 +70,7 @@ export function BrandLogo({
       width={asset.width}
       height={asset.height}
       priority={priority}
-      // Local brand PNGs — skip optimizer so replaced files show without cache lag.
+      // Pre-sized WebP (each under 15KB). Skip the optimizer so the bytes stay exact.
       unoptimized
       className={cn(
         "object-contain object-center select-none",

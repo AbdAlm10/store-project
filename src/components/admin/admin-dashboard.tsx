@@ -13,11 +13,14 @@ import {
   subscriptionPeriodEnd,
 } from "@/features/admin/labels";
 import {
+  earlyBirdPrice,
+  formatUsd,
   planPrice,
   PLANS,
   type BillingPeriod,
   type PlanId,
 } from "@/config/plans";
+import { earlyBirdStillApplies } from "@/domain/billing/early-bird";
 import { isSubscriptionUsable } from "@/domain/rules/store-rules";
 import type { AdminOverview } from "@/application/services/admin-platform-service";
 import { cn } from "@/lib/utils/cn";
@@ -170,6 +173,7 @@ function StoreAdminCard({
 }) {
   const { store, subscription, owner } = row;
   const subUsable = subscription ? isSubscriptionUsable(subscription) : false;
+  const firstYear = earlyBirdStillApplies(row.earlyBird);
   const daysLeft = remainingDays(
     subscription ? subscriptionPeriodEnd(subscription) : null,
   );
@@ -244,6 +248,7 @@ function StoreAdminCard({
             storeId={store.id}
             currentPlanId={subscription?.planId ?? null}
             currentBillingPeriod={subscription?.billingPeriod ?? null}
+            firstYear={firstYear}
           />
           <SuspendToggle
             storeId={store.id}
@@ -253,7 +258,21 @@ function StoreAdminCard({
           />
         </div>
       </div>
+      {firstYear ? <FirstYearCharge /> : null}
     </article>
+  );
+}
+
+function FirstYearCharge() {
+  const basicMonth = formatUsd(earlyBirdPrice("basic", "monthly"));
+  const basicYear = formatUsd(earlyBirdPrice("basic", "yearly"));
+  const proMonth = formatUsd(earlyBirdPrice("pro", "monthly"));
+  const proYear = formatUsd(earlyBirdPrice("pro", "yearly"));
+  return (
+    <p className="mt-2 text-[11px] font-semibold leading-5 text-brand-800">
+      شام كاش السنة الأولى: أساسي {basicMonth}$/شهر أو {basicYear}$/سنة · Pro{" "}
+      {proMonth}$/شهر أو {proYear}$/سنة
+    </p>
   );
 }
 
@@ -261,10 +280,12 @@ function PlanMenu({
   storeId,
   currentPlanId,
   currentBillingPeriod,
+  firstYear,
 }: {
   storeId: string;
   currentPlanId: PlanId | null;
   currentBillingPeriod: BillingPeriod | null;
+  firstYear: boolean;
 }) {
   const [open, setOpen] = useState<"plan" | "period" | null>(null);
   const anchorRef = useRef<HTMLButtonElement>(null);
@@ -309,7 +330,11 @@ function PlanMenu({
           }
           value={
             currentPlanId && currentPlanId !== "trial"
-              ? `$${planPrice(PLANS[currentPlanId], currentBillingPeriod ?? "monthly")}`
+              ? `$${formatUsd(
+                  firstYear
+                    ? earlyBirdPrice(currentPlanId, currentBillingPeriod ?? "monthly")
+                    : planPrice(PLANS[currentPlanId], currentBillingPeriod ?? "monthly"),
+                )}`
               : currentPlanId === "trial"
                 ? "10 أيام"
                 : "—"
