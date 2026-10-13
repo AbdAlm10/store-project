@@ -146,11 +146,13 @@ language plpgsql
 security definer
 set search_path = public
 as $fn$
-declare
-  jwt_role text;
 begin
-  jwt_role := coalesce(auth.jwt() ->> 'role', '');
-  if jwt_role = 'service_role' or session_user in ('postgres', 'supabase_admin') then
+  -- auth.users signup runs as supabase_auth_admin with auth.uid() null.
+  -- current_user is the definer inside this function, so the invoker is session_user.
+  if auth.uid() is null
+     or coalesce(auth.role(), '') = 'service_role'
+     or session_user in ('postgres', 'supabase_auth_admin', 'supabase_admin', 'service_role')
+  then
     return new;
   end if;
   if tg_op = 'INSERT' then
