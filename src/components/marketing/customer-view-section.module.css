@@ -1,0 +1,391 @@
+/* Visible unless JS has armed the section and it is still below the fold. */
+.rise [data-rise] {
+  opacity: 1;
+  transform: none;
+}
+
+.rise.is-armed:not(.is-in) [data-rise] {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.rise.is-armed.is-in [data-rise] {
+  animation: customer-view-rise 700ms ease both;
+  animation-delay: var(--rise-delay, 0ms);
+}
+
+@keyframes customer-view-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 15s order story. Static frame is the catalog. Playback is paused until .story-playing. */
+.scene-catalog {
+  opacity: 1;
+}
+
+.scene-product,
+.scene-chat,
+.scene-tap,
+.scene-bubble {
+  opacity: 0;
+}
+
+.story-armed .scene-catalog,
+.story-armed .scene-product,
+.story-armed .scene-chat,
+.story-armed .scene-tap,
+.story-armed .scene-bubble {
+  animation-duration: 15s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-play-state: paused;
+}
+
+.story-armed .scene-catalog {
+  animation-name: story-catalog;
+}
+
+.story-armed .scene-product {
+  animation-name: story-product;
+}
+
+.story-armed .scene-chat {
+  animation-name: story-chat;
+}
+
+.story-armed .scene-tap {
+  animation-name: story-tap;
+}
+
+.story-armed .scene-bubble {
+  animation-name: story-bubble;
+}
+
+.story-armed.story-playing .scene-catalog,
+.story-armed.story-playing .scene-product,
+.story-armed.story-playing .scene-chat,
+.story-armed.story-playing .scene-tap,
+.story-armed.story-playing .scene-bubble {
+  animation-play-state: running;
+}
+
+/* 0–2.4s catalog, 3–8.7s product, 6.9–9s tap, 9.9–14.1s chat, 12.6–14.1s bubble. */
+@keyframes story-catalog {
+  0%,
+  16% {
+    opacity: 1;
+  }
+  22%,
+  96% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes story-product {
+  0%,
+  16% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  22%,
+  58% {
+    opacity: 1;
+    transform: none;
+  }
+  64%,
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+
+@keyframes story-tap {
+  0%,
+  42% {
+    opacity: 0;
+    transform: scale(0.65);
+  }
+  48% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  52% {
+    opacity: 0.4;
+    transform: scale(1.4);
+  }
+  56% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  62%,
+  100% {
+    opacity: 0;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes story-chat {
+  0%,
+  58% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  66%,
+  94% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+
+@keyframes story-bubble {
+  0%,
+  76% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  84%,
+  94% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.scene-product,
+.scene-chat {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.scene-product {
+  background: #f7f4ef;
+  color: #1c241e;
+  padding: 30px 12px 14px;
+}
+
+.store-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.store-mark {
+  display: grid;
+  height: 22px;
+  width: 22px;
+  place-items: center;
+  border-radius: 7px;
+  background: #58a379;
+  color: #fff;
+  font-size: 11px;
+}
+
+.shirt-stage {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  place-items: center;
+  margin: 10px 0 8px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f6f1e8, #e6dccb);
+}
+
+.shirt-stage svg {
+  height: 78%;
+  width: auto;
+}
+
+.product-name {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.product-price {
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.product-stock {
+  margin-top: 2px;
+  color: #6b746e;
+  font-size: 11px;
+}
+
+.order-slot {
+  position: relative;
+  margin-top: 8px;
+}
+
+.order-button {
+  display: flex;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: #58a379;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.scene-tap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 42px;
+  height: 42px;
+  margin-top: -21px;
+  margin-left: -21px;
+  border: 2px solid #1c241e;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.45);
+  box-shadow: inset 0 0 0 6px rgb(88 163 121 / 0.35);
+}
+
+.scene-chat {
+  background: #efe7de;
+  color: #111;
+  padding-top: 26px;
+}
+
+.wa-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #075e54;
+  color: #fff;
+  padding: 8px 10px 10px;
+}
+
+.wa-avatar {
+  display: grid;
+  height: 28px;
+  width: 28px;
+  place-items: center;
+  border-radius: 999px;
+  background: #25d366;
+  color: #075e54;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.wa-name {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.wa-status {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+.wa-thread {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 12px;
+}
+
+.wa-bubble {
+  max-width: 94%;
+  align-self: flex-end;
+  border-radius: 12px 12px 12px 4px;
+  background: #d9fdd3;
+  padding: 8px 10px 6px;
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: pre-line;
+}
+
+.wa-time {
+  display: block;
+  margin-top: 2px;
+  color: #667781;
+  font-size: 9px;
+  text-align: end;
+}
+
+.scene-bubble {
+  transform: translateY(14px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise.is-armed:not(.is-in) [data-rise],
+  .rise.is-armed.is-in [data-rise],
+  .story-armed .scene-catalog,
+  .story-armed .scene-product,
+  .story-armed .scene-chat,
+  .story-armed .scene-tap,
+  .story-armed .scene-bubble {
+    animation: none;
+  }
+
+  .rise.is-armed:not(.is-in) [data-rise],
+  .rise.is-armed.is-in [data-rise] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .scene-catalog,
+  .scene-product,
+  .scene-tap {
+    opacity: 0;
+    transform: none;
+  }
+
+  .scene-chat,
+  .scene-bubble {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (scripting: none) {
+  .rise [data-rise] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .scene-catalog,
+  .scene-product,
+  .scene-tap {
+    animation: none !important;
+    opacity: 0 !important;
+    transform: none !important;
+  }
+
+  .scene-chat,
+  .scene-bubble {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
