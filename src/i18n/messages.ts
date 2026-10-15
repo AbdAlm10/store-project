@@ -258,6 +258,7 @@ const ar = {
   onboardingReadyStep1: "أضف أول منتج مع صورة وسعر",
   onboardingReadyStep2: "أنشئ تصنيفًا إذا كنت تبيع أكثر من نوع",
   onboardingReadyStep3: "انشر المتجر وانسخ الرابط",
+  onboardingEditDetails: "تعديل البيانات",
   goToDashboard: "الذهاب إلى لوحة التحكم",
   storeName: "اسم المتجر",
   storeUrl: "رابط المتجر",

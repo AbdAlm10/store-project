@@ -58,6 +58,17 @@ describe("onboarding creates one store on submit", () => {
     expect(await repo.listByUserId(userId)).toHaveLength(1);
     expect((await repo.listByUserId(userId))[0]?.name).toBe(" ");
 
+    await expect(
+      services.stores.createStore({
+        name: "Noon Shop",
+        slug: "noon-shop",
+        currency: "USD",
+        whatsapp: "+12",
+      }),
+    ).rejects.toThrow(/رمز الدولة/);
+    expect((await repo.listByUserId(userId))[0]?.whatsapp).toBeNull();
+    expect((await repo.listByUserId(userId))[0]?.name).toBe(" ");
+
     const store = await services.stores.createStore({
       name: "Noon Shop",
       slug: "noon-shop",

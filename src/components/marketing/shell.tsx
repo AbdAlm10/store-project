@@ -38,9 +38,9 @@ export async function MarketingHeader() {
 
   return (
     <header className="pointer-events-none sticky top-0 z-40 bg-transparent px-3 pt-3 sm:px-5 sm:pt-4">
-      <div className="pointer-events-auto mx-auto flex h-16 max-w-5xl items-center gap-2 rounded-full border border-white/50 bg-white/45 px-3 shadow-[0_10px_36px_-16px_rgba(15,23,42,0.18)] ring-1 ring-white/40 backdrop-blur-2xl sm:px-5 supports-[backdrop-filter]:bg-white/35">
-        <Link href="/" className="flex shrink-0 items-center" aria-label={t("brand")}>
-          <BrandLogo variant="horizontal" className="h-8 w-auto sm:h-9" priority />
+      <div className="pointer-events-auto mx-auto grid h-14 max-w-5xl grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 rounded-full border border-white/50 bg-white/45 px-3 shadow-[0_10px_36px_-16px_rgba(15,23,42,0.18)] ring-1 ring-white/40 backdrop-blur-2xl sm:h-16 sm:px-5 supports-[backdrop-filter]:bg-white/35 md:flex md:gap-2">
+        <Link href="/" className="col-start-1 flex shrink-0 items-center" aria-label={t("brand")}>
+          <BrandLogo variant="horizontal" className="h-7 w-auto sm:h-9" priority />
         </Link>
         <MarketingNav
           links={nav}

@@ -1,8 +1,9 @@
 "use server";
 
 import { after } from "next/server";
+import { unstable_rethrow } from "next/navigation";
 import { getServices } from "@/infrastructure/container";
-import { toUserMessage } from "@/domain/errors";
+import { isUnauthenticatedError, toUserMessage } from "@/domain/errors";
 import { revalidateStorefrontStore } from "@/lib/revalidate-storefront";
 
 export async function createStoreAction(input: {
@@ -12,7 +13,10 @@ export async function createStoreAction(input: {
   currency: string;
   whatsapp?: string;
   defaultLocale?: string;
-}): Promise<{ ok: true; storeId: string } | { ok: false; error: string }> {
+}): Promise<
+  | { ok: true; storeId: string }
+  | { ok: false; error: string; unauthenticated?: boolean }
+> {
   try {
     const services = getServices();
     const store = await services.stores.createStore(input);
@@ -21,6 +25,11 @@ export async function createStoreAction(input: {
     });
     return { ok: true, storeId: store.id };
   } catch (error) {
-    return { ok: false, error: toUserMessage(error) };
+    unstable_rethrow(error);
+    return {
+      ok: false,
+      error: toUserMessage(error),
+      unauthenticated: isUnauthenticatedError(error),
+    };
   }
 }

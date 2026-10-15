@@ -17,7 +17,8 @@ import {
 } from "@/lib/dashboard-request";
 import { ExternalLink, LogOut } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
+import { isUnauthenticatedError } from "@/domain/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -29,8 +30,10 @@ export default async function DashboardLayout({
   let dashboardAuth: Awaited<ReturnType<typeof getDashboardProfile>>;
   try {
     dashboardAuth = await getDashboardProfile();
-  } catch {
-    redirect("/login");
+  } catch (error) {
+    unstable_rethrow(error);
+    if (isUnauthenticatedError(error)) redirect("/login");
+    throw error;
   }
   if (!dashboardAuth.session.user.emailConfirmed) {
     redirect(
