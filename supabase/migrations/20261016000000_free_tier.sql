@@ -411,6 +411,26 @@ create policy products_select
     or public.product_visible_to_public(id)
   );
 
+-- Reading product_images from its own SELECT policy is infinite recursion:
+-- member inserts that return the new row, and storefront reads, both fail.
+-- The definer runs as the table owner, so this lookup does not re-enter the policy.
+create or replace function public.primary_product_image_id(p_product_id uuid)
+returns uuid
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  select img.id
+  from public.product_images img
+  where img.product_id = p_product_id
+  order by img.sort_order asc, img.id asc
+  limit 1;
+$fn$;
+
+revoke all on function public.primary_product_image_id(uuid) from public;
+grant execute on function public.primary_product_image_id(uuid) to anon, authenticated;
+
 drop policy if exists product_images_select on public.product_images;
 create policy product_images_select
   on public.product_images for select to anon, authenticated
@@ -420,13 +440,7 @@ create policy product_images_select
       public.product_visible_to_public(product_id)
       and (
         public.store_effective_plan(store_id) <> 'free'
-        or id = (
-          select img.id
-          from public.product_images img
-          where img.product_id = product_images.product_id
-          order by img.sort_order asc, img.id asc
-          limit 1
-        )
+        or id = public.primary_product_image_id(product_id)
       )
     )
   );

@@ -87,7 +87,7 @@ export function MarketingNav({
   }
 
   return (
-    <>
+    <div className="contents">
       <nav
         className="hidden min-w-0 flex-1 items-center justify-center gap-1 md:flex"
         aria-label="التنقل"
@@ -115,10 +115,10 @@ export function MarketingNav({
         })}
       </nav>
 
-      <div className="flex items-center gap-1.5 sm:gap-2">
+      <div className="col-start-2 flex min-w-0 justify-center md:contents">
         <Link
           href={signInHref}
-          className="hidden min-h-11 items-center rounded-full px-3 text-sm font-medium text-slate-600 transition hover:text-slate-900 sm:inline-flex"
+          className="hidden min-h-11 items-center rounded-full px-3 text-sm font-medium text-slate-600 transition hover:text-slate-900 md:inline-flex"
         >
           {signInLabel}
         </Link>
@@ -126,14 +126,16 @@ export function MarketingNav({
           href={createHref}
           className={cn(
             buttonVariants({ size: "sm" }),
-            "h-11 min-h-11 rounded-full px-4",
+            "h-9 min-h-9 max-w-full rounded-full px-3 text-sm md:h-11 md:min-h-11 md:px-4",
           )}
         >
           {createLabel}
         </Link>
+      </div>
+      <div className="col-start-3 flex justify-end md:contents">
         <button
           type="button"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full text-slate-700 hover:bg-white/70 md:hidden"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-700 hover:bg-white/70 md:hidden"
           aria-expanded={open}
           aria-controls={menuId}
           aria-label={open ? closeMenuLabel : openMenuLabel}
@@ -213,6 +215,6 @@ export function MarketingNav({
           document.body,
         )
         : null}
-    </>
+    </div>
   );
 }

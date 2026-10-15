@@ -62,6 +62,10 @@ function isZodLike(
   return Array.isArray(issues);
 }
 
+export function isUnauthenticatedError(error: unknown): boolean {
+  return error instanceof AppError && error.code === "UNAUTHORIZED";
+}
+
 export function toUserMessage(error: unknown): string {
   if (error instanceof AppError) {
     return localizeAuthMessage(error.message);

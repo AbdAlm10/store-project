@@ -11,6 +11,7 @@ import {
 } from "@/features/stores/create-store-form";
 import { createStoreAction } from "@/features/stores/actions";
 import { useI18n } from "@/i18n/provider";
+import { INTERNATIONAL_PHONE_MESSAGE } from "@/lib/phone";
 
 const stepKeys = [
   "onboardingWelcome",
@@ -23,7 +24,7 @@ export function OnboardingWizard() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [draft, setDraft] = useState<StoreDraft | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function finish(href: string) {
@@ -31,11 +32,16 @@ export function OnboardingWizard() {
       setStep(2);
       return;
     }
-    setError(null);
+    setFormError(null);
     startTransition(async () => {
       const result = await createStoreAction(draft);
       if (!result.ok) {
-        setError(result.error);
+        if (result.unauthenticated) {
+          router.push("/login");
+          return;
+        }
+        setFormError(result.error);
+        setStep(2);
         return;
       }
       router.push(href);
@@ -87,30 +93,36 @@ export function OnboardingWizard() {
         </div>
       ) : null}
 
-      {step === 2 ? (
-        <div className="mt-8 rounded-3xl bg-white p-6 ring-1 ring-slate-200">
-          <h1 className="text-2xl font-semibold text-slate-900">
-            {t("onboardingNameTitle")}
-          </h1>
-          <p className="mt-2 text-sm text-slate-600">{t("onboardingNameHint")}</p>
-          <div className="mt-6">
-            <CreateStoreForm
-              onDraft={(next) => {
-                setDraft(next);
-                setError(null);
-                setStep(3);
-              }}
-            />
-          </div>
-          <button
-            type="button"
-            className="mt-4 text-sm text-slate-500 hover:text-slate-800"
-            onClick={() => setStep(1)}
-          >
-            ← {t("back")}
-          </button>
+      <div
+        className={
+          step === 2
+            ? "mt-8 rounded-3xl bg-white p-6 ring-1 ring-slate-200"
+            : "hidden"
+        }
+        hidden={step !== 2}
+      >
+        <h1 className="text-2xl font-semibold text-slate-900">
+          {t("onboardingNameTitle")}
+        </h1>
+        <p className="mt-2 text-sm text-slate-600">{t("onboardingNameHint")}</p>
+        <div className="mt-6">
+          <CreateStoreForm
+            serverError={formError}
+            onDraft={(next) => {
+              setDraft(next);
+              setFormError(null);
+              setStep(3);
+            }}
+          />
         </div>
-      ) : null}
+        <button
+          type="button"
+          className="mt-4 text-sm text-slate-500 hover:text-slate-800"
+          onClick={() => setStep(1)}
+        >
+          ← {t("back")}
+        </button>
+      </div>
 
       {step === 3 ? (
         <div className="mt-8 rounded-3xl bg-white p-6 ring-1 ring-slate-200">
@@ -123,9 +135,9 @@ export function OnboardingWizard() {
             <li>{t("onboardingReadyStep2")}</li>
             <li>{t("onboardingReadyStep3")}</li>
           </ol>
-          {error ? (
+          {formError && formError !== INTERNATIONAL_PHONE_MESSAGE ? (
             <p className="mt-4 text-sm text-red-600" role="alert">
-              {error}
+              {formError}
             </p>
           ) : null}
           <div className="mt-8 flex flex-wrap gap-3">
@@ -143,6 +155,13 @@ export function OnboardingWizard() {
               {t("goToDashboard")}
             </Button>
           </div>
+          <button
+            type="button"
+            className="mt-4 text-sm text-slate-500 hover:text-slate-800"
+            onClick={() => setStep(2)}
+          >
+            ← {t("onboardingEditDetails")}
+          </button>
         </div>
       ) : null}
     </div>

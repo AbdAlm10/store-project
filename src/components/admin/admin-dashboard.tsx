@@ -55,8 +55,6 @@ const PLAN_SELECTOR_LABELS: Record<PlanId, string> = {
 
 type Props = {
   overview: AdminOverview;
-  mode: "memory" | "supabase";
-  serviceRoleConfigured: boolean;
 };
 
 function matchesStoreRow(
@@ -79,11 +77,7 @@ function matchesStoreRow(
   return tokens.every((token) => haystack.includes(token));
 }
 
-export function AdminDashboard({
-  overview,
-  mode,
-  serviceRoleConfigured,
-}: Props) {
+export function AdminDashboard({ overview }: Props) {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search.trim().toLowerCase());
   const isSearchPending = search.trim().toLowerCase() !== deferredSearch;
@@ -96,14 +90,7 @@ export function AdminDashboard({
 
   return (
     <div className="space-y-4 pb-8">
-      {mode === "supabase" && !serviceRoleConfigured ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          أضف <code className="text-xs">SUPABASE_SERVICE_ROLE_KEY</code> في
-          الخادم.
-        </div>
-      ) : null}
-
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <Stat label="المتاجر" value={overview.stats.storeCount} />
         <Stat
           label="اشتراكات فعّالة"
@@ -592,8 +579,8 @@ function Stat({
   compactLabel?: string;
 }) {
   return (
-    <div className="rounded-xl bg-white px-2 py-2 ring-1 ring-slate-200">
-      <p className="truncate text-[10px] font-semibold text-slate-500 sm:text-xs">
+    <div className="rounded-xl bg-white px-2 py-3 text-center ring-1 ring-slate-200 sm:px-3">
+      <p className="truncate text-[11px] font-semibold text-slate-500 sm:text-xs">
         <span className="sm:hidden">{compactLabel ?? label}</span>
         <span className="hidden sm:inline">{label}</span>
       </p>

@@ -5,8 +5,11 @@ import {
   isColorOptionName,
   parseOptionValueInput,
 } from "@/lib/option-colors";
-import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
+import {
+  INTERNATIONAL_PHONE_MESSAGE,
+  internationalPhoneError,
+} from "@/lib/phone";
 
 const moneySchema = z.number().finite().nonnegative();
 
@@ -70,8 +73,8 @@ const internationalPhoneSchema = z
   .string()
   .trim()
   .max(16, "رقم الهاتف طويل جدًا.")
-  .refine((value) => !value || isValidPhoneNumber(value), {
-    message: "أدخل رقم هاتف دوليًا صالحًا مع رمز الدولة.",
+  .refine((value) => internationalPhoneError(value) === null, {
+    message: INTERNATIONAL_PHONE_MESSAGE,
   });
 
 export const createStoreSchema = z.object({
