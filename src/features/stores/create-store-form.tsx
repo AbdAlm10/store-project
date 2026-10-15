@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Input, Label, Select, Textarea } from "@/components/ui/forms";
@@ -9,6 +9,10 @@ import { STORE_CURRENCIES } from "@/domain/types/enums";
 import { appConfig } from "@/config/app";
 import { createStoreAction } from "@/features/stores/actions";
 import { useI18n } from "@/i18n/provider";
+import {
+  INTERNATIONAL_PHONE_MESSAGE,
+  internationalPhoneError,
+} from "@/lib/phone";
 import { publicStorePathPrefix } from "@/lib/public-store-prefix";
 
 const CURRENCY_LABEL: Record<(typeof STORE_CURRENCIES)[number], string> = {
@@ -42,11 +46,14 @@ export function CreateStoreForm({
   onSuccess,
   redirectOnSuccess = true,
   onDraft,
+  serverError = null,
 }: {
   onSuccess?: () => void;
   redirectOnSuccess?: boolean;
   /** Keep the draft in the wizard. The store row is written on the last step. */
   onDraft?: (draft: StoreDraft) => void;
+  /** Shown in place when a later step's save fails. Does not clear the fields. */
+  serverError?: string | null;
 } = {}) {
   const router = useRouter();
   const { t } = useI18n();
@@ -54,7 +61,19 @@ export function CreateStoreForm({
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!serverError) return;
+    if (serverError === INTERNATIONAL_PHONE_MESSAGE) {
+      setPhoneError(serverError);
+      setError(null);
+      return;
+    }
+    setError(serverError);
+    setPhoneError(null);
+  }, [serverError]);
 
   return (
     <form
@@ -66,13 +85,21 @@ export function CreateStoreForm({
           toStoreSlug(String(formData.get("slug") ?? "")) ||
           toStoreSlug(String(formData.get("name") ?? ""));
         setSlug(nextSlug);
+        const whatsapp = String(formData.get("whatsapp") ?? "");
+        const phoneProblem = internationalPhoneError(whatsapp);
+        if (phoneProblem) {
+          setPhoneError(phoneProblem);
+          setError(null);
+          return;
+        }
+        setPhoneError(null);
         setError(null);
         const draft: StoreDraft = {
           name: String(formData.get("name") ?? ""),
           slug: nextSlug,
           description: String(formData.get("description") ?? ""),
           currency: String(formData.get("currency") ?? "USD"),
-          whatsapp: String(formData.get("whatsapp") ?? ""),
+          whatsapp,
           defaultLocale: "ar",
         };
         if (onDraft) {
@@ -82,6 +109,15 @@ export function CreateStoreForm({
         startTransition(async () => {
           const result = await createStoreAction(draft);
           if (!result.ok) {
+            if (result.unauthenticated) {
+              router.push("/login");
+              return;
+            }
+            if (result.error === INTERNATIONAL_PHONE_MESSAGE) {
+              setPhoneError(result.error);
+              setError(null);
+              return;
+            }
             setError(result.error);
             return;
           }
@@ -140,7 +176,17 @@ export function CreateStoreForm({
           id="whatsapp"
           name="whatsapp"
           placeholder="+15550100"
+          aria-invalid={phoneError ? true : undefined}
+          aria-describedby={phoneError ? "whatsapp-error" : undefined}
+          onChange={() => {
+            if (phoneError) setPhoneError(null);
+          }}
         />
+        {phoneError ? (
+          <p id="whatsapp-error" className="mt-1 text-sm text-red-600" role="alert">
+            {phoneError}
+          </p>
+        ) : null}
       </div>
       <div>
         <Label htmlFor="currency">{t("currency")}</Label>

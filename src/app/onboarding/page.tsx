@@ -1,4 +1,5 @@
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
+import { isUnauthenticatedError } from "@/domain/errors";
 import { getServices } from "@/infrastructure/container";
 import { OnboardingWizard } from "@/features/onboarding/onboarding-wizard";
 
@@ -17,8 +18,10 @@ export default async function OnboardingPage() {
     const ensured = await services.auth.ensureProfile();
     sessionEmail = ensured.session.user.email;
     emailConfirmed = ensured.session.user.emailConfirmed;
-  } catch {
-    redirect("/login");
+  } catch (error) {
+    unstable_rethrow(error);
+    if (isUnauthenticatedError(error)) redirect("/login");
+    throw error;
   }
   if (!emailConfirmed) {
     redirect(`/auth/verify?email=${encodeURIComponent(sessionEmail)}`);

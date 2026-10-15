@@ -44,16 +44,15 @@ export default async function AdminPage() {
   return (
     <>
       {loadError ? (
-        <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p
+          className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800"
+          role="alert"
+        >
           {loadError}
-        </div>
+        </p>
       ) : null}
 
-      <AdminDashboard
-        overview={overview}
-        mode={mode}
-        serviceRoleConfigured={serviceRoleConfigured}
-      />
+      <AdminDashboard overview={overview} />
     </>
   );
 }

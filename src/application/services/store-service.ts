@@ -64,7 +64,7 @@ export class StoreService {
     }
 
     if (await this.stores.slugExists(data.slug, placeholder?.id)) {
-      throw new AppError("CONFLICT", "This store URL is already taken.");
+      throw new AppError("CONFLICT", "رابط المتجر مستخدم. اختر رابطًا آخر.");
     }
 
     const store = placeholder
