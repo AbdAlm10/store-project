@@ -20,6 +20,7 @@ import type {
 } from "@/application/ports/repositories";
 import { occupiesFreeSlot } from "@/domain/plans/access";
 import { assertEmailConfirmed } from "@/lib/email-verification";
+import { isReadyStore } from "@/lib/onboarding-store";
 import { isHiddenFromCustomers } from "@/lib/store-storefront-access";
 import { parseNavbarActions } from "@/lib/navbar-actions";
 import { createStoreSchema, updateStoreSchema } from "@/validations/schemas";
@@ -46,8 +47,13 @@ export class StoreService {
   async createStore(input: unknown): Promise<Store> {
     const { session } = await this.auth.requireProfile();
     assertEmailConfirmed(session.user);
+    const data = this.parseNewStore(input);
     const owned = await this.stores.listByUserId(session.user.id);
+    const placeholder = owned.find(
+      (store) => store.ownerId === session.user.id && !isReadyStore(store),
+    );
     for (const existing of owned) {
+      if (!isReadyStore(existing) || existing.id === placeholder?.id) continue;
       const current = await this.subscriptions.findByStoreId(existing.id).catch(() => null);
       if (occupiesFreeSlot(current)) {
         throw new AppError(
@@ -56,15 +62,61 @@ export class StoreService {
         );
       }
     }
+
+    if (await this.stores.slugExists(data.slug, placeholder?.id)) {
+      throw new AppError("CONFLICT", "This store URL is already taken.");
+    }
+
+    const store = placeholder
+      ? await this.stores.update(placeholder.id, {
+          name: data.name,
+          slug: data.slug,
+          description: data.description ?? null,
+          currency: data.currency,
+          whatsapp: data.whatsapp ?? null,
+          defaultLocale: "ar",
+        })
+      : await this.stores.create({
+          id: crypto.randomUUID(),
+          ownerId: session.user.id,
+          name: data.name,
+          slug: data.slug,
+          description: data.description ?? null,
+          logoUrl: null,
+          coverUrl: null,
+          status: "draft",
+          currency: data.currency,
+          phone: null,
+          whatsapp: data.whatsapp ?? null,
+          email: null,
+          location: null,
+          openingHours: null,
+          instagram: null,
+          facebook: null,
+          telegram: null,
+          tiktok: null,
+          primaryColor: "#58A379",
+          themeId: "clean",
+          // Omit until DB has theme_overrides (migration 00007). Default lives in SQL.
+          themeOverrides: null,
+          defaultLocale: "ar",
+          publishedAt: null,
+          suspendedAt: null,
+        });
+
+    await this.ensureOwnerRecords(store.id, session.user.id);
+    return store;
+  }
+
+  /** Validates the full onboarding payload before any store row is written. */
+  private parseNewStore(input: unknown) {
     const raw =
       input && typeof input === "object"
         ? (input as Record<string, unknown>)
         : {};
-
     const name = String(raw.name ?? "").trim();
     const requestedSlug = String(raw.slug ?? "").trim();
     const normalizedSlug = slugify(requestedSlug) || slugify(name);
-
     const data = createStoreSchema.parse({
       ...raw,
       name,
@@ -72,58 +124,30 @@ export class StoreService {
       description: emptyToUndefined(raw.description),
       whatsapp: emptyToUndefined(raw.whatsapp),
     });
-    const slug = data.slug;
-
-    if (!slug) {
+    if (!data.slug) {
       throw new AppError(
         "VALIDATION",
         "Store URL: use only lowercase letters, numbers, and hyphens (e.g. alnoor).",
       );
     }
+    return data;
+  }
 
-    if (await this.stores.slugExists(slug)) {
-      throw new AppError("CONFLICT", "This store URL is already taken.");
+  private async ensureOwnerRecords(storeId: string, userId: string) {
+    const membership = await this.members.findMembership(storeId, userId);
+    if (!membership) {
+      await this.members.create({
+        storeId,
+        userId,
+        role: "owner",
+      });
     }
-
-    const store = await this.stores.create({
-      id: crypto.randomUUID(),
-      ownerId: session.user.id,
-      name: data.name,
-      slug,
-      description: data.description ?? null,
-      logoUrl: null,
-      coverUrl: null,
-      status: "draft",
-      currency: data.currency,
-      phone: null,
-      whatsapp: data.whatsapp ?? null,
-      email: null,
-      location: null,
-      openingHours: null,
-      instagram: null,
-      facebook: null,
-      telegram: null,
-      tiktok: null,
-      primaryColor: "#58A379",
-      themeId: "clean",
-      // Omit until DB has theme_overrides (migration 00007). Default lives in SQL.
-      themeOverrides: null,
-      defaultLocale: "ar",
-      publishedAt: null,
-      suspendedAt: null,
-    });
-
-    await this.members.create({
-      storeId: store.id,
-      userId: session.user.id,
-      role: "owner",
-    });
-
+    const existing = await this.subscriptions.findByStoreId(storeId).catch(() => null);
+    if (existing) return;
     const trialEndsAt = new Date();
     trialEndsAt.setDate(trialEndsAt.getDate() + TRIAL_DAYS);
-
     await this.subscriptions.create({
-      storeId: store.id,
+      storeId,
       planId: "trial",
       billingPeriod: "monthly",
       status: "trialing",
@@ -132,8 +156,6 @@ export class StoreService {
       stripeCustomerId: null,
       stripeSubscriptionId: null,
     });
-
-    return store;
   }
 
   async getStoreForOwner(storeId: string): Promise<Store> {
@@ -147,7 +169,8 @@ export class StoreService {
 
   async listMyStores(): Promise<Store[]> {
     const { session } = await this.auth.requireProfile();
-    return this.stores.listByUserId(session.user.id);
+    const stores = await this.stores.listByUserId(session.user.id);
+    return stores.filter(isReadyStore);
   }
 
   async updateStore(storeId: string, input: unknown): Promise<Store> {

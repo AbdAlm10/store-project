@@ -185,6 +185,8 @@ describe("migration intent", () => {
       "utf8",
     );
     expect(sql).toContain("protect_profile_privileges");
+    expect(sql).toContain("auth.uid() is null");
+    expect(sql).toContain("supabase_auth_admin");
     expect(sql).toContain("new.platform_role := 'merchant'");
     expect(sql).toContain("new.platform_role := old.platform_role");
     expect(sql).toContain("revoke update (platform_role, suspended_at)");

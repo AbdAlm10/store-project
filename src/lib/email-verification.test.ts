@@ -4,6 +4,7 @@ import { MemoryRateLimiter } from "@/infrastructure/rate-limit/memory-rate-limit
 import {
   OTP_AR,
   assertEmailConfirmed,
+  emailSignupNeedsOtp,
   isAuthUserVerified,
   needsEmailVerificationRedirect,
   otpFailureMessage,
@@ -29,6 +30,28 @@ describe("email confirmation", () => {
       isAuthUserVerified({
         email_confirmed_at: null,
         identities: [{ provider: "email" }],
+      }),
+    ).toBe(false);
+  });
+
+  it("keeps an unconfirmed email signup on the OTP page", () => {
+    const emailUser = {
+      email_confirmed_at: null,
+      app_metadata: { provider: "email" },
+      identities: [{ provider: "email" }],
+    };
+    expect(emailSignupNeedsOtp({ hasSession: false, user: emailUser })).toBe(true);
+    expect(emailSignupNeedsOtp({ hasSession: true, user: emailUser })).toBe(true);
+    expect(
+      emailSignupNeedsOtp({
+        hasSession: true,
+        user: { email_confirmed_at: "2026-01-01T00:00:00Z", identities: [{ provider: "email" }] },
+      }),
+    ).toBe(false);
+    expect(
+      emailSignupNeedsOtp({
+        hasSession: true,
+        user: { email_confirmed_at: null, identities: [{ provider: "google" }] },
       }),
     ).toBe(false);
   });

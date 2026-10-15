@@ -166,10 +166,14 @@ export class MemoryStoreRepository implements StoreRepository {
   }
 
   async listByUserId(userId: string) {
-    const storeIds = [...db.members.values()]
-      .filter((member) => member.userId === userId)
-      .map((member) => member.storeId);
-    return storeIds
+    const storeIds = new Set<string>();
+    for (const member of db.members.values()) {
+      if (member.userId === userId) storeIds.add(member.storeId);
+    }
+    for (const store of db.stores.values()) {
+      if (store.ownerId === userId) storeIds.add(store.id);
+    }
+    return [...storeIds]
       .map((id) => db.stores.get(id))
       .filter((store): store is Store => Boolean(store));
   }

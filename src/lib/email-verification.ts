@@ -16,6 +16,22 @@ export function isAuthUserVerified(user: {
   return isEmailVerifiedAuthUser(user);
 }
 
+/**
+ * Email/password signup must open /auth/verify until the address is confirmed.
+ * A session alone is not enough: Supabase returns one only after confirmation,
+ * or immediately when "Confirm email" is turned off (the user is then confirmed).
+ */
+export function emailSignupNeedsOtp(input: {
+  hasSession: boolean;
+  user: {
+    email_confirmed_at?: string | null;
+    identities?: Identity[] | null;
+    app_metadata?: Record<string, unknown> | null;
+  };
+}): boolean {
+  return !input.hasSession || !isAuthUserVerified(input.user);
+}
+
 const GUARDED_PREFIXES = ["/dashboard", "/admin", "/onboarding"] as const;
 
 /** Unconfirmed sessions may only stay on the OTP page, not the merchant app. */
