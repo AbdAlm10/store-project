@@ -9,16 +9,18 @@ type HeaderEnv = {
  * production keeps 'unsafe-inline' for those framework scripts and does not
  * allow 'unsafe-eval'. React's dev refresh runtime still needs 'unsafe-eval'.
  * Sentry ingest is HTTPS. Merchant images are https or demo data URLs.
+ * Cloudflare Web Analytics loads beacon.min.js and posts the beacon to
+ * cloudflareinsights.com.
  */
 export function buildContentSecurityPolicy(nodeEnv: string | undefined): string {
   const connectSrc =
     nodeEnv === "production"
-      ? "connect-src 'self' https: wss:"
-      : "connect-src 'self' https: http: wss: ws:";
+      ? "connect-src 'self' https: wss: https://cloudflareinsights.com"
+      : "connect-src 'self' https: http: wss: ws: https://cloudflareinsights.com";
   const scriptSrc =
     nodeEnv === "development"
-      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-      : "script-src 'self' 'unsafe-inline'";
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com"
+      : "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com";
   return [
     "default-src 'self'",
     "base-uri 'self'",
