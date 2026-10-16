@@ -167,7 +167,10 @@ describe("response headers", () => {
     const prodCsp = prod.find(
       (header) => header.key === "Content-Security-Policy",
     )?.value;
-    expect(prodCsp).toContain("script-src 'self' 'unsafe-inline'");
+    expect(prodCsp).toContain(
+      "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
+    );
+    expect(prodCsp).toContain("https://cloudflareinsights.com");
     expect(prodCsp).not.toContain("unsafe-eval");
     const devCsp = dev.find(
       (header) => header.key === "Content-Security-Policy",

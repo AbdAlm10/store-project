@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
+import Script from "next/script";
 import { appConfig } from "@/config/app";
 import { DEFAULT_LOCALE } from "@/i18n/config";
 import { t } from "@/i18n/messages";
@@ -58,6 +59,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <NavigationProgress />
           {children}
         </I18nProvider>
+        {process.env.NODE_ENV === "production" ? (
+          <Script
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            strategy="afterInteractive"
+            data-cf-beacon='{"token": "ed5adcacb1a64c5bb3bbb228354a3346"}'
+          />
+        ) : null}
       </body>
     </html>
   );
