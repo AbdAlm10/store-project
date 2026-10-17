@@ -1,5 +1,5 @@
 import { StorefrontCart } from "@/components/storefront/storefront-cart";
-import { showsDukkanStorefrontBadge } from "@/domain/storefront/badge";
+import { showsCartOrderPromo } from "@/domain/storefront/badge";
 import type { PopularProduct } from "@/features/cart/cart-context";
 import { productNeedsOptions } from "@/lib/orders/checkout";
 import { isReservedStoreSlug } from "@/lib/reserved-slugs";
@@ -48,7 +48,7 @@ export default async function StoreSlugLayout({
 
   let showPromo = true;
   try {
-    showPromo = showsDukkanStorefrontBadge(await getStorefrontPlanId(store.id));
+    showPromo = showsCartOrderPromo(await getStorefrontPlanId(store.id));
   } catch {
     showPromo = true;
   }
