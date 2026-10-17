@@ -1,4 +1,5 @@
 import { safeHttpOrigin } from "@/lib/http-url";
+import { netlifyPreviewAppOrigin } from "@/lib/netlify-app-url";
 
 /**
  * Public site origin (no path). Used for OAuth redirectTo and metadata.
@@ -21,7 +22,14 @@ const LOCAL_DEV_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"];
 export function allowedAppOrigins(
   env: NodeJS.ProcessEnv = process.env,
 ): string[] {
-  const primary = normalizePublicAppOrigin(env.NEXT_PUBLIC_APP_URL);
+  // Direct process.env access is inlined at build. Reading env.NEXT_PUBLIC_APP_URL
+  // on the default object would see Netlify's runtime value, which stays production.
+  const preview = netlifyPreviewAppOrigin(env);
+  const primary = preview
+    ? preview
+    : env === process.env
+      ? normalizePublicAppOrigin(process.env.NEXT_PUBLIC_APP_URL)
+      : normalizePublicAppOrigin(env.NEXT_PUBLIC_APP_URL);
   const extras = (env.OAUTH_ALLOWED_ORIGINS ?? "")
     .split(",")
     .map((item) => safeHttpOrigin(item.trim()))

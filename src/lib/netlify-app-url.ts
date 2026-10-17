@@ -7,12 +7,12 @@ const PREVIEW_CONTEXTS = new Set(["deploy-preview", "branch-deploy"]);
  * deploys use that origin as the public app URL. Production keeps
  * NEXT_PUBLIC_APP_URL. The request Host header is never read.
  */
-export function netlifyPreviewAppOrigin(env: {
-  CONTEXT?: string;
-  DEPLOY_PRIME_URL?: string;
-}): string | null {
-  if (!env.CONTEXT || !PREVIEW_CONTEXTS.has(env.CONTEXT)) return null;
-  const origin = safeHttpOrigin(env.DEPLOY_PRIME_URL);
+export function netlifyPreviewAppOrigin(
+  env: { CONTEXT?: string; DEPLOY_PRIME_URL?: string } | NodeJS.ProcessEnv,
+): string | null {
+  const source = env as { CONTEXT?: string; DEPLOY_PRIME_URL?: string };
+  if (!source.CONTEXT || !PREVIEW_CONTEXTS.has(source.CONTEXT)) return null;
+  const origin = safeHttpOrigin(source.DEPLOY_PRIME_URL);
   if (!origin?.startsWith("https://")) return null;
   return origin;
 }
