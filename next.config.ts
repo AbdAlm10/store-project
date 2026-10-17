@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs/config";
 import { buildSecurityHeaders } from "./src/lib/content-security-policy";
+import { applyNetlifyPreviewAppUrl } from "./src/lib/netlify-app-url";
+
+applyNetlifyPreviewAppUrl();
 
 /**
  * Merchant photos render through SafeImage with `unoptimized`, so the browser

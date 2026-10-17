@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 import { useI18n } from "@/i18n/provider";
@@ -38,13 +37,13 @@ export function GoogleAuthButton() {
 
   return (
     <div className="space-y-3">
-      <Link
+      <a
         href="/auth/google"
         className={cn(buttonVariants({ variant: "outline", size: "md" }), "w-full")}
       >
         <GoogleIcon className="h-5 w-5 shrink-0" />
         {t("continueWithGoogle")}
-      </Link>
+      </a>
     </div>
   );
 }

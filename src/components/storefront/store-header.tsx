@@ -1,4 +1,5 @@
 import { StoreNavActions } from "@/components/storefront/store-nav-actions";
+import { CartHeaderButton } from "@/features/cart/cart-chrome";
 import { SafeImage } from "@/components/ui/safe-image";
 import type { Store } from "@/domain/types/entities";
 import { resolveNavbarActions } from "@/lib/navbar-actions";
@@ -87,7 +88,10 @@ export function StoreNav({
           </div>
         </Link>
 
-        <StoreNavActions store={store} actions={actions} locked={locked} />
+        <div className="flex shrink-0 items-center gap-1">
+          <CartHeaderButton />
+          <StoreNavActions store={store} actions={actions} locked={locked} />
+        </div>
       </div>
     </nav>
   );
