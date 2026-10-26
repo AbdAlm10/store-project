@@ -10,13 +10,14 @@ import { getServices } from "@/infrastructure/container";
 import { claimEarlyBirdForMerchant } from "@/infrastructure/billing/early-bird-ledger";
 import { buildSubscriptionWhatsAppUrl } from "@/lib/social/sharing";
 import { isSubscriptionUsable } from "@/domain/rules/store-rules";
+import { SUBSCRIPTION_STATUS_AR } from "@/features/admin/labels";
 import { CopyReferralLink } from "@/features/dashboard/copy-referral-link";
 import { cn } from "@/lib/utils/cn";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Subscription",
+  title: "الاشتراك",
   robots: { index: false, follow: false },
 };
 
@@ -96,9 +97,11 @@ export default async function SubscriptionPage() {
         <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
           {planLabel}
         </p>
-        <p className="mt-2 text-sm capitalize text-slate-500">
+        <p className="mt-2 text-sm text-slate-500">
           {t("statusLabel", {
-            status: subscriptionIsUsable ? subscription.status : t("expired"),
+            status: subscriptionIsUsable
+              ? (SUBSCRIPTION_STATUS_AR[subscription.status] ?? subscription.status)
+              : t("expired"),
           })}
         </p>
         {subscription.trialEndsAt && subscription.planId === "trial" ? (

@@ -6,7 +6,7 @@ import { OnboardingWizard } from "@/features/onboarding/onboarding-wizard";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Create your store",
+  title: "أنشئ متجرك",
   robots: { index: false, follow: false },
 };
 

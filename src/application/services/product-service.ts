@@ -7,6 +7,7 @@ import {
 import type {
   Paginated,
   Product,
+  ProductVariant,
   ProductWithMedia,
   Store,
 } from "@/domain/types/entities";
@@ -16,7 +17,11 @@ import type {
   StoreMemberRepository,
   StoreRepository,
 } from "@/application/ports/repositories";
-import { getPlan, type PlanLimits } from "@/config/plans";
+import { getPlan, isUnlimited, type PlanLimits } from "@/config/plans";
+import {
+  countOptionGroups,
+  optionGroupLimitMessage,
+} from "@/lib/option-limits";
 import { visibleProductIds } from "@/domain/plans/access";
 import { productSchema } from "@/validations/schemas";
 import type { AuthService } from "./auth-service";
@@ -170,6 +175,7 @@ export class ProductService {
         `Your plan allows up to ${maxImages} images per product.`,
       );
     }
+    await this.assertProductVariantsAllowed(storeId, data.variants);
 
     const status = data.status ?? "draft";
     const product = await this.products.create({
@@ -190,37 +196,41 @@ export class ProductService {
       clientRequestId: requestId || null,
     });
 
-    if (data.images?.length) {
-      await this.products.replaceImages(
-        product.id,
-        storeId,
-        data.images.map((image) => ({
-          productId: product.id,
+    try {
+      if (data.images?.length) {
+        await this.products.replaceImages(
+          product.id,
           storeId,
-          url: image.url,
-          alt: image.alt ?? null,
-          sortOrder: image.sortOrder,
-          width: null,
-          height: null,
-        })),
-      );
-    }
+          data.images.map((image) => ({
+            productId: product.id,
+            storeId,
+            url: image.url,
+            alt: image.alt ?? null,
+            sortOrder: image.sortOrder,
+            width: null,
+            height: null,
+          })),
+        );
+      }
 
-    if (data.variants?.length) {
-      await this.entitlements.assertOptionSchemaAllowed(storeId, data.variants.length);
-      await this.products.replaceVariants(
-        product.id,
-        storeId,
-        data.variants.map((variant) => ({
-          productId: product.id,
+      if (data.variants?.length) {
+        await this.products.replaceVariants(
+          product.id,
           storeId,
-          name: variant.name,
-          options: variant.options,
-          price: variant.price ?? null,
-          stock: variant.stock ?? null,
-          sku: variant.sku ?? null,
-        })),
-      );
+          data.variants.map((variant) => ({
+            productId: product.id,
+            storeId,
+            name: variant.name,
+            options: variant.options,
+            price: variant.price ?? null,
+            stock: variant.stock ?? null,
+            sku: variant.sku ?? null,
+          })),
+        );
+      }
+    } catch (error) {
+      await this.products.delete(product.id).catch(() => undefined);
+      throw error;
     }
 
     return product;
@@ -251,6 +261,9 @@ export class ProductService {
         );
       }
     }
+    if (data.variants) {
+      await this.assertProductVariantsAllowed(storeId, data.variants);
+    }
     const patch: Partial<Product> = {};
 
     if (data.name !== undefined) patch.name = data.name;
@@ -274,44 +287,49 @@ export class ProductService {
       }
     }
 
-    const updated = await this.products.update(productId, patch);
-
-    if (data.images) {
-      await this.products.replaceImages(
-        productId,
-        storeId,
-        data.images.map((image) => ({
+    let variantsApplied = false;
+    try {
+      if (data.variants) {
+        await this.replaceVariantsSafely(
           productId,
           storeId,
-          url: image.url,
-          alt: image.alt ?? null,
-          sortOrder: image.sortOrder,
-          width: null,
-          height: null,
-        })),
-      );
-    }
-
-    if (data.variants) {
-      if (data.variants.length > 0) {
-        await this.entitlements.assertOptionSchemaAllowed(storeId, data.variants.length);
+          data.variants.map((variant) => ({
+            productId,
+            storeId,
+            name: variant.name,
+            options: variant.options,
+            price: variant.price ?? null,
+            stock: variant.stock ?? null,
+            sku: variant.sku ?? null,
+          })),
+          existing.variants,
+        );
+        variantsApplied = true;
       }
-      await this.products.replaceVariants(
-        productId,
-        storeId,
-        data.variants.map((variant) => ({
+
+      if (data.images) {
+        await this.products.replaceImages(
           productId,
           storeId,
-          name: variant.name,
-          options: variant.options,
-          price: variant.price ?? null,
-          stock: variant.stock ?? null,
-          sku: variant.sku ?? null,
-        })),
-      );
-    }
+          data.images.map((image) => ({
+            productId,
+            storeId,
+            url: image.url,
+            alt: image.alt ?? null,
+            sortOrder: image.sortOrder,
+            width: null,
+            height: null,
+          })),
+        );
+      }
 
-    return updated;
+      return await this.products.update(productId, patch);
+    } catch (error) {
+      if (variantsApplied) {
+        await this.restoreVariants(productId, storeId, existing.variants);
+      }
+      throw error;
+    }
   }
 
   async delete(storeId: string, productId: string): Promise<void> {
@@ -356,6 +374,61 @@ export class ProductService {
         sku: variant.sku,
       })),
     });
+  }
+
+  /**
+   * Groups (لون، مقاس), not combinations. Rejects before any product write.
+   * Free (limit 0) rejects every variant row, matching the database trigger.
+   */
+  private async assertProductVariantsAllowed(
+    storeId: string,
+    variants: Array<{ options: Record<string, string> }> | undefined,
+  ): Promise<void> {
+    if (!variants?.length) return;
+    const limit = (await this.entitlements.getLimits(storeId)).maxOptionsPerProduct;
+    if (isUnlimited(limit)) return;
+    const groups = countOptionGroups(variants);
+    if (groups > limit || limit <= 0) {
+      throw new AppError("LIMIT_REACHED", optionGroupLimitMessage(limit), {
+        details: { limit, groups },
+      });
+    }
+  }
+
+  private async replaceVariantsSafely(
+    productId: string,
+    storeId: string,
+    next: Array<Omit<ProductVariant, "id">>,
+    previous: ProductVariant[],
+  ): Promise<void> {
+    try {
+      await this.products.replaceVariants(productId, storeId, next);
+    } catch (error) {
+      await this.restoreVariants(productId, storeId, previous);
+      throw error;
+    }
+  }
+
+  private async restoreVariants(
+    productId: string,
+    storeId: string,
+    previous: ProductVariant[],
+  ): Promise<void> {
+    await this.products
+      .replaceVariants(
+        productId,
+        storeId,
+        previous.map((variant) => ({
+          productId,
+          storeId,
+          name: variant.name,
+          options: variant.options,
+          price: variant.price,
+          stock: variant.stock,
+          sku: variant.sku,
+        })),
+      )
+      .catch(() => undefined);
   }
 
   private async publicLimits(storeId: string): Promise<PlanLimits> {

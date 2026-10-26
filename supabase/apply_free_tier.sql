@@ -282,6 +282,8 @@ begin
     if v_plan = 'free' then
       raise exception 'plan catalog limit reached' using errcode = '23514';
     end if;
+    -- Basic/trial group cap is in supabase/apply_option_group_limit.sql.
+    -- Re-pasting this file drops that cap; paste the newer file again after.
     return new;
   else
     return new;

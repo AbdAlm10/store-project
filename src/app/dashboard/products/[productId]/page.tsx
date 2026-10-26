@@ -8,7 +8,7 @@ import { createTranslator } from "@/i18n/messages";
 type Props = PageProps<"/dashboard/products/[productId]">;
 
 export const metadata = {
-  title: "Edit product",
+  title: "تعديل المنتج",
   robots: { index: false, follow: false },
 };
 
@@ -36,6 +36,11 @@ export default async function EditProductPage({ params }: Props) {
         productId={product.id}
         categories={categories}
         maxImagesPerProduct={limits.maxImagesPerProduct}
+        maxOptionsPerProduct={
+          Number.isFinite(limits.maxOptionsPerProduct)
+            ? limits.maxOptionsPerProduct
+            : null
+        }
         variantsEnabled={limits.maxOptionsPerProduct !== 0}
         initial={{
           name: product.name,

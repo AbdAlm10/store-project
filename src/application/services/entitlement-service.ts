@@ -7,6 +7,7 @@ import {
 } from "@/config/plans";
 import type { ThemeColorKey } from "@/config/themes";
 import { AppError } from "@/domain/errors";
+import { optionGroupLimitMessage } from "@/lib/option-limits";
 import type { Subscription } from "@/domain/types/entities";
 import {
   effectivePlanId as resolveEffectivePlanId,
@@ -71,11 +72,9 @@ export class EntitlementService {
     const plan = getPlan(resolveEffectivePlanId(sub));
     const limit = plan.limits.maxOptionsPerProduct;
     if (!isUnlimited(limit) && optionCount > limit) {
-      throw new AppError(
-        "LIMIT_REACHED",
-        `Your ${plan.name} plan allows up to ${limit} options per product.`,
-        { details: { limit } },
-      );
+      throw new AppError("LIMIT_REACHED", optionGroupLimitMessage(limit), {
+        details: { limit },
+      });
     }
   }
 

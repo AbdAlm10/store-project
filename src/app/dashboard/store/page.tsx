@@ -7,7 +7,7 @@ import { getServices } from "@/infrastructure/container";
 import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Storefront",
+  title: "واجهة المتجر",
   robots: { index: false, follow: false },
 };
 

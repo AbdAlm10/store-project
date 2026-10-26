@@ -40,7 +40,7 @@ import { claimEarlyBirdForMerchant } from "@/infrastructure/billing/early-bird-l
 import { buildSubscriptionWhatsAppUrl } from "@/lib/social/sharing";
 
 export const metadata = {
-  title: "Dashboard",
+  title: "لوحة التحكم",
   robots: { index: false, follow: false },
 };
 

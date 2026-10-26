@@ -49,7 +49,7 @@ export function EmptyState({
 }
 
 export function ErrorState({
-  title = "Something went wrong",
+  title = "حدث خطأ ما",
   description,
 }: {
   title?: string;
