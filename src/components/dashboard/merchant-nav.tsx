@@ -131,13 +131,18 @@ export function MerchantNav({
   }, [compact, open]);
 
   const navBody = (
-    <div className={cn("space-y-4", embedded ? "mt-1" : "mt-1")}>
+    <div className={cn(compact ? "space-y-1" : "space-y-4", "mt-0.5")}>
       {groups.map((group) => (
         <div key={group.titleKey}>
-          <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+          <p
+            className={cn(
+              "px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400",
+              compact ? "mb-0.5" : "mb-1.5",
+            )}
+          >
             {t(group.titleKey)}
           </p>
-          <ul className="space-y-0.5">
+          <ul className={compact ? "space-y-0" : "space-y-0.5"}>
             {group.items.map((item) => {
               const active = isActive(pathname, item.href);
               const loading = pendingHref === item.href && !active;
@@ -152,7 +157,10 @@ export function MerchantNav({
                       disabled
                       aria-disabled="true"
                       title={t("subscriptionExpiredMessage")}
-                      className="group relative flex w-full cursor-not-allowed items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-400 opacity-70"
+                      className={cn(
+                        "group relative flex w-full cursor-not-allowed items-center gap-2.5 rounded-2xl px-3 text-sm font-medium text-slate-400 opacity-70",
+                        compact ? "py-1.5" : "py-2.5",
+                      )}
                     >
                       <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
                       <span className="min-w-0 flex-1 truncate text-start">{t(item.labelKey)}</span>
@@ -168,7 +176,8 @@ export function MerchantNav({
                         setPendingHref(item.href);
                       }}
                       className={cn(
-                        "group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-colors",
+                        "group relative flex items-center gap-2.5 rounded-2xl px-3 text-sm font-medium transition-colors",
+                        compact ? "py-1.5" : "py-2.5",
                         active
                           ? "bg-brand-50 text-brand-900"
                           : "text-slate-500 hover:bg-slate-50 hover:text-slate-800",
@@ -229,7 +238,7 @@ export function MerchantNav({
             />
             <nav
               id="merchant-nav"
-              className="fixed inset-x-3 top-[3.75rem] z-[60] max-h-[min(70dvh,28rem)] overflow-y-auto overscroll-contain rounded-2xl border border-slate-100 bg-white p-3 shadow-[0_20px_50px_-20px_rgba(15,23,42,0.45)] ys-scrollbar-none"
+              className="fixed inset-x-3 top-[3.75rem] z-[60] max-h-[calc(100dvh-4.5rem)] overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl border border-slate-100 bg-white p-2 shadow-[0_20px_50px_-20px_rgba(15,23,42,0.45)]"
             >
               {navBody}
             </nav>

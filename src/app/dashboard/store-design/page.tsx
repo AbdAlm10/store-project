@@ -8,7 +8,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Store design",
+  title: "تصميم المتجر",
   robots: { index: false, follow: false },
 };
 

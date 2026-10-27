@@ -13,6 +13,7 @@ import {
   buildVariantMatrix,
   pruneVariantsToSchema,
 } from "@/lib/category-options";
+import { countOptionGroups } from "@/lib/option-limits";
 import {
   countWords,
   MIN_PRODUCT_DESCRIPTION_WORDS,
@@ -34,6 +35,8 @@ type ProductFormProps = {
   productId?: string;
   /** Plan limit for product images (defaults fail-closed to Basic). */
   maxImagesPerProduct?: number;
+  /** Option groups, not combinations. null means unlimited. */
+  maxOptionsPerProduct?: number | null;
   variantsEnabled?: boolean;
   initial?: {
     name: string;
@@ -84,6 +87,7 @@ export function ProductForm({
   categories,
   productId,
   maxImagesPerProduct = 3,
+  maxOptionsPerProduct = 3,
   variantsEnabled = true,
   initial,
 }: ProductFormProps) {
@@ -140,7 +144,7 @@ export function ProductForm({
     [optionSchema],
   );
 
-  // Drop variant rows that no longer match the category Color/Size options.
+  // Drop variant rows that no longer match the category option groups.
   useEffect(() => {
     if (!optionSchema.length) return;
     setVariants((list) => {
@@ -233,6 +237,15 @@ export function ProductForm({
           setError(
             t("descriptionTooShort", { min: MIN_PRODUCT_DESCRIPTION_WORDS }),
           );
+          return;
+        }
+        if (
+          payload.variants &&
+          maxOptionsPerProduct != null &&
+          (maxOptionsPerProduct <= 0 ||
+            countOptionGroups(payload.variants) > maxOptionsPerProduct)
+        ) {
+          setError(t("optionLimitReached", { count: maxOptionsPerProduct }));
           return;
         }
 
@@ -407,6 +420,15 @@ export function ProductForm({
               size="sm"
               onClick={() => {
                 const axes = optionSchema.filter((opt) => opt.values.length > 0);
+                if (
+                  maxOptionsPerProduct != null &&
+                  axes.length > maxOptionsPerProduct
+                ) {
+                  setError(
+                    t("optionLimitReached", { count: maxOptionsPerProduct }),
+                  );
+                  return;
+                }
                 const missing = axes.some(
                   (opt) => (selectedLabels[opt.name] ?? []).length === 0,
                 );

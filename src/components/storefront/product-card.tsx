@@ -301,7 +301,7 @@ export function ProductCard({
           <>
             <button
               type="button"
-              aria-label="Previous image"
+              aria-label={t("previousImage")}
               onClick={(event) => stepImage(-1, event)}
               className="absolute start-1.5 top-1/2 z-3 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white opacity-80 backdrop-blur-[2px] transition hover:bg-black/50 hover:opacity-100 sm:h-7 sm:w-7 sm:opacity-0 sm:group-hover/card:opacity-90"
             >
@@ -309,7 +309,7 @@ export function ProductCard({
             </button>
             <button
               type="button"
-              aria-label="Next image"
+              aria-label={t("nextImage")}
               onClick={(event) => stepImage(1, event)}
               className="absolute end-1.5 top-1/2 z-3 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white opacity-80 backdrop-blur-[2px] transition hover:bg-black/50 hover:opacity-100 sm:h-7 sm:w-7 sm:opacity-0 sm:group-hover/card:opacity-90"
             >

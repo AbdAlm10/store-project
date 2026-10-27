@@ -137,7 +137,7 @@ export function CreateStoreForm({
           id="name"
           name="name"
           required
-          placeholder="Al Noor Store"
+          placeholder="متجر النور"
           value={name}
           onChange={(event) => {
             const nextName = event.target.value;

@@ -1,4 +1,5 @@
 import type { Locale } from "@/i18n/config";
+import { OPTION_GROUP_LIMIT_TEMPLATE } from "@/lib/option-limits";
 
 const ar = {
   brand: "دكّان",
@@ -50,6 +51,8 @@ const ar = {
   emptyMatchingHint: "جرّب بحثًا آخر أو أزل عوامل التصفية.",
   allCategories: "الكل",
   featured: "مميز",
+  previousImage: "الصورة السابقة",
+  nextImage: "الصورة التالية",
   addToFavorites: "أضف للمفضلة",
   removeFromFavorites: "إزالة من المفضلة",
   favorites: "المفضلة",
@@ -357,8 +360,7 @@ const ar = {
     "خطتك تسمح حتى {count} صور لكل منتج. الصورة الأولى إلزامية وهي الرئيسية.",
   categoryLimitReached:
     "خطتك تسمح بـ {count} تصنيفات فقط. احذف تصنيفًا أو رقِّ إلى Pro.",
-  optionLimitReached:
-    "خطتك تسمح بـ {count} اختيارات لكل منتج فقط. رقِّ إلى Pro للمزيد.",
+  optionLimitReached: OPTION_GROUP_LIMIT_TEMPLATE,
   productLimitReached:
     "خطتك تسمح بـ {count} منتج فقط. احذف منتجًا أو رقِّ إلى Pro.",
   sectionVisibility: "الظهور",
@@ -430,7 +432,7 @@ const ar = {
   categoryIconSearchAction: "أيقونة",
   categoryPasteUrlAction: "رابط صورة",
   categoryUploadAction: "رفع صورة من الجهاز",
-  iconSearchPlaceholder: "ابحث عن أيقونة… مثل ملابس أو shoes",
+  iconSearchPlaceholder: "ابحث عن أيقونة… مثل ملابس أو أحذية",
   searchingIcons: "جاري البحث عن الأيقونات…",
   noIconsFound: "لا توجد أيقونات. جرّب كلمة أخرى.",
   iconSearchFailed: "تعذر البحث عن الأيقونات. حاول مجددًا.",

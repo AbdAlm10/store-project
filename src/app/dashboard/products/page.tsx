@@ -4,7 +4,7 @@ import { ProductsWorkspace } from "@/features/products/products-workspace";
 import { getRequestLocale } from "@/i18n/get-locale";
 
 export const metadata = {
-  title: "Products",
+  title: "المنتجات",
   robots: { index: false, follow: false },
 };
 

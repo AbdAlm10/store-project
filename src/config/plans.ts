@@ -9,6 +9,7 @@ export type PlanLimits = {
   maxProducts: number;
   maxImagesPerProduct: number;
   maxCategories: number;
+  /** Option groups on one product (لون، مقاس), not variant combinations. */
   maxOptionsPerProduct: number;
   maxNavActions: number;
   advancedAnalytics: boolean;
@@ -46,7 +47,8 @@ export const BASIC_THEME_COLOR_KEYS = [
 /**
  * Centralized plan catalog. EntitlementService reads from here —
  * never hardcode limits in UI or random services.
- * The SQL trigger in supabase/apply_pricing.sql must use the same counts.
+ * SQL in supabase/apply_pricing.sql and supabase/apply_option_group_limit.sql
+ * must use the same counts. maxOptionsPerProduct counts groups, not combinations.
  */
 const FREE_LIMITS: PlanLimits = {
   maxProducts: 10,

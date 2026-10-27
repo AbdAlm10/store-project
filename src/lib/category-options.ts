@@ -12,19 +12,19 @@ export const OPTION_PRESETS: Array<{
   values: Array<{ label: string; hex?: string | null }>;
 }> = [
   {
-    name: "Color",
+    name: "لون",
     kind: "color",
     values: [
-      { label: "Black", hex: "#111827" },
-      { label: "White", hex: "#F8FAFC" },
-      { label: "Red", hex: "#DC2626" },
-      { label: "Blue", hex: "#2563EB" },
-      { label: "Green", hex: "#16A34A" },
-      { label: "Beige", hex: "#D6C3A8" },
+      { label: "أسود", hex: "#111827" },
+      { label: "أبيض", hex: "#F8FAFC" },
+      { label: "أحمر", hex: "#DC2626" },
+      { label: "أزرق", hex: "#2563EB" },
+      { label: "أخضر", hex: "#16A34A" },
+      { label: "بيج", hex: "#D6C3A8" },
     ],
   },
   {
-    name: "Size",
+    name: "مقاس",
     kind: "text",
     values: [
       { label: "XS" },
@@ -36,18 +36,18 @@ export const OPTION_PRESETS: Array<{
     ],
   },
   {
-    name: "Material",
+    name: "الخامة",
     kind: "text",
     values: [
-      { label: "Cotton" },
-      { label: "Leather" },
-      { label: "Metal" },
-      { label: "Wood" },
-      { label: "Plastic" },
+      { label: "قطن" },
+      { label: "جلد" },
+      { label: "معدن" },
+      { label: "خشب" },
+      { label: "بلاستيك" },
     ],
   },
   {
-    name: "Storage",
+    name: "السعة",
     kind: "text",
     values: [
       { label: "64GB" },
@@ -58,22 +58,22 @@ export const OPTION_PRESETS: Array<{
     ],
   },
   {
-    name: "Style",
+    name: "النمط",
     kind: "text",
     values: [
-      { label: "Classic" },
-      { label: "Modern" },
-      { label: "Sport" },
-      { label: "Casual" },
+      { label: "كلاسيكي" },
+      { label: "عصري" },
+      { label: "رياضي" },
+      { label: "كاجوال" },
     ],
   },
   {
-    name: "Weight",
+    name: "الوزن",
     kind: "text",
     values: [
-      { label: "Light" },
-      { label: "Medium" },
-      { label: "Heavy" },
+      { label: "خفيف" },
+      { label: "متوسط" },
+      { label: "ثقيل" },
     ],
   },
 ];

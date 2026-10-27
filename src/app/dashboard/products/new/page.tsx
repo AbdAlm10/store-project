@@ -6,7 +6,7 @@ import { getRequestLocale } from "@/i18n/get-locale";
 import { createTranslator } from "@/i18n/messages";
 
 export const metadata = {
-  title: "New product",
+  title: "منتج جديد",
   robots: { index: false, follow: false },
 };
 
@@ -27,6 +27,11 @@ export default async function NewProductPage() {
         storeId={store.id}
         categories={categories}
         maxImagesPerProduct={limits.maxImagesPerProduct}
+        maxOptionsPerProduct={
+          Number.isFinite(limits.maxOptionsPerProduct)
+            ? limits.maxOptionsPerProduct
+            : null
+        }
         variantsEnabled={limits.maxOptionsPerProduct !== 0}
       />
     </div>

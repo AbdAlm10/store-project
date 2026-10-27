@@ -6,7 +6,7 @@ import { getServices } from "@/infrastructure/container";
 import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Categories",
+  title: "التصنيفات",
   robots: { index: false, follow: false },
 };
 
