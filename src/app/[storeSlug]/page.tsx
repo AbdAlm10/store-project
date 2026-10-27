@@ -166,24 +166,24 @@ export default async function PublicStorePage({ params, searchParams }: Props) {
       </div>
 
       <footer
-        className="mt-auto border-t py-2 text-center"
+        className="mt-auto px-4 pt-8 text-center"
         style={{
-          borderColor: "color-mix(in srgb, var(--store-border) 70%, transparent)",
-          background: "var(--store-surface)",
+          background: "var(--store-bg)",
           color: "var(--store-muted)",
+          paddingBottom: "max(1.75rem, env(safe-area-inset-bottom))",
         }}
       >
         <p
-          className="text-xs font-semibold tracking-tight"
-          style={{
-            color: "var(--store-text)",
-            fontFamily: "var(--store-font-display)",
-          }}
+          className="text-xs font-medium tracking-tight"
+          style={{ color: "var(--store-muted)" }}
         >
           {store.name}
         </p>
-        <div className="mt-1.5 flex justify-center">
-          <StorefrontPlanCredit planId={await getStorefrontPlanId(store.id)} />
+        <div className="mt-1 flex justify-center">
+          <StorefrontPlanCredit
+            planId={await getStorefrontPlanId(store.id)}
+            className="text-xs font-normal"
+          />
         </div>
       </footer>
     </div>

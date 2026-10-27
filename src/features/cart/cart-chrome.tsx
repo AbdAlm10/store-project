@@ -40,15 +40,61 @@ export function CartHeaderButton() {
   );
 }
 
+/**
+ * The free-plan badge is an iframe (#nl-badge-frame) fixed to the bottom-right,
+ * about 92px tall. netlify.toml cannot remove it. Measure it so the bar sits
+ * above the iframe, and drop the extra gap when the badge is off.
+ */
+function useNetlifyBadgeClearance(): number {
+  const [extra, setExtra] = useState(0);
+
+  useEffect(() => {
+    function measure() {
+      const frame = document.getElementById("nl-badge-frame");
+      if (!(frame instanceof HTMLElement)) {
+        setExtra(0);
+        return;
+      }
+      const rect = frame.getBoundingClientRect();
+      setExtra(rect.height > 8 ? Math.ceil(rect.height) : 0);
+    }
+
+    measure();
+    const observer = new MutationObserver(measure);
+    observer.observe(document.body, { childList: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+
+  return extra;
+}
+
+function cartBottomOffset(badgeClearance: number): string {
+  return `calc(env(safe-area-inset-bottom, 0px) + 0.75rem + ${badgeClearance}px)`;
+}
+
 export function CartSpacer() {
   const cart = useCart();
+  const badgeClearance = useNetlifyBadgeClearance();
   if (cart.count === 0 || cart.open) return null;
-  return <div className="h-20 md:hidden" aria-hidden />;
+  return (
+    <div
+      className="md:hidden"
+      style={{
+        height: `calc(${cartBottomOffset(badgeClearance)} + 4.25rem)`,
+      }}
+      aria-hidden
+    />
+  );
 }
 
 export function CartBottomBar() {
   const cart = useCart();
   const { t } = useI18n();
+  const badgeClearance = useNetlifyBadgeClearance();
   if (cart.count === 0 || cart.open) return null;
 
   const totals = new Map<string, number>();
@@ -61,14 +107,28 @@ export function CartBottomBar() {
   const noun = cart.count === 1 ? "منتج" : cart.count === 2 ? "منتجان" : "منتجات";
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden">
+    <div
+      className="pointer-events-none fixed inset-x-0 z-40 px-3 md:hidden"
+      style={{ bottom: cartBottomOffset(badgeClearance) }}
+    >
       <button
         type="button"
         onClick={() => cart.setOpen(true)}
-        className="pointer-events-auto flex h-12 w-full items-center justify-center rounded-full bg-brand-600 px-4 text-sm font-bold text-white shadow-[0_12px_30px_-16px_rgba(63,133,96,0.9)]"
+        className="pointer-events-auto flex w-full items-center gap-3 rounded-full bg-brand-600 px-4 py-2.5 text-white shadow-[0_12px_30px_-16px_rgba(63,133,96,0.9)]"
       >
-        <span className="min-w-0 truncate">
-          {t("cartTitle")} · {cart.count} {noun} · {totalLabel} ← {t("cartCheckout")}
+        <span className="min-w-0 flex-1 text-start">
+          <span className="block truncate text-xs font-semibold opacity-90">
+            {t("cartTitle")} · {cart.count} {noun}
+          </span>
+          <span
+            dir="ltr"
+            className="mt-0.5 block whitespace-nowrap text-end text-sm font-bold leading-none tabular-nums"
+          >
+            {totalLabel}
+          </span>
+        </span>
+        <span className="shrink-0 whitespace-nowrap text-sm font-bold">
+          ← {t("cartCheckout")}
         </span>
       </button>
     </div>

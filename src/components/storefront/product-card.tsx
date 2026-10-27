@@ -19,18 +19,6 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState, type MouseEvent } from "react";
 
-/** Truncate on a word boundary and append ellipsis when there is more text. */
-function truncateWithEllipsis(text: string, maxChars: number): string {
-  if (text.length <= maxChars) return text;
-  const slice = text.slice(0, maxChars + 1);
-  const breakAt = Math.max(slice.lastIndexOf(" "), slice.lastIndexOf("\u00a0"));
-  const cut =
-    breakAt > Math.floor(maxChars * 0.55)
-      ? slice.slice(0, breakAt)
-      : text.slice(0, maxChars);
-  return `${cut.trimEnd()}...`;
-}
-
 export function ProductCardSkeleton({ className }: { className?: string }) {
   return (
     <div
@@ -148,11 +136,8 @@ export function ProductCard({
   const canFlip = images.length > 1;
   const discount = discountPercent(product.price, product.compareAtPrice);
   const subtitle = product.category?.name ?? null;
-  const fullDescription = product.description
+  const description = product.description
     ? product.description.replace(/\s+/g, " ").trim()
-    : null;
-  const description = fullDescription
-    ? truncateWithEllipsis(fullDescription, 110)
     : null;
 
   const schema = product.category?.optionSchema ?? [];
@@ -336,10 +321,10 @@ export function ProductCard({
 
         {/* Mobile: price + color swatches on the image */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-3 sm:hidden">
-          <div className="absolute bottom-2.5 left-2.5 min-w-0" dir="ltr">
+          <div className="absolute bottom-2.5 left-2.5 max-w-[62%] min-w-0" dir="ltr">
             <div className="flex flex-col items-start gap-0.5 text-left">
               {product.compareAtPrice ? (
-                <span className="text-[10px] leading-none tabular-nums text-white/70 line-through drop-shadow-sm">
+                <span className="text-[10px] leading-none whitespace-nowrap tabular-nums text-white/70 line-through drop-shadow-sm">
                   {formatMoney(
                     product.compareAtPrice,
                     product.currency,
@@ -347,7 +332,7 @@ export function ProductCard({
                   )}
                 </span>
               ) : null}
-              <span className="text-[15px] font-bold leading-none tracking-tight tabular-nums text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.45)]">
+              <span className="text-[13px] font-bold leading-none tracking-tight whitespace-nowrap tabular-nums text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.45)]">
                 {formatMoney(product.price, product.currency, locale)}
               </span>
             </div>
@@ -376,7 +361,7 @@ export function ProductCard({
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 px-3.5 pb-3.5 pt-3 sm:px-4 sm:pb-4 sm:pt-3.5">
+      <div className="flex flex-1 flex-col gap-1 px-3.5 pb-16 pt-3 sm:px-4 sm:pb-3.5 sm:pt-3.5">
         <h3
           className="text-[13px] font-bold leading-snug tracking-tight sm:text-[15px]"
           style={{
@@ -398,7 +383,7 @@ export function ProductCard({
 
         {description ? (
           <p
-            className="text-[10px] leading-relaxed sm:text-[11px]"
+            className="line-clamp-2 text-[10px] leading-relaxed sm:text-[11px]"
             style={{
               color: "color-mix(in srgb, var(--store-muted) 78%, transparent)",
             }}
@@ -407,7 +392,7 @@ export function ProductCard({
           </p>
         ) : null}
 
-        <div className="mt-auto hidden items-end justify-between gap-2 pt-3 sm:flex">
+        <div className="mt-auto hidden items-end justify-between gap-2 pe-12 pt-3 sm:flex">
           <div
             className="flex min-w-0 flex-col items-start gap-0.5 text-left"
             dir="ltr"
@@ -454,7 +439,9 @@ export function ProductCard({
         </div>
       </div>
     </Link>
-    <QuickAdd product={product} href={href} />
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex items-end justify-end px-2.5 pb-2.5 sm:px-3.5 sm:pb-3">
+      <QuickAdd product={product} href={href} />
+    </div>
     </div>
   );
 }
@@ -470,7 +457,7 @@ function QuickAdd({
   const { t } = useI18n();
   if (!cart) return null;
   const className =
-    "absolute bottom-2.5 end-2.5 z-20 inline-flex h-11 w-11 items-center justify-center";
+    "pointer-events-auto inline-flex h-11 w-11 shrink-0 items-center justify-center";
   const disc = (
     <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-white shadow-md">
       <Plus className="h-5 w-5" strokeWidth={2.4} />
