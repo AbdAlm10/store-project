@@ -1,7 +1,16 @@
+import { safeHttpOrigin } from "./http-url";
+
 type HeaderEnv = {
   NODE_ENV?: string;
   NEXT_PUBLIC_APP_URL?: string;
 };
+
+/** Allow posts to the baked site origin as well as the document origin. */
+function formActionDirective(appUrl: string | undefined): string {
+  const origin = safeHttpOrigin(appUrl);
+  if (origin?.startsWith("https://")) return `form-action 'self' ${origin}`;
+  return "form-action 'self'";
+}
 
 /**
  * Next.js writes inline bootstrap scripts into every page. A nonce has to be
@@ -12,7 +21,10 @@ type HeaderEnv = {
  * Cloudflare Web Analytics loads beacon.min.js and posts the beacon to
  * cloudflareinsights.com.
  */
-export function buildContentSecurityPolicy(nodeEnv: string | undefined): string {
+export function buildContentSecurityPolicy(
+  nodeEnv: string | undefined,
+  appUrl?: string,
+): string {
   const connectSrc =
     nodeEnv === "production"
       ? "connect-src 'self' https: wss: https://cloudflareinsights.com"
@@ -26,7 +38,7 @@ export function buildContentSecurityPolicy(nodeEnv: string | undefined): string 
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'self'",
-    "form-action 'self'",
+    formActionDirective(appUrl),
     scriptSrc,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
@@ -49,7 +61,7 @@ export function buildSecurityHeaders(
     },
     {
       key: "Content-Security-Policy",
-      value: buildContentSecurityPolicy(env.NODE_ENV),
+      value: buildContentSecurityPolicy(env.NODE_ENV, env.NEXT_PUBLIC_APP_URL),
     },
   ];
   const appUrl = env.NEXT_PUBLIC_APP_URL ?? "";

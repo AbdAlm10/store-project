@@ -295,6 +295,7 @@ export const analyticsTrackSchema = z.object({
     "share",
     "search",
     "qr_scan",
+    "order",
   ]),
   source: z.string().max(120).nullable().optional(),
   path: z.string().max(500).nullable().optional(),

@@ -73,8 +73,10 @@ export function createSupabaseRouteHandlerClient(request: NextRequest): {
 } {
   const { url, anonKey } = getSupabaseEnv();
   const pendingCookies: CookieToSet[] = [];
+  const secure = new URL(request.url).protocol === "https:";
 
   const supabase = createServerClient(url, anonKey, {
+    cookieOptions: { secure, sameSite: "lax", path: "/" },
     cookies: {
       getAll() {
         return request.cookies.getAll();

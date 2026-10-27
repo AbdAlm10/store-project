@@ -16,6 +16,10 @@ import {
   waitForAuthCookieFlush,
 } from "@/infrastructure/supabase/route-handler";
 
+function verifierCookieCount(request: NextRequest): number {
+  return request.cookies.getAll().filter((cookie) => cookie.name.includes("code-verifier")).length;
+}
+
 function metaString(
   metadata: Record<string, unknown> | undefined,
   ...keys: string[]
@@ -107,6 +111,12 @@ export async function GET(request: NextRequest) {
   const flowId = searchParams.get("sb_flow_id");
 
   if (!isSupabaseConfigured() || oauthError || !code) {
+    console.error("oauth callback rejected", {
+      configured: isSupabaseConfigured(),
+      oauthError,
+      hasCode: Boolean(code),
+      verifierCookies: verifierCookieCount(request),
+    });
     return NextResponse.redirect(oauthFailureUrl(origin));
   }
 
@@ -126,6 +136,13 @@ export async function GET(request: NextRequest) {
       "oauth code exchange",
     );
     if (!exchanged || exchanged.error || !exchanged.data.session) {
+      const failure = exchanged?.error;
+      console.error("oauth code exchange failed", {
+        reason: !exchanged ? "timeout" : failure?.name ?? "no_session",
+        message: failure?.message ?? null,
+        verifierCookies: verifierCookieCount(request),
+        hasFlowId: Boolean(flowId),
+      });
       return NextResponse.redirect(oauthFailureUrl(origin));
     }
 

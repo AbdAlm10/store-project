@@ -449,6 +449,60 @@ html:has(.dashboard-shell) body {
   }
 }
 
+@keyframes cart-bump {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes cart-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-3px);
+  }
+  40% {
+    transform: translateX(3px);
+  }
+  60% {
+    transform: translateX(-2px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes cart-sheet-up {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-cart-bump {
+  animation: cart-bump 450ms ease;
+}
+
+.animate-cart-shake {
+  animation: cart-shake 420ms ease;
+}
+
+.animate-cart-sheet {
+  animation: cart-sheet-up 220ms ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ys-reveal,
   .animate-ys-soft-float,
@@ -464,7 +518,10 @@ html:has(.dashboard-shell) body {
   .ys-ambient-orb-b,
   .ys-ambient-orb-c,
   .ys-ambient-dot,
-  .ys-ambient-ring {
+  .ys-ambient-ring,
+  .animate-cart-bump,
+  .animate-cart-shake,
+  .animate-cart-sheet {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;

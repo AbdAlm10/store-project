@@ -32,7 +32,8 @@ export type ClientTrackInput = {
     | "whatsapp_click"
     | "share"
     | "search"
-    | "qr_scan";
+    | "qr_scan"
+    | "order";
   source?: string | null;
   path?: string | null;
   metadata?: Record<string, unknown>;

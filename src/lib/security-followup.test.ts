@@ -14,6 +14,7 @@ import { assertProductionDataPlane } from "@/infrastructure/runtime-guard";
 import { subscriptionTestActionsEnabled } from "@/features/dashboard/subscription-test-actions";
 import { buildSecurityHeaders } from "@/lib/content-security-policy";
 import { resolveAllowedAppOrigin } from "@/lib/app-origin";
+import { applyNetlifyPreviewAppUrl } from "@/lib/netlify-app-url";
 
 const STORE_ID = "00000000-0000-4000-8000-000000000010";
 
@@ -41,6 +42,60 @@ describe("demo passwords", () => {
     const stored = hashPassword("password123");
     expect(verifyPassword("password123", stored)).toBe(true);
     expect(verifyPassword("other-password", stored)).toBe(false);
+  });
+});
+
+describe("netlify preview app url", () => {
+  it("uses DEPLOY_PRIME_URL for preview and branch deploys only", () => {
+    const preview = {
+      CONTEXT: "deploy-preview",
+      DEPLOY_PRIME_URL: "https://deploy-preview-12--dukkaan.netlify.app/login",
+      NEXT_PUBLIC_APP_URL: "https://dukkaan.netlify.app",
+    };
+    applyNetlifyPreviewAppUrl(preview);
+    expect(preview.NEXT_PUBLIC_APP_URL).toBe(
+      "https://deploy-preview-12--dukkaan.netlify.app",
+    );
+
+    const branch = {
+      CONTEXT: "branch-deploy",
+      DEPLOY_PRIME_URL: "https://feature--dukkaan.netlify.app",
+      NEXT_PUBLIC_APP_URL: "https://dukkaan.netlify.app",
+    };
+    applyNetlifyPreviewAppUrl(branch);
+    expect(branch.NEXT_PUBLIC_APP_URL).toBe("https://feature--dukkaan.netlify.app");
+
+    const production = {
+      CONTEXT: "production",
+      DEPLOY_PRIME_URL: "https://deploy-preview-12--dukkaan.netlify.app",
+      NEXT_PUBLIC_APP_URL: "https://dukkaan.netlify.app",
+    };
+    applyNetlifyPreviewAppUrl(production);
+    expect(production.NEXT_PUBLIC_APP_URL).toBe("https://dukkaan.netlify.app");
+
+    const missing = {
+      CONTEXT: "deploy-preview",
+      DEPLOY_PRIME_URL: "javascript:alert(1)",
+      NEXT_PUBLIC_APP_URL: "https://dukkaan.netlify.app",
+    };
+    applyNetlifyPreviewAppUrl(missing);
+    expect(missing.NEXT_PUBLIC_APP_URL).toBe("https://dukkaan.netlify.app");
+  });
+
+  it("keeps a forged host off the baked preview origin", () => {
+    const env = {
+      NODE_ENV: "production",
+      CONTEXT: "deploy-preview",
+      DEPLOY_PRIME_URL: "https://deploy-preview-12--dukkaan.netlify.app",
+      NEXT_PUBLIC_APP_URL: "https://dukkaan.netlify.app",
+    } as NodeJS.ProcessEnv & { CONTEXT: string; DEPLOY_PRIME_URL: string };
+    applyNetlifyPreviewAppUrl(env);
+    expect(resolveAllowedAppOrigin("https://evil.example", env)).toBe(
+      "https://deploy-preview-12--dukkaan.netlify.app",
+    );
+    expect(
+      resolveAllowedAppOrigin("http://169.254.169.254", env),
+    ).toBe("https://deploy-preview-12--dukkaan.netlify.app");
   });
 });
 
@@ -171,11 +226,14 @@ describe("response headers", () => {
       "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
     );
     expect(prodCsp).toContain("https://cloudflareinsights.com");
+    expect(prodCsp).toContain("form-action 'self' https://shop.example");
     expect(prodCsp).not.toContain("unsafe-eval");
     const devCsp = dev.find(
       (header) => header.key === "Content-Security-Policy",
     )?.value;
     expect(devCsp).toContain("unsafe-eval");
+    expect(devCsp).toContain("form-action 'self'");
+    expect(devCsp).not.toContain("http://localhost:3000");
   });
 });
 
