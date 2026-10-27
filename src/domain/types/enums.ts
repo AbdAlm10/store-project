@@ -24,7 +24,8 @@ export type AnalyticsEventType =
   | "whatsapp_click"
   | "share"
   | "search"
-  | "qr_scan";
+  | "qr_scan"
+  | "order";
 
 export type ThemeId =
   | "clean"

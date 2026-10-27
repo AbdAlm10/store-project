@@ -2,6 +2,8 @@
 
 import { SafeImage } from "@/components/ui/safe-image";
 import { FavoriteButton } from "@/components/storefront/favorite-button";
+import { useCartOptional } from "@/features/cart/cart-context";
+import { productNeedsOptions } from "@/lib/orders/checkout";
 import { discountPercent } from "@/domain/rules/store-rules";
 import type { ProductWithMedia } from "@/domain/types/entities";
 import type { Locale } from "@/i18n/config";
@@ -13,7 +15,7 @@ import {
 } from "@/lib/option-colors";
 import { formatMoney } from "@/lib/social/sharing";
 import { cn } from "@/lib/utils/cn";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState, type MouseEvent } from "react";
 
@@ -198,6 +200,7 @@ export function ProductCard({
   }
 
   return (
+    <div className="relative h-full">
     <Link
       href={href}
       prefetch
@@ -451,5 +454,56 @@ export function ProductCard({
         </div>
       </div>
     </Link>
+    <QuickAdd product={product} href={href} />
+    </div>
+  );
+}
+
+function QuickAdd({
+  product,
+  href,
+}: {
+  product: ProductWithMedia;
+  href: string;
+}) {
+  const cart = useCartOptional();
+  const { t } = useI18n();
+  if (!cart) return null;
+  const className =
+    "absolute bottom-2.5 end-2.5 z-20 inline-flex h-11 w-11 items-center justify-center";
+  const disc = (
+    <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-white shadow-md">
+      <Plus className="h-5 w-5" strokeWidth={2.4} />
+    </span>
+  );
+  if (productNeedsOptions(product)) {
+    return (
+      <Link href={href} aria-label={t("addToCart")} className={className}>
+        {disc}
+      </Link>
+    );
+  }
+  return (
+    <button
+      type="button"
+      aria-label={t("addToCart")}
+      className={className}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        cart.addLine({
+          productId: product.id,
+          slug: product.slug,
+          name: product.name,
+          imageUrl: product.images[0]?.url ?? null,
+          options: {},
+          quantity: 1,
+          unitPrice: product.price,
+          currency: product.currency,
+        });
+      }}
+    >
+      {disc}
+    </button>
   );
 }

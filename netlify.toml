@@ -1,0 +1,8 @@
+# Preview and branch deploys bake DEPLOY_PRIME_URL into NEXT_PUBLIC_APP_URL.
+# Bash expands the variable in the build command. Production keeps the URL
+# configured for that context. The app does not trust the request Host.
+[context.deploy-preview]
+  command = "NEXT_PUBLIC_APP_URL=$DEPLOY_PRIME_URL npm run build"
+
+[context.branch-deploy]
+  command = "NEXT_PUBLIC_APP_URL=$DEPLOY_PRIME_URL npm run build"

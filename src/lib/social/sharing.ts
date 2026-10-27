@@ -42,6 +42,84 @@ export function buildWhatsAppOrderMessage(input: {
   return { url, message };
 }
 
+export type CartOrderLine = {
+  name: string;
+  options: Record<string, string>;
+  quantity: number;
+  lineTotal: number;
+};
+
+/** Latin digits, grouped thousands. SYP is shown as ل.س. */
+export function formatOrderAmount(amount: number, currency: string): string {
+  const value = Number.isFinite(amount) ? amount : 0;
+  const whole = Math.abs(value - Math.round(value)) < 0.001;
+  const digits = new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: whole ? 0 : 2,
+    maximumFractionDigits: whole ? 0 : 2,
+  }).format(value);
+  const suffix =
+    currency === "SYP"
+      ? "ل.س"
+      : currency === "USD"
+        ? "US$"
+        : currency === "EUR"
+          ? "€"
+          : currency === "TRY"
+            ? "₺"
+            : currency;
+  return `${digits} ${suffix}`;
+}
+
+export function whatsAppHref(phone: string, message: string): string | null {
+  const digits = phone.replace(/[^\d]/g, "");
+  if (!digits) return null;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+}
+
+/** One WhatsApp message for a whole cart. Omit the order code when recording failed. */
+export function buildCartWhatsAppMessage(input: {
+  storeName: string;
+  storeLink: string;
+  orderCode: string | null;
+  currency: string;
+  lines: CartOrderLine[];
+  total: number;
+  customerName: string;
+  governorate: string;
+  address?: string | null;
+  notes?: string | null;
+  paymentLabel: string;
+}): string {
+  const header = input.orderCode
+    ? `مرحباً ${input.storeName} 👋\nطلب جديد رقم #${input.orderCode}`
+    : `مرحباً ${input.storeName} 👋\nطلب جديد`;
+  const itemLines = input.lines.map((line, index) => {
+    const options = Object.entries(line.options)
+      .filter(([, value]) => value.trim())
+      .map(([key, value]) => `${key}: ${value}`);
+    const detail = [
+      ...options,
+      `الكمية: ${line.quantity}`,
+      formatOrderAmount(line.lineTotal, input.currency),
+    ].join(" · ");
+    return `${index + 1}) ${line.name}\n   ${detail}`;
+  });
+  const address = input.address?.trim();
+  const notes = input.notes?.trim();
+  const tail = [
+    `المجموع: ${formatOrderAmount(input.total, input.currency)}`,
+    "",
+    `الاسم: ${input.customerName.trim()}`,
+    `المحافظة: ${input.governorate.trim()}`,
+    address ? `العنوان: ${address}` : null,
+    notes ? `ملاحظات: ${notes}` : null,
+    `الدفع: ${input.paymentLabel}`,
+    "",
+    `🛒 طلب من ${input.storeName} — ${input.storeLink}`,
+  ].filter((line): line is string => line !== null);
+  return [header, "", ...itemLines, "", ...tail].join("\n");
+}
+
 export function formatMoney(
   amount: number,
   currency: string,

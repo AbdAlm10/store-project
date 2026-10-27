@@ -10,7 +10,7 @@ import {
   REFERRAL_CODE_PATTERN,
   generateReferralCode,
 } from "@/lib/referrals/cookie";
-import { showsDukkanStorefrontBadge } from "@/domain/storefront/badge";
+import { showsCartOrderPromo, showsDukkanStorefrontBadge } from "@/domain/storefront/badge";
 
 const now = new Date("2026-03-01T00:00:00.000Z");
 
@@ -247,5 +247,13 @@ describe("storefront badge", () => {
     expect(showsDukkanStorefrontBadge("trial")).toBe(false);
     expect(showsDukkanStorefrontBadge(null)).toBe(true);
     expect(showsDukkanStorefrontBadge("pro")).toBe(false);
+  });
+
+  it("keeps the cart promo on every plan except a Pro store that hides the badge", () => {
+    expect(showsCartOrderPromo("free")).toBe(true);
+    expect(showsCartOrderPromo("trial")).toBe(true);
+    expect(showsCartOrderPromo("basic")).toBe(true);
+    expect(showsCartOrderPromo(null)).toBe(true);
+    expect(showsCartOrderPromo("pro")).toBe(false);
   });
 });
