@@ -8,6 +8,7 @@ import { STORE_CURRENCIES } from "@/domain/types/enums";
 import { CopyStoreUrl } from "@/features/dashboard/copy-store-url";
 import { OpeningHoursEditor } from "@/features/stores/opening-hours-editor";
 import { updateStoreAction } from "@/features/stores/update-actions";
+import { useDemoMode } from "@/features/demo/demo-provider";
 import { useI18n } from "@/i18n/provider";
 import { isLegacyOpeningHoursText } from "@/lib/opening-hours";
 import {
@@ -66,6 +67,7 @@ export function StoreSettingsForm({
   maxNavActions?: number;
 }) {
   const { t } = useI18n();
+  const demo = useDemoMode();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -135,6 +137,7 @@ export function StoreSettingsForm({
       className="space-y-5"
       onSubmit={(event) => {
         event.preventDefault();
+        if (demo.block()) return;
         const formData = new FormData(event.currentTarget);
         if (
           status === "published" &&

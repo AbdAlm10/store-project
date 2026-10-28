@@ -6,6 +6,8 @@ import {
   duplicateProductAction,
   updateProductAction,
 } from "@/features/products/actions";
+import { useDashboardPaths } from "@/components/dashboard/dashboard-paths";
+import { useDemoMode } from "@/features/demo/demo-provider";
 import { useI18n } from "@/i18n/provider";
 import { cn } from "@/lib/utils/cn";
 import {
@@ -37,6 +39,8 @@ export function ProductActions({
   previewHref?: string;
 }) {
   const { t } = useI18n();
+  const demo = useDemoMode();
+  const paths = useDashboardPaths();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState<BusyAction>(null);
@@ -47,7 +51,7 @@ export function ProductActions({
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <Link
-        href={`/dashboard/products/${productId}`}
+        href={`${paths.base}/products/${productId}`}
         className={cn(
           "inline-flex h-8 items-center gap-1.5 rounded-full bg-brand-50 px-2.5 text-xs font-semibold text-brand-800 transition hover:bg-brand-100",
           disabled && "pointer-events-none opacity-50",
@@ -76,6 +80,7 @@ export function ProductActions({
         disabled={disabled}
         className="inline-flex h-8 items-center gap-1.5 rounded-full bg-slate-50 px-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
         onClick={() => {
+          if (demo.block()) return;
           setBusy("duplicate");
           startTransition(async () => {
             try {
@@ -105,6 +110,7 @@ export function ProductActions({
             : "bg-amber-50 text-amber-800 hover:bg-amber-100",
         )}
         onClick={() => {
+          if (demo.block()) return;
           setBusy("archive");
           startTransition(async () => {
             try {
@@ -139,6 +145,7 @@ export function ProductActions({
         disabled={disabled}
         className="inline-flex h-8 items-center gap-1.5 rounded-full bg-red-50 px-2.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
         onClick={() => {
+          if (demo.block()) return;
           const message = productName
             ? t("deleteProductConfirm", { name: productName })
             : t("deleteThisProduct");

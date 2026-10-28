@@ -8,6 +8,7 @@ import {
   skipsAuthRefresh,
 } from "@/lib/auth-callback";
 import { withTimeout } from "@/lib/with-timeout";
+import { isDemoPath } from "@/features/demo/write-guard";
 import {
   REFERRAL_CODE_PATTERN,
   REFERRAL_COOKIE_NAME,
@@ -35,6 +36,11 @@ function withReferralCookie(request: NextRequest, response: NextResponse): NextR
  */
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+
+  // Public read-only marketing demo. Never refresh a session or call Supabase.
+  if (isDemoPath(pathname)) {
+    return withReferralCookie(request, NextResponse.next());
+  }
 
   // Supabase misconfigured Site URL sometimes sends ?code= to /login instead of /auth/callback.
   // Only when there is no error — a failure redirect that keeps ?code= would loop.

@@ -16,6 +16,7 @@ import {
   updateCategoryAction,
 } from "@/features/categories/actions";
 import { CategoryMediaActions } from "@/features/categories/category-media-actions";
+import { useDemoMode } from "@/features/demo/demo-provider";
 import { useI18n } from "@/i18n/provider";
 import { OPTION_PRESETS, newOptionDef } from "@/lib/category-options";
 import {
@@ -49,6 +50,7 @@ export function CategoryManager({
   maxOptionsPerProduct?: number;
 }) {
   const { t } = useI18n();
+  const demo = useDemoMode();
   const router = useRouter();
   const [categories, setCategories] = useState(initial);
   const [name, setName] = useState("");
@@ -130,6 +132,7 @@ export function CategoryManager({
           className="space-y-5"
           onSubmit={(event) => {
             event.preventDefault();
+            if (demo.block()) return;
             if (isEditing || atCategoryLimit || saving) return;
             setError(null);
             setSaving("create");
@@ -299,6 +302,7 @@ export function CategoryManager({
                         className="inline-flex h-8 items-center gap-1.5 rounded-full bg-red-50 px-2.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
                         disabled={pending || (isEditing && !isThisEditing)}
                         onClick={() => {
+                          if (demo.block()) return;
                           if (saving) return;
                           if (!confirm(t("deleteCategoryConfirm"))) return;
                           setSaving("delete");
@@ -337,6 +341,7 @@ export function CategoryManager({
                       pending={saving === "edit"}
                       maxOptionsPerProduct={maxOptionsPerProduct}
                       onSave={async (payload) => {
+                        if (demo.block()) return;
                         setSaving("edit");
                         try {
                           const result = await updateCategoryAction(

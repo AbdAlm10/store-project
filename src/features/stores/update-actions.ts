@@ -1,6 +1,7 @@
 "use server";
 
 import { after } from "next/server";
+import { refuseDemoWrite } from "@/features/demo/write-guard";
 import { getServices } from "@/infrastructure/container";
 import { toUserMessage } from "@/domain/errors";
 import { revalidateStorefrontStore } from "@/lib/revalidate-storefront";
@@ -9,6 +10,8 @@ export async function updateStoreAction(
   storeId: string,
   input: unknown,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const services = getServices();
     const existing = await services.stores.getStoreForOwner(storeId);
@@ -42,6 +45,8 @@ export async function updateStoreAction(
 export async function publishStoreAction(
   storeId: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const store = await getServices().stores.updateStore(storeId, {
       status: "published",

@@ -1,6 +1,7 @@
 "use server";
 
 import { after } from "next/server";
+import { refuseDemoWrite } from "@/features/demo/write-guard";
 import { getServices } from "@/infrastructure/container";
 import { toUserMessage } from "@/domain/errors";
 
@@ -14,6 +15,8 @@ export async function createProductAction(
   storeId: string,
   input: unknown,
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const services = getServices();
     const store = await services.stores.getStoreForOwner(storeId);
@@ -32,6 +35,8 @@ export async function updateProductAction(
   productId: string,
   input: unknown,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const services = getServices();
     const store = await services.stores.getStoreForOwner(storeId);
@@ -49,6 +54,8 @@ export async function deleteProductAction(
   storeId: string,
   productId: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const services = getServices();
     const store = await services.stores.getStoreForOwner(storeId);
@@ -66,6 +73,8 @@ export async function duplicateProductAction(
   storeId: string,
   productId: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const services = getServices();
     const store = await services.stores.getStoreForOwner(storeId);
@@ -84,6 +93,8 @@ export async function bulkUpdateProductStatusAction(
   productIds: string[],
   status: "published" | "hidden" | "archived",
 ): Promise<{ ok: true; count: number } | { ok: false; error: string }> {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const uniqueIds = [...new Set(productIds.filter(Boolean))];
     if (uniqueIds.length === 0) {
@@ -111,6 +122,8 @@ export async function bulkDeleteProductsAction(
   storeId: string,
   productIds: string[],
 ): Promise<{ ok: true; count: number } | { ok: false; error: string }> {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const uniqueIds = [...new Set(productIds.filter(Boolean))];
     if (uniqueIds.length === 0) {

@@ -8,6 +8,8 @@ import {
   createProductAction,
   updateProductAction,
 } from "@/features/products/actions";
+import { useDashboardPaths } from "@/components/dashboard/dashboard-paths";
+import { useDemoMode } from "@/features/demo/demo-provider";
 import { useI18n } from "@/i18n/provider";
 import {
   buildVariantMatrix,
@@ -93,6 +95,8 @@ export function ProductForm({
 }: ProductFormProps) {
   const imageSlots = Math.max(1, maxImagesPerProduct);
   const { t } = useI18n();
+  const demo = useDemoMode();
+  const paths = useDashboardPaths();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -205,6 +209,7 @@ export function ProductForm({
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
+        if (demo.block()) return;
         if (submitLock.current || uploading) {
           if (uploading) setError(t("waitForImageUpload"));
           return;
@@ -266,7 +271,7 @@ export function ProductForm({
               setPending(false);
               return;
             }
-            router.push("/dashboard/products");
+            router.push(`${paths.base}/products`);
             router.refresh();
           } catch {
             submitLock.current = false;
@@ -637,7 +642,7 @@ export function ProductForm({
           type="button"
           variant="ghost"
           disabled={pending || uploading}
-          onClick={() => router.push("/dashboard/products")}
+          onClick={() => router.push(`${paths.base}/products`)}
         >
           {t("cancel")}
         </Button>

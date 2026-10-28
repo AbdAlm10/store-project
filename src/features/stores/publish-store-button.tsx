@@ -1,5 +1,7 @@
 "use client";
 
+import { useDashboardPaths } from "@/components/dashboard/dashboard-paths";
+import { useDemoMode } from "@/features/demo/demo-provider";
 import { publishStoreAction } from "@/features/stores/update-actions";
 import { useI18n } from "@/i18n/provider";
 import Link from "next/link";
@@ -14,6 +16,8 @@ export function PublishChecklistAction({
   hasWhatsapp: boolean;
 }) {
   const { t } = useI18n();
+  const demo = useDemoMode();
+  const paths = useDashboardPaths();
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +25,7 @@ export function PublishChecklistAction({
   if (!hasWhatsapp) {
     return (
       <Link
-        href="/dashboard/store#whatsapp"
+        href={`${paths.base}/store#whatsapp`}
         className="shrink-0 text-xs font-semibold text-brand-700 underline"
       >
         {t("whatsappRequiredToPublish")}
@@ -35,6 +39,7 @@ export function PublishChecklistAction({
         type="button"
         disabled={pending}
         onClick={() => {
+          if (demo.block()) return;
           setPending(true);
           setError(null);
           void publishStoreAction(storeId).then((result) => {

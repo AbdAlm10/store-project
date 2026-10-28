@@ -1,5 +1,6 @@
 "use server";
 
+import { refuseDemoWrite } from "@/features/demo/write-guard";
 import { getServices } from "@/infrastructure/container";
 import {
   enforceRateLimit,
@@ -16,6 +17,8 @@ export async function uploadImageAction(
   kind: UploadImageKind,
   formData: FormData,
 ): Promise<{ ok: true; url: string; path: string } | { ok: false; error: string }> {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0) {
@@ -59,6 +62,8 @@ export async function deleteOwnedImageAction(
   storeId: string,
   publicUrl: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     await getServices().media.deleteClearedAssetUrl(storeId, publicUrl);
     return { ok: true };

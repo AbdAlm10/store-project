@@ -1,6 +1,7 @@
 "use server";
 
 import { after } from "next/server";
+import { refuseDemoWrite } from "@/features/demo/write-guard";
 import { getServices } from "@/infrastructure/container";
 import { toUserMessage } from "@/domain/errors";
 import type { Category } from "@/domain/types/entities";
@@ -14,6 +15,8 @@ export async function createCategoryAction(
   storeId: string,
   input: unknown,
 ): Promise<{ ok: true; category: Category } | { ok: false; error: string }> {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const store = await storeRef(storeId);
     const category = await getServices().categories.create(storeId, input);
@@ -31,6 +34,8 @@ export async function updateCategoryAction(
   categoryId: string,
   input: unknown,
 ): Promise<{ ok: true; category: Category } | { ok: false; error: string }> {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const store = await storeRef(storeId);
     const category = await getServices().categories.updateOptions(
@@ -51,6 +56,8 @@ export async function deleteCategoryAction(
   storeId: string,
   categoryId: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const store = await storeRef(storeId);
     await getServices().categories.delete(storeId, categoryId);

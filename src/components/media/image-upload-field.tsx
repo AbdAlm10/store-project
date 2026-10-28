@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/forms";
 import { SafeImage } from "@/components/ui/safe-image";
 import { deleteOwnedImageAction, uploadImageAction, type UploadImageKind } from "@/features/media/actions";
+import { useDemoMode } from "@/features/demo/demo-provider";
 import { useI18n } from "@/i18n/provider";
 import { compressImageForUpload } from "@/lib/compress-image";
 import { cn } from "@/lib/utils/cn";
@@ -34,6 +35,7 @@ export function ImageUploadField({
   onBusyChange,
 }: ImageUploadFieldProps) {
   const { t } = useI18n();
+  const demo = useDemoMode();
   const inputId = useId();
   const fileRef = useRef<HTMLInputElement>(null);
   const [internalUrl, setInternalUrl] = useState(defaultValue);
@@ -57,6 +59,7 @@ export function ImageUploadField({
 
   async function handleFile(file: File | undefined) {
     if (!file) return;
+    if (demo.block()) return;
     setError(null);
     onBusyChange?.(true);
     setStatus("compressing");
@@ -96,6 +99,7 @@ export function ImageUploadField({
   }
 
   async function handleClear() {
+    if (demo.block()) return;
     const previous = url;
     setUrl("");
     if (replacesOwnedAsset && previous) {
