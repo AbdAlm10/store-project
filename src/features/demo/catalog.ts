@@ -1,61 +1,43 @@
 import type { DashboardStats } from "@/application/services/analytics-service";
 import { limitsForSubscription } from "@/domain/plans/access";
 import type { ProductWithMedia } from "@/domain/types/entities";
-import { demoSeed } from "@/infrastructure/demo/seed";
+import {
+  alnoorCategories,
+  alnoorEvents,
+  alnoorImages,
+  alnoorOrders,
+  alnoorProducts,
+  alnoorProfile,
+  alnoorStore,
+  alnoorSubscription,
+} from "@/features/demo/alnoor-demo";
 
 export const DEMO_STORE_PATH = "/alnoor";
 export const DEMO_DASHBOARD_BASE = "/demo/dashboard";
 
-const store = demoSeed.stores[0];
-const profile = demoSeed.profiles[0];
-const subscription = demoSeed.subscriptions[0];
+export const demoStore = alnoorStore;
+export const demoProfile = alnoorProfile;
+export const demoSubscription = alnoorSubscription;
+export const demoLimits = limitsForSubscription(alnoorSubscription);
 
-if (!store || !profile || !subscription) {
-  throw new Error("Demo seed is missing the alnoor store.");
-}
-
-export const demoStore = store;
-export const demoProfile = profile;
-export const demoSubscription = subscription;
-export const demoLimits = limitsForSubscription(subscription);
-
-const categoriesById = new Map(demoSeed.categories.map((category) => [category.id, category]));
+const categoriesById = new Map(alnoorCategories.map((category) => [category.id, category]));
 
 export function demoProducts(): ProductWithMedia[] {
-  return demoSeed.products.map((product) => ({
+  return alnoorProducts.map((product) => ({
     ...product,
-    images: demoSeed.images.filter((image) => image.productId === product.id),
-    variants: demoSeed.variants.filter((variant) => variant.productId === product.id),
+    images: alnoorImages.filter((image) => image.productId === product.id),
+    variants: [],
     category: product.categoryId ? categoriesById.get(product.categoryId) ?? null : null,
   }));
 }
 
-export const demoCategories = demoSeed.categories;
+export const demoCategories = alnoorCategories;
 
-const ORDER_STATUS = ["جديد", "قيد التجهيز", "مكتمل"] as const;
+export type DemoOrder = (typeof alnoorOrders)[number];
 
-export type DemoOrder = {
-  number: string;
-  productName: string;
-  quantity: number;
-  total: number;
-  currency: string;
-  status: (typeof ORDER_STATUS)[number];
-};
-
-/** Sample orders whose lines and totals come from the seed catalog. */
+/** Sample orders priced from the hardcoded النور catalog. */
 export function demoOrders(): DemoOrder[] {
-  return demoSeed.products.slice(0, 6).map((product, index) => {
-    const quantity = (index % 3) + 1;
-    return {
-      number: `D-${1001 + index}`,
-      productName: product.name,
-      quantity,
-      total: product.price * quantity,
-      currency: product.currency,
-      status: ORDER_STATUS[index % ORDER_STATUS.length] ?? "جديد",
-    };
-  });
+  return alnoorOrders;
 }
 
 function dayKey(iso: string): string {
@@ -72,7 +54,7 @@ function round1(value: number): number {
 }
 
 /**
- * Dashboard analytics counted from `demoSeed.events` and seed product names.
+ * Dashboard analytics counted from the hardcoded النور visit rows.
  * No analytics service and no database.
  */
 export function demoDashboardStats(
@@ -80,7 +62,7 @@ export function demoDashboardStats(
   now = Date.now(),
 ): DashboardStats {
   const since = now - rangeDays * 86_400_000;
-  const events = demoSeed.events.filter((event) => Date.parse(event.createdAt) >= since);
+  const events = alnoorEvents.filter((event) => Date.parse(event.createdAt) >= since);
   const products = demoProducts();
   const productById = new Map(products.map((product) => [product.id, product]));
 

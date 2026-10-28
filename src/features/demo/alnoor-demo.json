@@ -1,0 +1,556 @@
+{
+  "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+  "ownerId": "898acf56-6c73-41dd-a0dd-c1d3fb68bffd",
+  "categories": [
+    {
+      "id": "1c436ed1-8d96-42f9-bf0b-00934c6b1c92",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "name": "رجالي",
+      "slug": "cat-mv5ok8cv",
+      "sortOrder": 0,
+      "imageUrl": null,
+      "icon": "lucide:shirt",
+      "optionSchema": [
+        {
+          "id": "46fcfdba-019e-46be-a324-5ae5aa48755e",
+          "name": "مقاس",
+          "kind": "text",
+          "values": [
+            {
+              "label": "صغير جداً",
+              "hex": null
+            },
+            {
+              "label": "صغير",
+              "hex": null
+            },
+            {
+              "label": "وسط",
+              "hex": null
+            },
+            {
+              "label": "كبير",
+              "hex": null
+            },
+            {
+              "label": "كبير جداً",
+              "hex": null
+            },
+            {
+              "label": "قياس مضاعف",
+              "hex": null
+            }
+          ]
+        },
+        {
+          "id": "f5fa2bd4-4598-4ba2-a6a8-285bceb8c092",
+          "name": "لون",
+          "kind": "color",
+          "values": [
+            {
+              "label": "أسود",
+              "hex": "#111827"
+            },
+            {
+              "label": "أبيض",
+              "hex": "#F8FAFC"
+            },
+            {
+              "label": "أحمر",
+              "hex": "#DC2626"
+            },
+            {
+              "label": "أزرق",
+              "hex": "#2563EB"
+            },
+            {
+              "label": "أخضر",
+              "hex": "#16A34A"
+            },
+            {
+              "label": "بيج",
+              "hex": "#D6C3A8"
+            }
+          ]
+        }
+      ],
+      "createdAt": "2026-10-12T20:04:09.612948+00:00",
+      "updatedAt": "2026-10-12T20:07:31.288+00:00"
+    },
+    {
+      "id": "a70c7a54-9fb2-4a32-a02d-4f774c5233a0",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "name": "نسائي",
+      "slug": "cat-mv5okpxe",
+      "sortOrder": 1,
+      "imageUrl": null,
+      "icon": "lucide:gem",
+      "optionSchema": [
+        {
+          "id": "3e8c07c8-2ce7-476c-8666-6f074522761c",
+          "name": "مقاس",
+          "kind": "text",
+          "values": [
+            {
+              "label": "صغير جداً",
+              "hex": null
+            },
+            {
+              "label": "صغير",
+              "hex": null
+            },
+            {
+              "label": "وسط",
+              "hex": null
+            },
+            {
+              "label": "كبير",
+              "hex": null
+            },
+            {
+              "label": "كبير جداً",
+              "hex": null
+            },
+            {
+              "label": "قياس مضاعف",
+              "hex": null
+            }
+          ]
+        },
+        {
+          "id": "19b032c5-7c83-4528-a267-873662e340eb",
+          "name": "لون",
+          "kind": "color",
+          "values": [
+            {
+              "label": "أسود",
+              "hex": "#111827"
+            },
+            {
+              "label": "أبيض",
+              "hex": "#F8FAFC"
+            },
+            {
+              "label": "أحمر",
+              "hex": "#DC2626"
+            },
+            {
+              "label": "أزرق",
+              "hex": "#2563EB"
+            },
+            {
+              "label": "أخضر",
+              "hex": "#16A34A"
+            },
+            {
+              "label": "بيج",
+              "hex": "#D6C3A8"
+            }
+          ]
+        }
+      ],
+      "createdAt": "2026-10-12T20:04:31.701533+00:00",
+      "updatedAt": "2026-10-12T20:07:51.225+00:00"
+    },
+    {
+      "id": "7b576d5d-8417-48e1-977e-658e18a14342",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "name": "إكسسوارات",
+      "slug": "cat-mv5okvwl",
+      "sortOrder": 2,
+      "imageUrl": null,
+      "icon": "lucide:watch",
+      "optionSchema": [
+        {
+          "id": "073282c3-f9b0-4e52-9eda-22d172f81ef9",
+          "name": "لون",
+          "kind": "color",
+          "values": [
+            {
+              "label": "أسود",
+              "hex": "#111827"
+            },
+            {
+              "label": "أبيض",
+              "hex": "#F8FAFC"
+            },
+            {
+              "label": "أحمر",
+              "hex": "#DC2626"
+            },
+            {
+              "label": "أزرق",
+              "hex": "#2563EB"
+            },
+            {
+              "label": "أخضر",
+              "hex": "#16A34A"
+            },
+            {
+              "label": "بيج",
+              "hex": "#D6C3A8"
+            }
+          ]
+        }
+      ],
+      "createdAt": "2026-10-12T20:04:39.394214+00:00",
+      "updatedAt": "2026-10-12T20:08:01.991+00:00"
+    },
+    {
+      "id": "7fe2e91e-7552-475e-a5c7-d7a0889c46dd",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "name": "أطفال",
+      "slug": "cat-atfal",
+      "sortOrder": 3,
+      "imageUrl": null,
+      "icon": "lucide:baby",
+      "optionSchema": [],
+      "createdAt": "2026-10-12T20:12:00.000Z",
+      "updatedAt": "2026-10-12T20:12:00.000Z"
+    }
+  ],
+  "products": [
+    {
+      "id": "8fbd619f-67b7-4189-a1c9-fa41e108f719",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "categoryId": "1c436ed1-8d96-42f9-bf0b-00934c6b1c92",
+      "name": "قميص كتان رجالي أبيض",
+      "slug": "product-mv5oqm5o",
+      "description": "قميص رجالي من الكتان الناعم بقصة عملية مريحة للصيف، لون أبيض ثابت، يناسب الاستخدام اليومي والسهرات الخفيفة في دمشق.",
+      "price": 120000,
+      "compareAtPrice": 135000,
+      "currency": "SYP",
+      "stock": null,
+      "status": "published",
+      "tags": [
+        "قميص",
+        "كتان",
+        "رجالي",
+        "صيفي"
+      ],
+      "specifications": {},
+      "featured": false,
+      "createdAt": "2026-10-12T20:09:06.547222+00:00",
+      "updatedAt": "2026-10-12T20:09:06.547222+00:00",
+      "publishedAt": "2026-10-12T20:09:06.395+00:00"
+    },
+    {
+      "id": "8814b8e8-1c88-4db7-9171-24928611521e",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "categoryId": "1c436ed1-8d96-42f9-bf0b-00934c6b1c92",
+      "name": "تيشيرت قطن رجالي أساسي",
+      "slug": "product-mv5os8fu",
+      "description": "تيشيرت رجالي من القطن 100% بقصة مريحة ورقبة دائرية، ناعم على البشرة ومتين للاستخدام اليومي. مناسب للصيف في دمشق.",
+      "price": 45000,
+      "compareAtPrice": 50000,
+      "currency": "SYP",
+      "stock": null,
+      "status": "published",
+      "tags": [
+        "تيشيرت",
+        "قطن",
+        "رجالي",
+        "صيفي"
+      ],
+      "specifications": {},
+      "featured": false,
+      "createdAt": "2026-10-12T20:10:22.083851+00:00",
+      "updatedAt": "2026-10-12T20:10:22.083851+00:00",
+      "publishedAt": "2026-10-12T20:10:21.943+00:00"
+    },
+    {
+      "id": "ee938797-1061-4466-904e-63fb834771b5",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "categoryId": "a70c7a54-9fb2-4a32-a02d-4f774c5233a0",
+      "name": "فستان كتان صيفي أبيض",
+      "slug": "product-mv5oth2d",
+      "description": "فستان صيفي من الكتان الخفيف بقصة واسعة وأكمام قصيرة، مريح للطقس الحار ومناسب للخروج اليومي والمناسبات العائلية في دمشق.",
+      "price": 165000,
+      "compareAtPrice": 180000,
+      "currency": "SYP",
+      "stock": null,
+      "status": "published",
+      "tags": [
+        "فستان",
+        "كتان",
+        "نسائي",
+        "صيفي"
+      ],
+      "specifications": {},
+      "featured": true,
+      "createdAt": "2026-10-12T20:11:19.899087+00:00",
+      "updatedAt": "2026-10-12T20:11:19.899087+00:00",
+      "publishedAt": "2026-10-12T20:11:19.755+00:00"
+    },
+    {
+      "id": "a98aa333-b5be-4bf5-be11-eda54c7bf49b",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "categoryId": "a70c7a54-9fb2-4a32-a02d-4f774c5233a0",
+      "name": "طقم تونيك وتنورة بطبعة ورود",
+      "slug": "product-mv5ou61t",
+      "description": "طقم نسائي من قماش خفيف مطبوع بورود ملونة، يتكون من تونيك وتنورة متناسقة، مناسب للنزهات والمشاوير الصيفية، ويمكن ارتداؤه بإكسسوارات بسيطة.",
+      "price": 185000,
+      "compareAtPrice": null,
+      "currency": "SYP",
+      "stock": null,
+      "status": "published",
+      "tags": [
+        "طقم",
+        "تونيك",
+        "نسائي",
+        "ورود"
+      ],
+      "specifications": {},
+      "featured": false,
+      "createdAt": "2026-10-12T20:11:52.252874+00:00",
+      "updatedAt": "2026-10-12T20:11:52.252874+00:00",
+      "publishedAt": "2026-10-12T20:11:52.115+00:00"
+    },
+    {
+      "id": "9cce6b19-593d-4b2a-93aa-b7984832af65",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "categoryId": "7fe2e91e-7552-475e-a5c7-d7a0889c46dd",
+      "name": "طقم قميص وشورت للأولاد",
+      "slug": "product-mv5ouu56",
+      "description": "طقم صيفي للأولاد من القطن الناعم يتكون من قميص مطبوع وشورت مريح، ألوان زاهية وخياطة متينة تناسب اللعب والمدرسة في الصيف.",
+      "price": 80000,
+      "compareAtPrice": null,
+      "currency": "SYP",
+      "stock": null,
+      "status": "published",
+      "tags": [
+        "أطفال",
+        "ولادي",
+        "طقم",
+        "صيفي"
+      ],
+      "specifications": {},
+      "featured": false,
+      "createdAt": "2026-10-12T20:12:23.505428+00:00",
+      "updatedAt": "2026-10-12T20:12:23.505428+00:00",
+      "publishedAt": "2026-10-12T20:12:23.371+00:00"
+    },
+    {
+      "id": "70006925-a1a4-4129-a28e-211c93869ffe",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "categoryId": "7fe2e91e-7552-475e-a5c7-d7a0889c46dd",
+      "name": "طقم تيشيرت وشورت للبنات",
+      "slug": "product-mv5ovh29",
+      "description": "طقم صيفي للبنات من القطن الخفيف، تيشيرت بطبعة مرحة مع شورت مريح بخصر مطاطي، مناسب للعب واللعب في الهواء الطلق وأيام الصيف الحارة.",
+      "price": 70000,
+      "compareAtPrice": null,
+      "currency": "SYP",
+      "stock": null,
+      "status": "published",
+      "tags": [
+        "أطفال",
+        "بناتي",
+        "طقم",
+        "صيفي"
+      ],
+      "specifications": {},
+      "featured": false,
+      "createdAt": "2026-10-12T20:12:53.172583+00:00",
+      "updatedAt": "2026-10-12T20:12:53.172583+00:00",
+      "publishedAt": "2026-10-12T20:12:53.041+00:00"
+    },
+    {
+      "id": "65b473ac-a70e-4987-8877-6261d5f6e49c",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "categoryId": "7b576d5d-8417-48e1-977e-658e18a14342",
+      "name": "حقيبة يد جلدية رمادية",
+      "slug": "product-mv5ow4ez",
+      "description": "حقيبة يد نسائية من الجلد الصناعي عالي الجودة بلون رمادي أنيق، مع حزام كتف قابل للتعديل وإغلاق بأزرار ذهبية، تناسب الاستخدام اليومي والخروج.",
+      "price": 160000,
+      "compareAtPrice": null,
+      "currency": "SYP",
+      "stock": null,
+      "status": "published",
+      "tags": [
+        "حقيبة",
+        "جلد",
+        "إكسسوارات",
+        "نسائي"
+      ],
+      "specifications": {},
+      "featured": false,
+      "createdAt": "2026-10-12T20:13:23.48581+00:00",
+      "updatedAt": "2026-10-12T20:13:23.48581+00:00",
+      "publishedAt": "2026-10-12T20:13:23.337+00:00"
+    },
+    {
+      "id": "8468f607-473a-41be-8542-64645a34400b",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "categoryId": "7b576d5d-8417-48e1-977e-658e18a14342",
+      "name": "نظارة شمسية بإطار أسود",
+      "slug": "product-mv5owsq1",
+      "description": "نظارة شمسية بإطار أسود بتصميم كلاسيكي، عدسات تحمي العين من الأشعة فوق البنفسجية، خفيفة الوزن ومريحة للارتداء اليومي في الصيف.",
+      "price": 60000,
+      "compareAtPrice": 70000,
+      "currency": "SYP",
+      "stock": null,
+      "status": "published",
+      "tags": [
+        "نظارات",
+        "شمسية",
+        "إكسسوارات",
+        "صيفي"
+      ],
+      "specifications": {},
+      "featured": false,
+      "createdAt": "2026-10-12T20:13:54.984696+00:00",
+      "updatedAt": "2026-10-12T20:13:54.984696+00:00",
+      "publishedAt": "2026-10-12T20:13:54.838+00:00"
+    }
+  ],
+  "images": [
+    {
+      "id": "074889a8-845a-48d7-bebd-e612ac7648f8",
+      "productId": "8fbd619f-67b7-4189-a1c9-fa41e108f719",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "url": "https://uhnlgrbaypfjviuagske.supabase.co/storage/v1/object/public/store-media/stores/2d996df5-df09-4a81-8d5a-8cb2bebdd60b/products/1791835738398-shirt.webp",
+      "alt": "قميص كتان رجالي أبيض",
+      "sortOrder": 0,
+      "width": null,
+      "height": null
+    },
+    {
+      "id": "8c2c4de5-59f4-40f2-8388-c9923246467e",
+      "productId": "8814b8e8-1c88-4db7-9171-24928611521e",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "url": "https://uhnlgrbaypfjviuagske.supabase.co/storage/v1/object/public/store-media/stores/2d996df5-df09-4a81-8d5a-8cb2bebdd60b/products/1791835804699-tshirt.webp",
+      "alt": "تيشيرت قطن رجالي أساسي",
+      "sortOrder": 0,
+      "width": null,
+      "height": null
+    },
+    {
+      "id": "fd60ae0f-0b3c-4bc5-beb7-3d72b41e0a56",
+      "productId": "ee938797-1061-4466-904e-63fb834771b5",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "url": "https://uhnlgrbaypfjviuagske.supabase.co/storage/v1/object/public/store-media/stores/2d996df5-df09-4a81-8d5a-8cb2bebdd60b/products/1791835850876-dress.webp",
+      "alt": "فستان كتان صيفي أبيض",
+      "sortOrder": 0,
+      "width": null,
+      "height": null
+    },
+    {
+      "id": "f09eb604-890d-42e1-9f54-f910ee6e339e",
+      "productId": "a98aa333-b5be-4bf5-be11-eda54c7bf49b",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "url": "https://uhnlgrbaypfjviuagske.supabase.co/storage/v1/object/public/store-media/stores/2d996df5-df09-4a81-8d5a-8cb2bebdd60b/products/1791835907565-tunic.webp",
+      "alt": "طقم تونيك وتنورة بطبعة ورود",
+      "sortOrder": 0,
+      "width": null,
+      "height": null
+    },
+    {
+      "id": "38856a8b-0ee1-4de2-a35b-f4999584038c",
+      "productId": "9cce6b19-593d-4b2a-93aa-b7984832af65",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "url": "https://uhnlgrbaypfjviuagske.supabase.co/storage/v1/object/public/store-media/stores/2d996df5-df09-4a81-8d5a-8cb2bebdd60b/products/1791835938179-kidsboy.webp",
+      "alt": "طقم قميص وشورت للأولاد",
+      "sortOrder": 0,
+      "width": null,
+      "height": null
+    },
+    {
+      "id": "edf530bc-6377-4300-9074-409f2f0b178c",
+      "productId": "70006925-a1a4-4129-a28e-211c93869ffe",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "url": "https://uhnlgrbaypfjviuagske.supabase.co/storage/v1/object/public/store-media/stores/2d996df5-df09-4a81-8d5a-8cb2bebdd60b/products/1791835967935-kidsgirl.webp",
+      "alt": "طقم تيشيرت وشورت للبنات",
+      "sortOrder": 0,
+      "width": null,
+      "height": null
+    },
+    {
+      "id": "0aa5c3ce-e8ab-4b97-8540-a21f0d4d1868",
+      "productId": "65b473ac-a70e-4987-8877-6261d5f6e49c",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "url": "https://uhnlgrbaypfjviuagske.supabase.co/storage/v1/object/public/store-media/stores/2d996df5-df09-4a81-8d5a-8cb2bebdd60b/products/1791835997975-bag.webp",
+      "alt": "حقيبة يد جلدية رمادية",
+      "sortOrder": 0,
+      "width": null,
+      "height": null
+    },
+    {
+      "id": "21954ea5-c7b4-495c-963e-813b748df080",
+      "productId": "8468f607-473a-41be-8542-64645a34400b",
+      "storeId": "2d996df5-df09-4a81-8d5a-8cb2bebdd60b",
+      "url": "https://uhnlgrbaypfjviuagske.supabase.co/storage/v1/object/public/store-media/stores/2d996df5-df09-4a81-8d5a-8cb2bebdd60b/products/1791836030101-sunglasses.webp",
+      "alt": "نظارة شمسية بإطار أسود",
+      "sortOrder": 0,
+      "width": null,
+      "height": null
+    }
+  ],
+  "orders": [
+    {
+      "number": "D-1001",
+      "customerName": "ليلى الحسن",
+      "governorate": "دمشق",
+      "productId": "8fbd619f-67b7-4189-a1c9-fa41e108f719",
+      "productName": "قميص كتان رجالي أبيض",
+      "quantity": 1,
+      "total": 120000,
+      "currency": "SYP",
+      "status": "جديد"
+    },
+    {
+      "number": "D-1002",
+      "customerName": "أحمد الخطيب",
+      "governorate": "حلب",
+      "productId": "8814b8e8-1c88-4db7-9171-24928611521e",
+      "productName": "تيشيرت قطن رجالي أساسي",
+      "quantity": 2,
+      "total": 90000,
+      "currency": "SYP",
+      "status": "قيد التجهيز"
+    },
+    {
+      "number": "D-1003",
+      "customerName": "سمر يوسف",
+      "governorate": "حمص",
+      "productId": "ee938797-1061-4466-904e-63fb834771b5",
+      "productName": "فستان كتان صيفي أبيض",
+      "quantity": 1,
+      "total": 165000,
+      "currency": "SYP",
+      "status": "مكتمل"
+    },
+    {
+      "number": "D-1004",
+      "customerName": "نور الدين",
+      "governorate": "اللاذقية",
+      "productId": "a98aa333-b5be-4bf5-be11-eda54c7bf49b",
+      "productName": "طقم تونيك وتنورة بطبعة ورود",
+      "quantity": 1,
+      "total": 185000,
+      "currency": "SYP",
+      "status": "جديد"
+    },
+    {
+      "number": "D-1005",
+      "customerName": "رنا صالح",
+      "governorate": "حماة",
+      "productId": "9cce6b19-593d-4b2a-93aa-b7984832af65",
+      "productName": "طقم قميص وشورت للأولاد",
+      "quantity": 2,
+      "total": 160000,
+      "currency": "SYP",
+      "status": "قيد التجهيز"
+    },
+    {
+      "number": "D-1006",
+      "customerName": "كريم عباس",
+      "governorate": "طرطوس",
+      "productId": "70006925-a1a4-4129-a28e-211c93869ffe",
+      "productName": "طقم تيشيرت وشورت للبنات",
+      "quantity": 1,
+      "total": 70000,
+      "currency": "SYP",
+      "status": "مكتمل"
+    }
+  ]
+}

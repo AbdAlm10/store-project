@@ -24,6 +24,7 @@ import {
   isDataLayerWriteMethod,
 } from "@/features/demo/write-guard";
 import { demoDashboardStats, demoOrders } from "@/features/demo/catalog";
+import { alnoorCategories, alnoorEvents, alnoorProducts } from "@/features/demo/alnoor-demo";
 import { demoSeed } from "@/infrastructure/demo/seed";
 
 describe("demo mode writes", () => {
@@ -83,12 +84,16 @@ describe("demo mode writes", () => {
 });
 
 describe("demo catalog", () => {
-  it("builds orders and analytics from the seed", () => {
+  it("builds Arabic orders and analytics from the النور dataset", () => {
     const orders = demoOrders();
+    const first = alnoorProducts.find((product) => product.id === orders[0]?.productId);
     expect(orders[0]).toMatchObject({
       number: "D-1001",
-      productName: demoSeed.products[0]!.name,
-      total: demoSeed.products[0]!.price * orders[0]!.quantity,
+      customerName: "ليلى الحسن",
+      governorate: "دمشق",
+      productName: first?.name,
+      currency: "SYP",
+      total: (first?.price ?? 0) * (orders[0]?.quantity ?? 0),
     });
     expect(orders.map((order) => order.number)).toEqual([
       "D-1001",
@@ -98,11 +103,28 @@ describe("demo catalog", () => {
       "D-1005",
       "D-1006",
     ]);
+    expect(orders.map((order) => order.governorate)).toEqual([
+      "دمشق",
+      "حلب",
+      "حمص",
+      "اللاذقية",
+      "حماة",
+      "طرطوس",
+    ]);
+
+    for (const category of alnoorCategories) {
+      for (const option of category.optionSchema) {
+        expect(option.name).not.toMatch(/color|size/i);
+        for (const value of option.values) {
+          expect(value.label).not.toMatch(/black|white|red|blue|green|beige|color|size/i);
+        }
+      }
+    }
 
     const now = Date.now();
     const stats = demoDashboardStats(7, now);
     const since = now - 7 * 86_400_000;
-    const events = demoSeed.events.filter((event) => Date.parse(event.createdAt) >= since);
+    const events = alnoorEvents.filter((event) => Date.parse(event.createdAt) >= since);
     expect(stats.whatsappClicks).toBe(events.filter((event) => event.eventType === "whatsapp_click").length);
     expect(stats.productViews).toBe(events.filter((event) => event.eventType === "product_view").length);
     const visitors = new Set(
@@ -113,7 +135,7 @@ describe("demo catalog", () => {
     expect(stats.storeViews).toBe(visitors.size);
     if (stats.topProducts[0]) {
       expect(stats.topProducts[0].name).toBe(
-        demoSeed.products.find((product) => product.id === stats.topProducts[0]?.productId)?.name,
+        alnoorProducts.find((product) => product.id === stats.topProducts[0]?.productId)?.name,
       );
     }
   });
