@@ -5,6 +5,14 @@
 # Preview and branch deploys bake DEPLOY_PRIME_URL into NEXT_PUBLIC_APP_URL.
 # Bash expands the variable in the build command. Production keeps the URL
 # configured for that context. The app does not trust the request Host.
+#
+# The demo catalog hardcodes the public storage host. That host is also
+# SUPABASE_URL, so Netlify's secret scan fails the build with exit code 2.
+# The objects are public; the credential keys stay unscanned.
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL,NEXT_PUBLIC_SUPABASE_URL"
+  SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "uhnlgrbaypfjviuagske,https://uhnlgrbaypfjviuagske.supabase.co"
+
 [context.deploy-preview]
   command = "NEXT_PUBLIC_APP_URL=$DEPLOY_PRIME_URL npm run build"
 
