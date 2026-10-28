@@ -146,6 +146,9 @@ export function CustomerViewSection() {
           <Link href="/alnoor" className={`${styles.btn} ${styles.btnSecondary}`}>
             شاهد متجراً تجريبياً
           </Link>
+          <Link href="/demo/dashboard" className={`${styles.btn} ${styles.btnSecondary}`}>
+            شوف لوحة التحكم
+          </Link>
         </div>
       </div>
 

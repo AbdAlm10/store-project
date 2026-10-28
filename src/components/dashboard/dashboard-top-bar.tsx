@@ -1,7 +1,9 @@
 "use client";
 
+import { useDashboardPaths } from "@/components/dashboard/dashboard-paths";
 import { SafeImage } from "@/components/ui/safe-image";
 import { logoutAction } from "@/features/auth/actions";
+import { useDemoMode } from "@/features/demo/demo-provider";
 import { cn } from "@/lib/utils/cn";
 import { ChevronDown, LogOut, Plus, Store } from "lucide-react";
 import Link from "next/link";
@@ -29,6 +31,8 @@ export function DashboardTopBar({
     signOut: string;
   };
 }) {
+  const demo = useDemoMode();
+  const paths = useDashboardPaths();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
@@ -59,7 +63,7 @@ export function DashboardTopBar({
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
       <Link
-        href="/dashboard/products/new"
+        href={`${paths.base}/products/new`}
         className="inline-flex h-10 items-center gap-1.5 rounded-full bg-brand-600 px-4 text-sm font-semibold text-white shadow-[0_8px_24px_-14px_rgba(58,122,86,0.55)] transition hover:bg-brand-700"
       >
         <Plus className="h-4 w-4" strokeWidth={2} />
@@ -132,16 +136,28 @@ export function DashboardTopBar({
               </dl>
             </div>
 
-            <form action={logoutAction} className="mt-1">
+            {demo.enabled ? (
               <button
-                type="submit"
+                type="button"
                 role="menuitem"
-                className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-700"
+                onClick={() => demo.block()}
+                className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-700"
               >
                 <LogOut className="h-4 w-4" strokeWidth={1.75} />
                 {labels.signOut}
               </button>
-            </form>
+            ) : (
+              <form action={logoutAction} className="mt-1">
+                <button
+                  type="submit"
+                  role="menuitem"
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-700"
+                >
+                  <LogOut className="h-4 w-4" strokeWidth={1.75} />
+                  {labels.signOut}
+                </button>
+              </form>
+            )}
           </div>
         ) : null}
       </div>

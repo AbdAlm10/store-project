@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { refuseDemoWrite } from "@/features/demo/write-guard";
 import { getServices } from "@/infrastructure/container";
 import { REFERRAL_COOKIE_NAME } from "@/lib/referrals/cookie";
 import {
@@ -148,6 +149,7 @@ export async function googleAuthAction(): Promise<
 }
 
 export async function logoutAction(): Promise<void> {
+  if (await refuseDemoWrite()) return;
   const services = getServices();
   await services.auth.logout();
 }
@@ -157,6 +159,8 @@ export async function updateAccountSettingsAction(input: {
   storeId: string;
   storeName: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const services = getServices();
     await services.auth.updateProfile({ fullName: input.fullName });
@@ -175,6 +179,8 @@ export async function updatePasswordAction(input: {
   password: string;
   confirmPassword: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const services = getServices();
     await services.auth.updatePassword(input);

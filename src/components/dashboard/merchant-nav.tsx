@@ -1,11 +1,13 @@
 "use client";
 
+import { useDashboardPaths } from "@/components/dashboard/dashboard-paths";
 import { Button } from "@/components/ui/button";
 import type { Locale } from "@/i18n/config";
 import { createTranslator, type MessageKey } from "@/i18n/messages";
 import { cn } from "@/lib/utils/cn";
 import {
   Boxes,
+  ClipboardList,
   CreditCard,
   Home,
   Layers,
@@ -25,7 +27,7 @@ import { useEffect, useRef, useState, type ComponentType } from "react";
 type NavIcon = ComponentType<{ className?: string; strokeWidth?: number }>;
 
 type NavItem = {
-  href: string;
+  path: string;
   labelKey: MessageKey;
   icon: NavIcon;
 };
@@ -35,52 +37,48 @@ type NavGroup = { titleKey: MessageKey; items: NavItem[] };
 const groups: NavGroup[] = [
   {
     titleKey: "overview",
-    items: [{ href: "/dashboard", labelKey: "home", icon: Home }],
+    items: [{ path: "", labelKey: "home", icon: Home }],
   },
   {
     titleKey: "catalog",
     items: [
-      { href: "/dashboard/products", labelKey: "products", icon: Boxes },
-      { href: "/dashboard/categories", labelKey: "categories", icon: Layers },
+      { path: "/products", labelKey: "products", icon: Boxes },
+      { path: "/categories", labelKey: "categories", icon: Layers },
     ],
   },
   {
     titleKey: "store",
     items: [
-      { href: "/dashboard/store", labelKey: "storefront", icon: Store },
-      { href: "/dashboard/store-design", labelKey: "design", icon: Palette },
+      { path: "/store", labelKey: "storefront", icon: Store },
+      { path: "/store-design", labelKey: "design", icon: Palette },
     ],
   },
   {
     titleKey: "growth",
-    items: [
-      { href: "/dashboard/analytics", labelKey: "analytics", icon: PieChart },
-    ],
+    items: [{ path: "/analytics", labelKey: "analytics", icon: PieChart }],
   },
   {
     titleKey: "account",
     items: [
-      { href: "/dashboard/settings", labelKey: "settings", icon: Settings2 },
-      {
-        href: "/dashboard/subscription",
-        labelKey: "subscription",
-        icon: CreditCard,
-      },
+      { path: "/settings", labelKey: "settings", icon: Settings2 },
+      { path: "/subscription", labelKey: "subscription", icon: CreditCard },
     ],
   },
 ];
 
-function isActive(pathname: string, href: string): boolean {
-  if (href === "/dashboard") return pathname === "/dashboard";
+const ordersItem: NavItem = { path: "/orders", labelKey: "orders", icon: ClipboardList };
+
+function hrefFor(base: string, path: string): string {
+  return path ? `${base}${path}` : base;
+}
+
+function isActive(pathname: string, href: string, base: string): boolean {
+  if (href === base) return pathname === base;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function isAllowedWhenLocked(href: string): boolean {
-  return (
-    href === "/dashboard" ||
-    href === "/dashboard/subscription" ||
-    href === "/dashboard/settings"
-  );
+function isAllowedWhenLocked(path: string): boolean {
+  return path === "" || path === "/subscription" || path === "/settings";
 }
 
 export function MerchantNav({
@@ -99,6 +97,7 @@ export function MerchantNav({
   locked?: boolean;
 }) {
   const pathname = usePathname();
+  const paths = useDashboardPaths();
   const [open, setOpen] = useState(false);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const compactRootRef = useRef<HTMLDivElement>(null);
@@ -130,9 +129,15 @@ export function MerchantNav({
     };
   }, [compact, open]);
 
+  const navGroups = groups.map((group) =>
+    group.titleKey === "catalog" && paths.orders
+      ? { ...group, items: [...group.items, ordersItem] }
+      : group,
+  );
+
   const navBody = (
     <div className={cn(compact ? "space-y-1" : "space-y-4", "mt-0.5")}>
-      {groups.map((group) => (
+      {navGroups.map((group) => (
         <div key={group.titleKey}>
           <p
             className={cn(
@@ -144,13 +149,14 @@ export function MerchantNav({
           </p>
           <ul className={compact ? "space-y-0" : "space-y-0.5"}>
             {group.items.map((item) => {
-              const active = isActive(pathname, item.href);
-              const loading = pendingHref === item.href && !active;
+              const href = hrefFor(paths.base, item.path);
+              const active = isActive(pathname, href, paths.base);
+              const loading = pendingHref === href && !active;
               const Icon = item.icon;
-              const disabled = locked && !isAllowedWhenLocked(item.href);
+              const disabled = locked && !isAllowedWhenLocked(item.path);
 
               return (
-                <li key={item.href}>
+                <li key={href}>
                   {disabled ? (
                     <button
                       type="button"
@@ -168,12 +174,12 @@ export function MerchantNav({
                     </button>
                   ) : (
                     <Link
-                      href={item.href}
+                      href={href}
                       prefetch
                       onClick={() => {
                         if (active) return;
                         setOpen(false);
-                        setPendingHref(item.href);
+                        setPendingHref(href);
                       }}
                       className={cn(
                         "group relative flex items-center gap-2.5 rounded-2xl px-3 text-sm font-medium transition-colors",
@@ -238,7 +244,7 @@ export function MerchantNav({
             />
             <nav
               id="merchant-nav"
-              className="fixed inset-x-3 top-[3.75rem] z-[60] max-h-[calc(100dvh-4.5rem)] overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl border border-slate-100 bg-white p-2 shadow-[0_20px_50px_-20px_rgba(15,23,42,0.45)]"
+              className="fixed inset-x-3 top-[calc(var(--demo-banner-offset,0px)+3.75rem)] z-[60] max-h-[calc(100dvh-var(--demo-banner-offset,0px)-4.5rem)] overflow-x-hidden overflow-y-auto overscroll-contain rounded-2xl border border-slate-100 bg-white p-2 shadow-[0_20px_50px_-20px_rgba(15,23,42,0.45)]"
             >
               {navBody}
             </nav>

@@ -1,5 +1,6 @@
 "use server";
 
+import { refuseDemoWrite } from "@/features/demo/write-guard";
 import { getServices } from "@/infrastructure/container";
 import { toUserMessage } from "@/domain/errors";
 import type { DashboardStats } from "@/application/services/analytics-service";
@@ -13,6 +14,8 @@ export async function getDashboardStatsAction(
 ): Promise<
   { ok: true; stats: DashboardStats } | { ok: false; error: string }
 > {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const range = Number(rangeDays);
     if (!ANALYTICS_RANGES.includes(range as (typeof ANALYTICS_RANGES)[number])) {

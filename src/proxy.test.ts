@@ -68,6 +68,12 @@ describe("auth proxy", () => {
     expect(failed.headers.get("location")).toBeNull();
   });
 
+  it("does not refresh the session on the public demo dashboard", async () => {
+    const response = await proxy(new NextRequest("http://localhost:3000/demo/dashboard/products"));
+    expect(response.headers.get("location")).toBeNull();
+    expect(createServerClient).not.toHaveBeenCalled();
+  });
+
   it("does not refresh the session on the OAuth callback", async () => {
     const response = await proxy(
       new NextRequest("http://localhost:3000/auth/callback?code=pkce-code"),

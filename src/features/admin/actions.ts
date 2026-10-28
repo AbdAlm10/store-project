@@ -3,6 +3,7 @@
 import type { BillingPeriod, PlanId } from "@/config/plans";
 import { AppError } from "@/domain/errors";
 import type { StoreStatus, SubscriptionStatus } from "@/domain/types/enums";
+import { refuseDemoWrite } from "@/features/demo/write-guard";
 import { getServices } from "@/infrastructure/container";
 import {
   storeCategoriesTag,
@@ -36,6 +37,7 @@ function readString(formData: FormData, key: string): string | null {
 }
 
 async function runAdminAction(fn: () => Promise<void>) {
+  if (await refuseDemoWrite()) return;
   try {
     await fn();
     revalidateAdmin();

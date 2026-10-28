@@ -5,6 +5,7 @@ import {
 } from "@/components/categories/category-icon-picker";
 import { SafeImage } from "@/components/ui/safe-image";
 import { deleteOwnedImageAction, uploadImageAction } from "@/features/media/actions";
+import { useDemoMode } from "@/features/demo/demo-provider";
 import { useI18n } from "@/i18n/provider";
 import { compressImageForUpload } from "@/lib/compress-image";
 import { searchLucideIcons } from "@/lib/icon-search";
@@ -32,6 +33,7 @@ export function CategoryMediaActions({
   onIconChange: (icon: string | null) => void;
 }) {
   const { t } = useI18n();
+  const demo = useDemoMode();
   const fileInputId = useId();
   const fileRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<MediaMode>("icon");
@@ -81,7 +83,9 @@ export function CategoryMediaActions({
   }, [deferred, mode]);
 
   async function clearOwnedImage(previous: string) {
-    if (previous) void deleteOwnedImageAction(storeId, previous);
+    if (!previous) return;
+    if (demo.block()) return;
+    void deleteOwnedImageAction(storeId, previous);
   }
 
   function selectIcon(id: string) {
@@ -102,6 +106,7 @@ export function CategoryMediaActions({
 
   async function handleFile(file: File | undefined) {
     if (!file) return;
+    if (demo.block()) return;
     setError(null);
     setUploadStatus("compressing");
     setProgress(0);

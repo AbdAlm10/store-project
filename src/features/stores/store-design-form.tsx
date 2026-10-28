@@ -17,6 +17,7 @@ import { BASIC_THEME_COLOR_KEYS } from "@/config/plans";
 import type { Store } from "@/domain/types/entities";
 import { updateStoreAction } from "@/features/stores/update-actions";
 import type { MessageKey } from "@/i18n/messages";
+import { useDemoMode } from "@/features/demo/demo-provider";
 import { useI18n } from "@/i18n/provider";
 import { storeInitials } from "@/lib/store-initials";
 import { cn } from "@/lib/utils/cn";
@@ -44,6 +45,7 @@ export function StoreDesignForm({
   fullThemeCustomization?: boolean;
 }) {
   const { t } = useI18n();
+  const demo = useDemoMode();
   const router = useRouter();
   const [primaryColor, setPrimaryColor] = useState(store.primaryColor);
   const [overrides, setOverrides] = useState<Partial<ThemeTokens>>(
@@ -76,6 +78,7 @@ export function StoreDesignForm({
       className="min-w-0 max-w-full space-y-4"
       onSubmit={(event) => {
         event.preventDefault();
+        if (demo.block()) return;
         setError(null);
         setSaved(false);
         startTransition(async () => {

@@ -9,6 +9,7 @@ import {
   type StatTone,
 } from "@/components/dashboard/ui";
 import { getDashboardStatsAction } from "@/features/dashboard/stats-actions";
+import { useDemoMode } from "@/features/demo/demo-provider";
 import { DASHBOARD_STATS_POLL_MS } from "@/lib/dashboard-cache";
 import { cn } from "@/lib/utils/cn";
 import {
@@ -80,6 +81,7 @@ export function LiveMetrics({
   viewsCountTemplate?: string;
   emptyLabel?: string;
 }) {
+  const demo = useDemoMode();
   const [stats, setStats] = useState(initial);
   const fetchTopProducts = includeTopProducts ?? showTopProducts;
 
@@ -88,6 +90,7 @@ export function LiveMetrics({
   }, [initial]);
 
   useEffect(() => {
+    if (demo.enabled) return;
     let cancelled = false;
 
     async function refresh() {
@@ -107,7 +110,7 @@ export function LiveMetrics({
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [storeId, rangeDays, fetchTopProducts]);
+  }, [demo.enabled, storeId, rangeDays, fetchTopProducts]);
 
   return (
     <>

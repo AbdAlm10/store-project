@@ -13,6 +13,8 @@ import {
   bulkDeleteProductsAction,
   bulkUpdateProductStatusAction,
 } from "@/features/products/actions";
+import { useDashboardPaths } from "@/components/dashboard/dashboard-paths";
+import { useDemoMode } from "@/features/demo/demo-provider";
 import { ProductActions } from "@/features/products/product-actions";
 import type { Locale } from "@/i18n/config";
 import { useI18n } from "@/i18n/provider";
@@ -70,6 +72,8 @@ export function ProductsWorkspace({
   productTotal?: number;
 }) {
   const { t } = useI18n();
+  const demo = useDemoMode();
+  const paths = useDashboardPaths();
   const router = useRouter();
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
@@ -159,6 +163,7 @@ export function ProductsWorkspace({
   }
 
   function runBulk(action: BulkAction) {
+    if (demo.block()) return;
     const ids = [...selected];
     if (ids.length === 0) return;
 
@@ -205,7 +210,7 @@ export function ProductsWorkspace({
               disabled={navigating}
               onClick={() =>
                 startNavigate(() => {
-                  router.push("/dashboard/products/new");
+                  router.push(`${paths.base}/products/new`);
                 })
               }
             >
@@ -347,7 +352,7 @@ export function ProductsWorkspace({
                 disabled={navigating}
                 onClick={() =>
                   startNavigate(() => {
-                    router.push("/dashboard/products/new");
+                    router.push(`${paths.base}/products/new`);
                   })
                 }
               >
@@ -398,7 +403,7 @@ export function ProductsWorkspace({
                     </div>
                     <div className="min-w-0 flex-1">
                       <Link
-                        href={`/dashboard/products/${product.id}`}
+                        href={`${paths.base}/products/${product.id}`}
                         className="font-semibold text-slate-900"
                       >
                         {product.name}
@@ -512,7 +517,7 @@ export function ProductsWorkspace({
                             </div>
                             <div className="min-w-0">
                               <Link
-                                href={`/dashboard/products/${product.id}`}
+                                href={`${paths.base}/products/${product.id}`}
                                 className="font-medium text-slate-900 hover:underline"
                               >
                                 {product.name}

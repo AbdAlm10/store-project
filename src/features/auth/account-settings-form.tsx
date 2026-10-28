@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/forms";
 import { updateAccountSettingsAction } from "@/features/auth/actions";
+import { useDemoMode } from "@/features/demo/demo-provider";
 import { useI18n } from "@/i18n/provider";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -19,6 +20,7 @@ export function AccountSettingsForm({
   storeName: string;
 }) {
   const { t } = useI18n();
+  const demo = useDemoMode();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -29,6 +31,7 @@ export function AccountSettingsForm({
       className="mt-4 space-y-4"
       onSubmit={(event) => {
         event.preventDefault();
+        if (demo.block()) return;
         const formData = new FormData(event.currentTarget);
         setError(null);
         setSaved(false);

@@ -2,7 +2,9 @@
 
 import type { DashboardStats } from "@/application/services/analytics-service";
 import { SafeImage } from "@/components/ui/safe-image";
+import { useDashboardPaths } from "@/components/dashboard/dashboard-paths";
 import { getDashboardStatsAction } from "@/features/dashboard/stats-actions";
+import { useDemoMode } from "@/features/demo/demo-provider";
 import { DASHBOARD_STATS_POLL_MS } from "@/lib/dashboard-cache";
 import { formatMoney } from "@/lib/social/sharing";
 import { cn } from "@/lib/utils/cn";
@@ -267,6 +269,7 @@ function FullPageLock({
   cta: string;
   children: ReactNode;
 }) {
+  const paths = useDashboardPaths();
   if (!locked) return <>{children}</>;
 
   return (
@@ -291,7 +294,7 @@ function FullPageLock({
           {hint}
         </p>
         <Link
-          href="/dashboard/subscription"
+          href={`${paths.base}/subscription`}
           className="inline-flex items-center gap-2 rounded-full bg-gradient-to-l from-orange-500 to-amber-400 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_28px_-12px_rgba(249,115,22,0.7)]"
         >
           <Sparkles className="h-4 w-4" strokeWidth={2} />
@@ -329,6 +332,8 @@ export function AnalyticsDashboard({
   initial: DashboardStats;
   labels: Labels;
 }) {
+  const demo = useDemoMode();
+  const paths = useDashboardPaths();
   const [stats, setStats] = useState(initial);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -337,6 +342,7 @@ export function AnalyticsDashboard({
   }, [initial]);
 
   const refresh = useCallback(async () => {
+    if (demo.block()) return;
     setRefreshing(true);
     try {
       const result = await getDashboardStatsAction(storeId, rangeDays, true);
@@ -344,9 +350,10 @@ export function AnalyticsDashboard({
     } finally {
       window.setTimeout(() => setRefreshing(false), 280);
     }
-  }, [storeId, rangeDays]);
+  }, [demo, storeId, rangeDays]);
 
   useEffect(() => {
+    if (demo.enabled) return;
     let cancelled = false;
     const id = window.setInterval(() => {
       void getDashboardStatsAction(storeId, rangeDays, true).then((result) => {
@@ -357,7 +364,7 @@ export function AnalyticsDashboard({
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [storeId, rangeDays]);
+  }, [demo.enabled, storeId, rangeDays]);
 
   const daySeries = useMemo(
     () =>
@@ -416,7 +423,7 @@ export function AnalyticsDashboard({
               return (
                 <Link
                   key={days}
-                  href={`/dashboard/analytics?range=${days}`}
+                  href={`${paths.base}/analytics?range=${days}`}
                   tabIndex={locked ? -1 : undefined}
                   className={cn(
                     "rounded-full px-3.5 py-1.5 text-sm font-medium transition",

@@ -76,6 +76,7 @@ const ar = {
   dashboard: "لوحة التحكم",
   products: "المنتجات",
   categories: "التصنيفات",
+  orders: "الطلبات",
   analytics: "التحليلات",
   settings: "الإعدادات",
   subscription: "الاشتراك",

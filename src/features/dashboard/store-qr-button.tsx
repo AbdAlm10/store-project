@@ -2,6 +2,7 @@
 
 import { Input, Label } from "@/components/ui/forms";
 import type { ThemeOverrides } from "@/config/themes";
+import { useDemoMode } from "@/features/demo/demo-provider";
 import { updateStoreAction } from "@/features/stores/update-actions";
 import { useI18n } from "@/i18n/provider";
 import {
@@ -73,6 +74,7 @@ export function StoreQrButton({
   variant?: Variant;
 }) {
   const { t } = useI18n();
+  const demo = useDemoMode();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const defaultStand = resolveStandColor(themeOverrides, primaryColor);
@@ -148,6 +150,7 @@ export function StoreQrButton({
   }, [open, url, storeName, logoUrl, standColor, logoBg]);
 
   function saveColors() {
+    if (demo.block()) return;
     setSaveError(null);
     setJustSaved(false);
     startTransition(async () => {

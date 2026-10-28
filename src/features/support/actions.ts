@@ -1,6 +1,7 @@
 "use server";
 
 import { AppError, toUserMessage } from "@/domain/errors";
+import { refuseDemoWrite } from "@/features/demo/write-guard";
 import { getServices } from "@/infrastructure/container";
 import { createSupabaseAdminClient } from "@/infrastructure/supabase/admin-client";
 import { isSupabaseConfigured } from "@/infrastructure/supabase/config";
@@ -20,6 +21,8 @@ export async function sendSupportMessageAction(input: {
   | { ok: true; userMessage: SupportMessage; systemMessage: SupportMessage }
   | { ok: false; error: string }
 > {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const data = supportMessageSchema.parse({
       body: input.body,
@@ -86,6 +89,8 @@ export async function sendSupportMessageAction(input: {
 export async function listSupportMessagesAction(): Promise<
   { ok: true; messages: SupportMessage[] } | { ok: false; error: string }
 > {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const { session } = await getServices().auth.requireProfile();
     const userId = session.user.id;

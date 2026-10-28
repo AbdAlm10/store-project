@@ -5,6 +5,7 @@ import {
   listSupportMessagesAction,
   sendSupportMessageAction,
 } from "@/features/support/actions";
+import { useDemoMode } from "@/features/demo/demo-provider";
 import { useI18n } from "@/i18n/provider";
 import type { SupportMessage } from "@/lib/support-messages";
 import { cn } from "@/lib/utils/cn";
@@ -31,6 +32,7 @@ export function SupportWidget({
   storeId?: string | null;
 }) {
   const { t } = useI18n();
+  const demo = useDemoMode();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export function SupportWidget({
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
-    if (!open || loaded) return;
+    if (demo.enabled || !open || loaded) return;
     startTransition(async () => {
       const result = await listSupportMessagesAction();
       if (result.ok) {
@@ -49,7 +51,7 @@ export function SupportWidget({
       }
       setLoaded(true);
     });
-  }, [open, loaded]);
+  }, [demo.enabled, open, loaded]);
 
   useEffect(() => {
     if (!open) return;
@@ -58,6 +60,7 @@ export function SupportWidget({
   }, [open, lines.length]);
 
   function send() {
+    if (demo.block()) return;
     const body = draft.trim();
     if (!body || pending) return;
     setError(null);

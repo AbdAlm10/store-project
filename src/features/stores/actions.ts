@@ -2,6 +2,7 @@
 
 import { after } from "next/server";
 import { unstable_rethrow } from "next/navigation";
+import { refuseDemoWrite } from "@/features/demo/write-guard";
 import { getServices } from "@/infrastructure/container";
 import { isUnauthenticatedError, toUserMessage } from "@/domain/errors";
 import { revalidateStorefrontStore } from "@/lib/revalidate-storefront";
@@ -17,6 +18,8 @@ export async function createStoreAction(input: {
   | { ok: true; storeId: string }
   | { ok: false; error: string; unauthenticated?: boolean }
 > {
+  const blocked = await refuseDemoWrite();
+  if (blocked) return blocked;
   try {
     const services = getServices();
     const store = await services.stores.createStore(input);
