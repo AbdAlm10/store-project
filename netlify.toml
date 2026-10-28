@@ -1,3 +1,7 @@
+# The "Powered by Netlify" pill is injected by Netlify's edge (/.netlify/scripts/hud).
+# netlify.toml cannot turn it off. In the Netlify UI: Project configuration >
+# General > Powered by Netlify badge > off. That applies on the next request.
+#
 # Preview and branch deploys bake DEPLOY_PRIME_URL into NEXT_PUBLIC_APP_URL.
 # Bash expands the variable in the build command. Production keeps the URL
 # configured for that context. The app does not trust the request Host.

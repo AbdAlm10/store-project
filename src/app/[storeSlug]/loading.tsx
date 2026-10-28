@@ -127,12 +127,8 @@ export default function StoreLoading() {
       </div>
 
       <footer
-        className="mt-auto border-t py-2 text-center"
-        style={{
-          borderColor:
-            "color-mix(in srgb, var(--store-border, #ebe0c4) 70%, transparent)",
-          background: "var(--store-surface, #fff)",
-        }}
+        className="mt-auto px-4 pt-8 pb-7 text-center"
+        style={{ background: "var(--store-bg, #f7f4ef)" }}
       >
         <div className="mx-auto h-3 w-28 animate-pulse rounded" style={pulse()} />
         <div className="mx-auto mt-2 h-3 w-20 animate-pulse rounded" style={pulse()} />

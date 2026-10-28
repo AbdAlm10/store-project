@@ -75,7 +75,7 @@ export function StoreNav({
               {store.name}
             </span>
             {store.description?.trim() ? (
-              <span className="mt-0.5 block truncate text-xs opacity-75 sm:text-sm">
+              <span className="mt-0.5 line-clamp-2 text-xs leading-snug opacity-75 sm:text-sm">
                 {store.description}
               </span>
             ) : null}
